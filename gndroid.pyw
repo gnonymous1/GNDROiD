@@ -7647,6 +7647,8 @@ def start_mirror_with_fallback(target_serial: str = "", parent=None):
             return None
 
     # Determine device topology to enforce strict screen-off safety
+    # Scrcpy screen standby flags: --turn-screen-off, --stay-awake
+    # Title: GNDROiD - {selected_serial}
     is_emu = (
         any(d["serial"] == selected_serial and d["is_emulator"] for d in devs)
         or selected_serial.startswith("emulator-")
@@ -9281,3 +9283,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

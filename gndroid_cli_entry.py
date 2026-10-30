@@ -52,26 +52,38 @@ def find_python_executable(gui: bool = True) -> str:
     name = "pythonw.exe" if gui else "python.exe"
     user_profile = os.environ.get("USERPROFILE", "")
     candidates = [
+        os.path.join(r"C:\Python314", name),
         os.path.join(user_profile, "AppData", "Local", "Programs", "Python", "Python314", name),
+        os.path.join(r"C:\Program Files", "Python314", name),
         os.path.join(user_profile, "AppData", "Local", "Programs", "Python", "Python310", name),
         os.path.join(user_profile, "AppData", "Local", "Programs", "Python", "Python312", name),
         os.path.join(user_profile, "AppData", "Local", "Programs", "Python", "Python311", name),
-        os.path.join(r"C:\Python314", name),
-        os.path.join(r"C:\Program Files", "Python314", name),
-        os.path.join(r"C:\Program Files", "Python310", name),
+        os.path.join(r"C:\Python310", name),
     ]
 
+    # Priority 1: Pick an installation that verified has PyQt6 installed
     for cand in candidates:
         if os.path.exists(cand):
-            return cand
+            parent = os.path.dirname(cand)
+            sp = os.path.join(parent, "Lib", "site-packages", "PyQt6")
+            if os.path.exists(sp):
+                return cand
+            cli_py = os.path.join(parent, "python.exe")
+            if os.path.exists(cli_py):
+                try:
+                    res = subprocess.run([cli_py, "-c", "import PyQt6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=0x08000000, timeout=2)
+                    if res.returncode == 0:
+                        return cand
+                except Exception:
+                    pass
 
     which_py = shutil.which(name)
     if which_py:
         return which_py
-    
-    which_py_cli = shutil.which("python.exe")
-    if which_py_cli:
-        return which_py_cli
+
+    for cand in candidates:
+        if os.path.exists(cand):
+            return cand
 
     return name
 
