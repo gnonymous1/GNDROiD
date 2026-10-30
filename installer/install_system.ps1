@@ -17,10 +17,10 @@ $ErrorActionPreference = "Stop"
 $AppName = "GNDROiD"
 $AppVersion = "2.2.2"
 $AppPublisher = "Ghulam Nabi Kalhoro"
-$AppDescription = "GNDROiD — High-Performance Android Virtual Machine & Physical Phone Suite"
+$AppDescription = "GNDROiD - High-Performance Android Virtual Machine and Physical Phone Suite"
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  GNDROiD v$AppVersion — Automated System Installer            " -ForegroundColor Green -BackgroundColor Black
+Write-Host "  GNDROiD v$AppVersion - Automated System Installer            " -ForegroundColor Green -BackgroundColor Black
 Write-Host "============================================================" -ForegroundColor Cyan
 
 # 1. Determine Administrative Elevation
@@ -38,8 +38,10 @@ Write-Host "[+] Target Installation Directory: $TargetDir" -ForegroundColor Yell
 Write-Host "[+] Elevated (Administrator): $IsAdmin" -ForegroundColor Yellow
 
 # 2. Stop Any Active Instances
-Write-Host "[*] Terminating active GNDROiD processes..." -ForegroundColor Gray
-Get-Process gndroid, scrcpy -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Write-Host "[*] Terminating active GNDROiD and ADB processes..." -ForegroundColor Gray
+try { & adb kill-server 2>$null } catch {}
+Get-Process gndroid, scrcpy, adb -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
 
 # 3. Resolve Workspace Source Files
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -133,17 +135,27 @@ if (-not $NoShortcuts) {
         $shortcut.Save()
     }
 
-    # Desktop shortcut for master suite
-    $desktopLnk = Join-Path $DesktopDir "$AppName.lnk"
-    $dShortcut = $WshShell.CreateShortcut($desktopLnk)
-    $dShortcut.TargetPath = $ExeTarget
-    $dShortcut.WorkingDirectory = $TargetDir
-    $dShortcut.Description = $AppDescription
-    if (Test-Path $IconPath) { $dShortcut.IconLocation = "$IconPath,0" }
-    $dShortcut.Save()
+    # Desktop shortcuts for key suites
+    $DesktopShortcuts = @(
+        @{ Name = "GNDROiD.lnk"; Args = ""; Desc = "GNDROiD Master Suite" },
+        @{ Name = "GNDROiD Mirror.lnk"; Args = "mirror"; Desc = "GNDROiD Phone Mirroring" },
+        @{ Name = "GNDROiD Multi-Instance.lnk"; Args = "multi"; Desc = "GNDROiD Multi-Instance Manager" },
+        @{ Name = "GNDROiD Wireless LAN.lnk"; Args = "lan"; Desc = "GNDROiD Wireless LAN Mode" },
+        @{ Name = "GNDROiD ADB Doctor.lnk"; Args = "fix"; Desc = "GNDROiD ADB Doctor" }
+    )
+    foreach ($ds in $DesktopShortcuts) {
+        $desktopLnk = Join-Path $DesktopDir $ds.Name
+        $dShortcut = $WshShell.CreateShortcut($desktopLnk)
+        $dShortcut.TargetPath = $ExeTarget
+        $dShortcut.Arguments = $ds.Args
+        $dShortcut.WorkingDirectory = $TargetDir
+        $dShortcut.Description = $ds.Desc
+        if (Test-Path $IconPath) { $dShortcut.IconLocation = "$IconPath,0" }
+        $dShortcut.Save()
+    }
 
-    Write-Host "[✓] Start Menu shortcuts created at: $StartMenuDir" -ForegroundColor Green
-    Write-Host "[✓] Desktop shortcut created at: $desktopLnk" -ForegroundColor Green
+    Write-Host "[OK] Start Menu shortcuts created at: $StartMenuDir" -ForegroundColor Green
+    Write-Host "[OK] All 5 Desktop shortcuts created at: $DesktopDir" -ForegroundColor Green
 }
 
 # 8. Add to System / User PATH
@@ -153,9 +165,9 @@ $OldPath = [Environment]::GetEnvironmentVariable("Path", $RegScope)
 if ($OldPath -notlike "*$TargetDir*") {
     $NewPath = "$OldPath;$TargetDir"
     [Environment]::SetEnvironmentVariable("Path", $NewPath, $RegScope)
-    Write-Host "[✓] Added '$TargetDir' to $RegScope PATH" -ForegroundColor Green
+    Write-Host "[OK] Added '$TargetDir' to $RegScope PATH" -ForegroundColor Green
 } else {
-    Write-Host "[✓] '$TargetDir' already present in $RegScope PATH" -ForegroundColor Green
+    Write-Host "[OK] '$TargetDir' already present in $RegScope PATH" -ForegroundColor Green
 }
 
 # 9. Optional APK File Association
@@ -169,7 +181,7 @@ if (Test-Path (Join-Path $TargetDir "gndroid.ico")) {
     New-Item -Path "$RegRoot\GNDROiD.APKPackage\DefaultIcon" -Value "$TargetDir\gndroid.ico,0" -Force | Out-Null
 }
 New-Item -Path "$RegRoot\GNDROiD.APKPackage\shell\open\command" -Value "`"$AdbPath`" install -r `"%1`"" -Force | Out-Null
-Write-Host "[✓] .apk association registered with GNDROiD ADB" -ForegroundColor Green
+Write-Host "[OK] .apk association registered with GNDROiD ADB" -ForegroundColor Green
 
 # 10. Register in Windows Programs & Features (Add/Remove Programs)
 Write-Host "[*] Registering Uninstaller in Windows Registry..." -ForegroundColor Cyan
@@ -180,7 +192,7 @@ $UninstallKeyPath = if ($IsAdmin) {
 }
 
 New-Item -Path $UninstallKeyPath -Force | Out-Null
-Set-ItemProperty -Path $UninstallKeyPath -Name "DisplayName" -Value "$AppName v$AppVersion — High-Performance Android Suite" -Force
+Set-ItemProperty -Path $UninstallKeyPath -Name "DisplayName" -Value "$AppName v$AppVersion - High-Performance Android Suite" -Force
 Set-ItemProperty -Path $UninstallKeyPath -Name "DisplayVersion" -Value $AppVersion -Force
 Set-ItemProperty -Path $UninstallKeyPath -Name "Publisher" -Value $AppPublisher -Force
 Set-ItemProperty -Path $UninstallKeyPath -Name "InstallLocation" -Value $TargetDir -Force

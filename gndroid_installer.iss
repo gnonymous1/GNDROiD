@@ -81,11 +81,11 @@ Name: "developer"; Description: "Developer Source Scripts & API Control Planes";
 ; Additional Tasks
 ; ======================================================================
 [Tasks]
-Name: "desktopicon"; Description: "Create Desktop Shortcut for GNDROiD Master Suite"; GroupDescription: "Desktop Shortcuts:"; Flags: unchecked
-Name: "mirroricon"; Description: "Create Desktop Shortcut for GNDROiD Mirror (Direct Phone Streaming)"; GroupDescription: "Desktop Shortcuts:"; Flags: unchecked
-Name: "multiicon"; Description: "Create Desktop Shortcut for Multi-Instance Manager"; GroupDescription: "Desktop Shortcuts:"; Flags: unchecked
-Name: "lanicon"; Description: "Create Desktop Shortcut for Wireless LAN Wi-Fi Mode"; GroupDescription: "Desktop Shortcuts:"; Flags: unchecked
-Name: "fixicon"; Description: "Create Desktop Shortcut for ADB Doctor & Troubleshooting Suite"; GroupDescription: "Desktop Shortcuts:"; Flags: unchecked
+Name: "desktopicon"; Description: "Create Desktop Shortcut for GNDROiD Master Suite"; GroupDescription: "Desktop Shortcuts:"; 
+Name: "mirroricon"; Description: "Create Desktop Shortcut for GNDROiD Mirror (Direct Phone Streaming)"; GroupDescription: "Desktop Shortcuts:"; 
+Name: "multiicon"; Description: "Create Desktop Shortcut for Multi-Instance Manager"; GroupDescription: "Desktop Shortcuts:"; 
+Name: "lanicon"; Description: "Create Desktop Shortcut for Wireless LAN Wi-Fi Mode"; GroupDescription: "Desktop Shortcuts:"; 
+Name: "fixicon"; Description: "Create Desktop Shortcut for ADB Doctor & Troubleshooting Suite"; GroupDescription: "Desktop Shortcuts:"; 
 Name: "associateapk"; Description: "Associate .apk files with GNDROiD (Instant 1-Click Install to Phone / VM)"; GroupDescription: "File Associations:"
 
 ; ======================================================================

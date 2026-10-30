@@ -30,12 +30,22 @@ foreach ($p in $StartMenuPaths) {
     if (Test-Path $p) { Remove-Item -Path $p -Recurse -Force }
 }
 
-$DesktopPaths = @(
-    Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::CommonDesktopDirectory)) "$AppName.lnk",
-    Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)) "$AppName.lnk"
+$DesktopDirs = @(
+    [Environment]::GetFolderPath([Environment+SpecialFolder]::CommonDesktopDirectory),
+    [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
 )
-foreach ($d in $DesktopPaths) {
-    if (Test-Path $d) { Remove-Item -Path $d -Force }
+$ShortcutNames = @(
+    "GNDROiD.lnk",
+    "GNDROiD Mirror.lnk",
+    "GNDROiD Multi-Instance.lnk",
+    "GNDROiD Wireless LAN.lnk",
+    "GNDROiD ADB Doctor.lnk"
+)
+foreach ($dir in $DesktopDirs) {
+    foreach ($name in $ShortcutNames) {
+        $d = Join-Path $dir $name
+        if (Test-Path $d) { Remove-Item -Path $d -Force }
+    }
 }
 
 # 3. Remove Registry associations & Uninstall entries
