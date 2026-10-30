@@ -76,7 +76,7 @@ GNDROiD is an institutional-grade, hyper-performant Android emulation platform o
 | M2 | App Cloning & Floating Windows | R2 Tiered AOSP Sandboxing & Scrcpy 4.1 Virtual Display Floating Windows | None | DONE |
 | M3 | Emulator VPN Architecture & IP Routing | R3 Root-Cause Analysis, QEMU SLIRP Hardening, Guest Netd/MTU Clamp, Public IP Verification | None | DONE |
 | M4 | Wireless Debugging Research & Provisioning | R5 Comparative Research Report, SPAKE2 QR Pairing Engine, TCP 5555 Fallback | None | DONE |
-| M5 | E2E Integration & Verification Track | R6 Independent Automated Verification Test Suite (Tiers 1-4), Forensic Audit & Hardening | M1, M2, M3, M4 | IN_PROGRESS (Hardening) |
+| M5 | E2E Integration & Verification Track | R6 Independent Automated Verification Test Suite (Tiers 1-4), Master E2E Runner, TEST_READY.md published | M1, M2, M3, M4 | DONE |
 
 ---
 
