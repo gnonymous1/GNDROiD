@@ -1881,7 +1881,7 @@ class LanRadarWorker(QThread):
         except Exception:
             pass
 
-        # 4. Check Nexus Companion UDP probe (port 51899 fallback)
+        # 4. Check Nexus Companion UDP probe (port 51899 fallback - excluding loopback)
         try:
             udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -1892,17 +1892,19 @@ class LanRadarWorker(QThread):
                 reply = data.decode("utf-8", "ignore").strip()
                 if "NXAI" in reply:
                     nx_ip = addr[0]
-                    nx_target = f"{nx_ip}:5555"
-                    if not any(nx_ip in k for k in results_map.keys()):
-                        results_map[nx_target] = {
-                            "serial": nx_target,
-                            "model": "Nexus Companion Device",
-                            "address": nx_target,
-                            "protocol": "📲 Nexus Companion (Wi-Fi)",
-                            "status": "🟡 Discovered on LAN",
-                            "is_connected": False,
-                            "can_mirror": True
-                        }
+                    # STRICT FILTER: Never add loopback, local PC IPs, or APIPA to discovery table!
+                    if nx_ip not in ("127.0.0.1", "0.0.0.0", "localhost") and not nx_ip.startswith("169.254."):
+                        nx_target = f"{nx_ip}:5555"
+                        if not any(nx_ip in k for k in results_map.keys()):
+                            results_map[nx_target] = {
+                                "serial": nx_target,
+                                "model": "Nexus Companion Device",
+                                "address": nx_target,
+                                "protocol": "📲 Nexus Companion (Wi-Fi)",
+                                "status": "🟡 Discovered on LAN",
+                                "is_connected": False,
+                                "can_mirror": True
+                            }
             except Exception:
                 pass
             finally:
@@ -2174,6 +2176,207 @@ class NexusCompanionManager:
             return ip
         except Exception:
             return "127.0.0.1"
+
+
+
+# ----------------------------------------------------------------------
+# GNDroidAutoLockDialog: Intelligent Auto-Lock & Full-Speed Mirror Engine
+# ----------------------------------------------------------------------
+class GNDroidAutoLockDialog(QDialog):
+    """
+    Intelligent Auto-Locking & Full-Speed Mirroring Engine:
+    Actively monitors ADB over Wi-Fi and USB, automatically performs cable handshake
+    and switches to wireless TCP 5555, then instantly launches 60 FPS Scrcpy mirroring.
+    """
+    def __init__(self, target_ip: str = "", target_serial: str = "", parent=None):
+        super().__init__(parent)
+        self.target_ip = target_ip or "192.168.100.20"
+        self.target_serial = target_serial or f"{self.target_ip}:5555"
+        self.locked_serial = ""
+        self.setWindowTitle("🚀 GNDROiD — Auto-Lock & Full-Speed Mirroring Engine")
+        self.resize(540, 420)
+        self.setMinimumSize(500, 380)
+        self.setup_ui()
+
+        # Active Watcher Timer (Checks every 400ms)
+        self.watch_timer = QTimer(self)
+        self.watch_timer.timeout.connect(self.auto_lock_tick)
+        self.watch_timer.start(400)
+
+        # Trigger immediate first pass
+        QTimer.singleShot(50, self.auto_lock_tick)
+
+    def setup_ui(self):
+        self.setStyleSheet("""
+            QDialog {
+                background: #f8f9fa;
+                color: #0f172a;
+                font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif;
+            }
+            QFrame.cardBox {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(14)
+
+        # Header Title
+        lbl_head = QLabel("⚡ Auto-Locking Android Device")
+        lbl_head.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        lbl_head.setStyleSheet("color: #0f172a;")
+        layout.addWidget(lbl_head)
+
+        # Subtitle
+        self.lbl_sub = QLabel(f"Targeting device at <b>{self.target_ip}</b> on local Wi-Fi...")
+        self.lbl_sub.setStyleSheet("color: #64748b; font-size: 12px;")
+        layout.addWidget(self.lbl_sub)
+
+        # Card Box with Live Status
+        card = QFrame()
+        card.setProperty("class", "cardBox")
+        c_l = QVBoxLayout(card)
+        c_l.setSpacing(12)
+
+        self.lbl_badge = QLabel("🔍 Scanning connection pathways...")
+        self.lbl_badge.setStyleSheet("color: #0284c7; font-weight: 700; font-size: 13px;")
+        c_l.addWidget(self.lbl_badge)
+
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 0)
+        self.progress.setFixedHeight(6)
+        self.progress.setTextVisible(False)
+        self.progress.setStyleSheet("""
+            QProgressBar {
+                background-color: #e2e8f0;
+                border-radius: 3px;
+                border: none;
+            }
+            QProgressBar::chunk {
+                background-color: #0067c0;
+                border-radius: 3px;
+            }
+        """)
+        c_l.addWidget(self.progress)
+
+        self.lbl_instructions = QLabel(
+            "<b>📡 Device is active on Wi-Fi!</b><br><br>"
+            "Android requires a 1-time cable handshake to unlock port 5555.<br><br>"
+            "👉 <b>Plug your USB cable into your PC now.</b><br>"
+            "GNDROiD will automatically detect the connection, authorize wireless mode, "
+            "and pop open 60 FPS mirroring with <b>zero extra clicks</b>!<br>"
+            "<i>(You can then unplug the cable completely.)</i>"
+        )
+        self.lbl_instructions.setWordWrap(True)
+        self.lbl_instructions.setStyleSheet("color: #334155; font-size: 12px; line-height: 1.5;")
+        c_l.addWidget(self.lbl_instructions)
+
+        layout.addWidget(card)
+
+        # Quick Actions Row
+        row_btn = QHBoxLayout()
+        row_btn.setSpacing(10)
+
+        self.btn_usb_mirror = QPushButton("🔌 Mirror via USB Directly")
+        self.btn_usb_mirror.setStyleSheet("""
+            QPushButton {
+                background: #f1f5f9;
+                color: #0f172a;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 600;
+                font-size: 11px;
+            }
+            QPushButton:hover { background: #e2e8f0; }
+        """)
+        self.btn_usb_mirror.clicked.connect(self.action_mirror_usb_direct)
+        row_btn.addWidget(self.btn_usb_mirror)
+
+        row_btn.addStretch()
+
+        self.btn_cancel = QPushButton("Cancel")
+        self.btn_cancel.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                color: #64748b;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 11px;
+            }
+            QPushButton:hover { background: #f1f5f9; color: #0f172a; }
+        """)
+        self.btn_cancel.clicked.connect(self.reject)
+        row_btn.addWidget(self.btn_cancel)
+
+        layout.addLayout(row_btn)
+
+    def auto_lock_tick(self):
+        adb = SystemPaths.get_adb()
+        target_lan = f"{self.target_ip}:5555"
+
+        # 1. First test: Is ADB already connected to this target?
+        devs = SystemPaths.list_devices()
+        for d in devs:
+            if d["serial"] == target_lan and d["state"] == "device":
+                self.finish_lock(target_lan, "🎉 Device locked wirelessly!")
+                return
+
+        # 2. Second test: Can we connect directly to IP:5555?
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.2)
+                if s.connect_ex((self.target_ip, 5555)) == 0:
+                    res = subprocess.run([adb, "connect", target_lan], capture_output=True, text=True, timeout=2, creationflags=0x08000000)
+                    out = (res.stdout + " " + res.stderr).lower()
+                    if "connected to" in out or "already connected" in out:
+                        self.finish_lock(target_lan, f"🎉 Wireless lock successful on {target_lan}!")
+                        return
+        except Exception:
+            pass
+
+        # 3. Third test: Is a physical phone plugged in via USB right now?
+        usb_devs = [d for d in devs if not d["is_emulator"] and not d.get("is_lan") and d["state"] == "device"]
+        if usb_devs:
+            usb_serial = usb_devs[0]["serial"]
+            model = usb_devs[0].get("model", "Android Phone")
+            self.lbl_badge.setText(f"⚡ USB Phone Detected ({model})! Enabling wireless mode...")
+            self.lbl_badge.setStyleSheet("color: #0284c7; font-weight: bold; font-size: 13px;")
+            self.progress.setStyleSheet("QProgressBar::chunk { background-color: #16a34a; }")
+            QApplication.processEvents()
+
+            try:
+                subprocess.run([adb, "-s", usb_serial, "tcpip", "5555"], timeout=3, creationflags=0x08000000)
+                time.sleep(1.0)
+                phone_ip = SystemPaths.get_phone_lan_ip(usb_serial) or self.target_ip
+                new_target = f"{phone_ip}:5555"
+                subprocess.run([adb, "connect", new_target], timeout=3, creationflags=0x08000000)
+                self.finish_lock(new_target, f"🎉 Wireless Mode Activated on {new_target}! You can unplug the cable.")
+                return
+            except Exception as e:
+                self.lbl_badge.setText(f"Handshake error: {e}")
+
+    def finish_lock(self, locked_serial: str, message: str):
+        self.watch_timer.stop()
+        self.locked_serial = locked_serial
+        self.lbl_badge.setText(message)
+        self.lbl_badge.setStyleSheet("color: #16a34a; font-weight: bold; font-size: 13px;")
+        self.progress.setRange(0, 100)
+        self.progress.setValue(100)
+        self.progress.setStyleSheet("QProgressBar::chunk { background-color: #16a34a; }")
+        QTimer.singleShot(700, self.accept)
+
+    def action_mirror_usb_direct(self):
+        devs = SystemPaths.list_devices()
+        usb_devs = [d for d in devs if not d["is_emulator"] and not d.get("is_lan") and d["state"] == "device"]
+        if usb_devs:
+            self.finish_lock(usb_devs[0]["serial"], f"⚡ Mirroring directly via USB: {usb_devs[0]['serial']}")
+        else:
+            QMessageBox.warning(self, "No USB Device", "No USB phone detected yet. Please plug in the USB cable first.")
 
 
 class GNDroidADBFixerDialog(QDialog):
@@ -3505,13 +3708,49 @@ class GNDroidADBFixerDialog(QDialog):
             ab_l.setSpacing(6)
 
             btn_mirror = QPushButton("⚡ Mirror 60 FPS")
-            btn_mirror.setProperty("class", "btnHero")
-            btn_mirror.setToolTip(f"Launch 60 FPS mirroring with companion sidebar for {serial}")
+            btn_mirror.setStyleSheet("""
+                QPushButton {
+                    background-color: #0067c0;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 6px;
+                    font-family: 'Segoe UI', -apple-system, sans-serif;
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 6px 14px;
+                    min-height: 24px;
+                }
+                QPushButton:hover {
+                    background-color: #1879c9;
+                }
+                QPushButton:pressed {
+                    background-color: #005a9e;
+                }
+            """)
+            btn_mirror.setToolTip(f"Lock onto {serial} and start 60 FPS mirroring")
             btn_mirror.clicked.connect(lambda _, ser=serial: self.action_mirror_radar_device(ser))
             ab_l.addWidget(btn_mirror)
 
             btn_perms = QPushButton("🔐 Perms")
-            btn_perms.setProperty("class", "btnAction")
+            btn_perms.setStyleSheet("""
+                QPushButton {
+                    background-color: #f1f5f9;
+                    color: #0f172a;
+                    font-family: 'Segoe UI', -apple-system, sans-serif;
+                    font-size: 11px;
+                    font-weight: 600;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    padding: 6px 10px;
+                    min-height: 24px;
+                }
+                QPushButton:hover {
+                    background-color: #e2e8f0;
+                }
+                QPushButton:pressed {
+                    background-color: #cbd5e1;
+                }
+            """)
             btn_perms.setToolTip("1-Tap grant all background, overlay, and wireless permissions")
             btn_perms.clicked.connect(lambda _, ser=serial: self.action_grant_full_perms(ser))
             ab_l.addWidget(btn_perms)
@@ -3544,37 +3783,13 @@ class GNDroidADBFixerDialog(QDialog):
         if not target:
             return
         host_ip = target.split(":")[0] if ":" in target else target
-        adb = SystemPaths.get_adb()
 
-        # Check if ADB port 5555 is open
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.4)
-                is_5555_open = (s.connect_ex((host_ip, 5555)) == 0)
-        except Exception:
-            is_5555_open = False
-
-        if not is_5555_open:
-            QMessageBox.information(
-                self,
-                "Activate Wireless ADB on Phone",
-                f"📲 Nexus Companion APK is active on {host_ip}!\n\n"
-                "Android requires ADB TCP mode (port 5555) to be switched on before Scrcpy can mirror the screen.\n\n"
-                "To unlock cable-free mirroring:\n"
-                "1. Connect your phone to PC via USB cable once.\n"
-                "2. Click '📶 1-Click USB to Wireless' in the radar bar.\n"
-                "3. Unplug the USB cable!\n\n"
-                "Your phone will stay connected wirelessly on Wi-Fi permanently."
-            )
-            return
-
-        adb_target = f"{host_ip}:5555"
-        try:
-            subprocess.run([adb, "connect", adb_target], capture_output=True, timeout=4, creationflags=0x08000000)
-        except Exception:
-            pass
-        self.accept()
-        start_mirror_with_fallback(adb_target, self.parent())
+        # Open Intelligent Auto-Lock Dialog
+        auto_lock = GNDroidAutoLockDialog(target_ip=host_ip, target_serial=target, parent=self)
+        if auto_lock.exec() == QDialog.DialogCode.Accepted:
+            locked_target = auto_lock.locked_serial or f"{host_ip}:5555"
+            self.accept()
+            start_mirror_with_fallback(locked_target, self.parent())
 
     def action_grant_full_perms(self, specific_serial: str = ""):
         serial = specific_serial
