@@ -22,3 +22,5 @@ virtual_storage/
 *.log
 *.tmp
 .agents/
+
+build/

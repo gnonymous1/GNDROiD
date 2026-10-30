@@ -9231,7 +9231,7 @@ def main():
             sys.exit(0)
 
     # 2. Direct Mirror Launcher: gndroid.exe --mirror
-    if "--mirror" in args:
+    if "--mirror" in args or "mirror" in args:
         # Cross-process singleton guard: if a ribbon is already open in another process, bring it to front and exit
         existing_ribbon = user32.FindWindowW(None, "GNDROiD Controls") or user32.FindWindowW(None, "gndroid Controls")
         if existing_ribbon and user32.IsWindowVisible(existing_ribbon):
@@ -9244,7 +9244,7 @@ def main():
         sys.exit(0)
 
     # 3. Direct Wireless LAN Mode: gndroid.exe --lan or --wireless
-    if "--lan" in args or "--wireless" in args:
+    if "--lan" in args or "--wireless" in args or "lan" in args:
         dlg = GNDroidADBFixerDialog("", None)
         if hasattr(dlg, "tabs") and dlg.tabs.count() > 1:
             dlg.tabs.setCurrentIndex(1)
@@ -9252,19 +9252,19 @@ def main():
         sys.exit(app.exec())
 
     # 4. Direct ADB Doctor & Troubleshooting Suite: gndroid.exe --adb-fixer or --fix
-    if "--adb-fixer" in args or "--fixer" in args or "--fix" in args:
+    if "--adb-fixer" in args or "--fixer" in args or "--fix" in args or "fix" in args:
         dlg = GNDroidADBFixerDialog("", None)
         dlg.show()
         sys.exit(app.exec())
 
     # 4. Direct Multi-Instance Manager: gndroid.exe --multi or --instances
-    if "--multi" in args or "--instances" in args:
+    if "--multi" in args or "--instances" in args or "multi" in args:
         dlg = GNDroidMultiInstanceManager()
         dlg.show()
         sys.exit(app.exec())
 
     # 5. Direct OS Downloader: gndroid.exe --download-image or --downloader
-    if "--download-image" in args or "--downloader" in args:
+    if "--download-image" in args or "--downloader" in args or "download" in args:
         dlg = GNDroidImageDownloaderDialog(34)
         dlg.show()
         sys.exit(app.exec())
