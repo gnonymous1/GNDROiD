@@ -1,0 +1,1558 @@
+{
+  "timestamp": "2026-10-30T10:44:40Z",
+  "duration_seconds": 72.01764512062073,
+  "total_tests": 160,
+  "total_passed": 154,
+  "total_failed": 6,
+  "pass_rate_percent": 96.25,
+  "tier_counts": {
+    "Tier 1 - Feature Coverage": {
+      "pass": 67,
+      "fail": 3
+    },
+    "Tier 2 - Boundary & Corner": {
+      "pass": 69,
+      "fail": 1
+    },
+    "Tier 3 - Cross-Feature": {
+      "pass": 10,
+      "fail": 0
+    },
+    "Tier 4 - Real-World Workloads": {
+      "pass": 4,
+      "fail": 1
+    },
+    "Subsystem Suite Orchestration": {
+      "pass": 4,
+      "fail": 1
+    }
+  },
+  "feature_coverage": {
+    "1": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 2,
+      "t4": 1
+    },
+    "2": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 0
+    },
+    "3": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 0
+    },
+    "4": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 0
+    },
+    "5": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 0,
+      "t4": 0
+    },
+    "6": {
+      "t1": 2,
+      "t2": 4,
+      "t3": 1,
+      "t4": 0
+    },
+    "7": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 1
+    },
+    "8": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 0
+    },
+    "9": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 0,
+      "t4": 0
+    },
+    "10": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 0
+    },
+    "11": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 1,
+      "t4": 0
+    },
+    "12": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 0,
+      "t4": 1
+    },
+    "13": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 0,
+      "t4": 0
+    },
+    "14": {
+      "t1": 5,
+      "t2": 5,
+      "t3": 0,
+      "t4": 1
+    }
+  },
+  "results": [
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.1.1",
+      "name": "Default secondary display matches primary 1440x3120 @ 500 DPI",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.1.2",
+      "name": "set_secondary_display_config with match_primary=True writes matching resolution",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.1.3",
+      "name": "Custom secondary display configuration adheres to custom dimensions",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.1.4",
+      "name": "Disabling secondary display resets effective dimensions without corrupting config",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.1.5",
+      "name": "GNDroidInstanceCreatorDialog preset 0 defaults to flagship 1440x3120 @ 500 DPI",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.2.1",
+      "name": "get_multi_display_emulator_args outputs -multidisplay 1,1440,3120,500,0",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.2.2",
+      "name": "get_multi_display_emulator_args outputs empty list when disabled",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.2.3",
+      "name": "Multi-display launch arguments include -hotplug-multi-display",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.2.4",
+      "name": "MultiDisplayArgs backward compatibility contract satisfied",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.2.5",
+      "name": "AVDManager.launch_emulator_instance injects -multidisplay flags into command",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.3.1",
+      "name": "RAM and CPU settings updated correctly",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.3.2",
+      "name": "hw.display1 resolution and density keys preserved",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.3.3",
+      "name": "hw.display1.enabled and match_primary keys preserved",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.3.4",
+      "name": "hw.multi_display_window and hotplug flags preserved",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.3.5",
+      "name": "gndroid custom secondary display metadata keys preserved",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.4.1",
+      "name": "Invalid QSS 'margin: 0 auto' eliminated from gndroid.pyw",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.4.2",
+      "name": "WirelessPairingEngine generates exact 1:1 square QPixmap",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.4.3",
+      "name": "Raw QR PNG image bytes render with perfect 1:1 aspect ratio",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.4.4",
+      "name": "All 3 QR code finder patterns detected intact in pixel grid",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.4.5",
+      "name": "Mobile download QR label sized to 220x220 square with 1:1 aspect ratio",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.5.1",
+      "name": "Dynamic minimum dialog sizing setMinimumSize(440, 490) implemented",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.5.2",
+      "name": "Done button minimum height configured to 38px",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.5.3",
+      "name": "Done button styled with pointing hand cursor",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.5.4",
+      "name": "GNDroidWirelessPairingDialog minimum size satisfies >=540x640 bounds",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.5.5",
+      "name": "Wireless pairing modal Done and Cancel buttons fully visible within dialog rect",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.6.1",
+      "name": "AppCloneEntry correctly establishes master vs clone tagging metadata",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.6.2",
+      "name": "AppCloneManager.get_clone_users returns profile list structure",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:28Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.6.3",
+      "name": "AppCloneManager.create_clone_user allocates positive user_id (got -1)",
+      "feature_id": 6,
+      "passed": false,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:29Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.6.4",
+      "name": "AppCloneManager.clone_app_to_user performs zero-copy install to user -1",
+      "feature_id": 6,
+      "passed": false,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:29Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.6.5",
+      "name": "AppCloneManager.remove_clone_user cleanly purges user -1",
+      "feature_id": 6,
+      "passed": false,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:29Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.7.1",
+      "name": "find_scrcpy_binary resolves valid executable: C:\\Users\\Reader-Branch\\Desktop\\Android Emulator\\dist\\gndroid\\scrcpy.exe",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:29Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.7.2",
+      "name": "AppWindowManager launches floating window process (PID: 20528)",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:29Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.7.3",
+      "name": "Dedicated floating window title formatting encapsulates clone ID",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:31Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.7.4",
+      "name": "AppWindowManager creates valid Windows desktop .lnk shortcut",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:31Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.7.5",
+      "name": "Dedicated window process spawned with non-blocking subprocess handle",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:31Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.8.1",
+      "name": "list_apps_with_clones tags master profile apps with [Master] (22 found)",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.8.2",
+      "name": "All app drawer items encapsulated in AppCloneEntry dictionary objects",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.8.3",
+      "name": "GNDroidAppDrawer class exposes load_apps / refresh_apps and multi-account UI bindings",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.8.4",
+      "name": "Discovered apps count is complete across all queried profiles",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.8.5",
+      "name": "App drawer filter queries locate targeted package 'com.android.camera2'",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.9.1",
+      "name": "docs/VPN_NETWORKING_ARCHITECTURE_ROOT_CAUSE.md exists (314 lines)",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.9.2",
+      "name": "RCA details QEMU SLIRP 10.0.2.3 virtual DNS proxy failure mechanism",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.9.3",
+      "name": "RCA details Path MTU silent black hole and 1380 clamp resolution",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.9.4",
+      "name": "RCA details Android 14 captive portal probe trapping VpnService",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.9.5",
+      "name": "RCA details dual-stack IPv6 bypass leakage and hypervisor flag resolution",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.10.1",
+      "name": "get_vpn_and_dns_emulator_args injects -dns-server 8.8.8.8,1.1.1.1",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.10.2",
+      "name": "get_vpn_and_dns_emulator_args injects -wifi-user-mode-options ipv6=off",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.10.3",
+      "name": "get_vpn_and_dns_emulator_args injects -network-user-mode-options ipv6=off",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.10.4",
+      "name": "AVDManager injects -netdelay none and -netspeed full into emulator CLI",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.10.5",
+      "name": "AVDManager injects -netfast unthrottled processing flag into emulator CLI",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.11.1",
+      "name": "auto_stabilize_vpn_networking is exported in nexus package root",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:33Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.11.2",
+      "name": "Captive portal probe detection successfully disabled on guest",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:35Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.11.3",
+      "name": "Private DNS configured to dns.google hostname mode on guest",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:35Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.11.4",
+      "name": "ACTIVATE_VPN AppOps permissions granted to detected VPN apps",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:35Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.11.5",
+      "name": "Overall network stabilization reports overall_success=True",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:35Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.12.1",
+      "name": "detect_installed_vpn_apps returns package list: ['com.android.vpndialogs', 'com.vpn.free.hotspot.secure.vpnify']",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:35Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.12.2",
+      "name": "Guest kernel /dev/tun node active with character device permissions: crw-rw---- 1 system vpn 10, 200 2026-10-30 13:16 /dev/tun",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:35Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.12.3",
+      "name": "Gateway egress connectivity verified via ICMP ping (0% packet loss)",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:37Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.12.4",
+      "name": "grant_vpn_permission executes ACTIVATE_VPN allow for 'com.android.vpndialogs'",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:37Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.12.5",
+      "name": "fix_guest_vpn_and_dns pipeline executes cleanly with status='success'",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.13.1",
+      "name": "docs/WIRELESS_DEBUGGING_RESEARCH_REPORT.md exists (411 lines)",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.13.2",
+      "name": "Report analyzes AOSP SPAKE2 cryptographic key exchange and TLS 1.3",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.13.3",
+      "name": "Report analyzes Shizuku Binder IPC and IShizukuService architecture",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.13.4",
+      "name": "Report delivers complete Comparative Matrix across all 4 wireless mechanisms",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.13.5",
+      "name": "Report establishes Dual-Engine Provisioning and Watchdog architecture",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.14.1",
+      "name": "WirelessPairingEngine generates compliant AOSP pairing credentials",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.14.2",
+      "name": "generate_qr_payload formats exact AOSP pairing specification",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.14.3",
+      "name": "get_lan_diagnostic_info produces LAN diagnostic report (Host IP: 192.168.100.5)",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.14.4",
+      "name": "WirelessReconnectionWatchdog dynamic target management functional",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:40Z"
+    },
+    {
+      "tier": "Tier 1 - Feature Coverage",
+      "test_id": "T1.14.5",
+      "name": "WirelessReconnectionWatchdog thread lifecycle starts and terminates cleanly",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:41Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.1.1",
+      "name": "Extreme 4K landscape (3840x2160) normalized to primary resolution",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.1.2",
+      "name": "Negative/zero secondary dimensions normalized to primary resolution",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.1.3",
+      "name": "_safe_int safely handles string units, whitespaces, and None values",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.1.4",
+      "name": "Extreme DPI bounds (10 and 1200 DPI) parsed without overflow",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.1.5",
+      "name": "Missing config file safely returns flagship fallback defaults",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.2.1",
+      "name": "Orientation inversion (landscape on portrait) detected and normalized",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.2.2",
+      "name": "Ultra-wide 32:9 secondary display (5120x1440) normalized to prevent letterboxing",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.2.3",
+      "name": "Sanitizer is strictly idempotent on clean configuration",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.2.4",
+      "name": "Corrupt config file handles safely without crashing launch arguments",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.2.5",
+      "name": "Explicit hw.display1.enabled=false suppresses launch arguments",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.3.1",
+      "name": "Large config with 100+ keys and comments preserved verbatim during update",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.3.2",
+      "name": "Keys containing dots, underscores, and mixed case preserved exactly",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.3.3",
+      "name": "Empty key values (key =) handled without IndexError or corruption",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.3.4",
+      "name": "Updating existing key does not duplicate key lines in config.ini",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.3.5",
+      "name": "hardware-qemu.ini cleanly synchronized with secondary display settings",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.4.1",
+      "name": "Long QR pairing payload (>250 chars) generates exact 1:1 square pixmap",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.4.2",
+      "name": "Special characters in QR pairing payload encode cleanly",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.4.3",
+      "name": "Box size boundaries (1 to 15) preserve strict 1:1 square ratio",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.4.4",
+      "name": "Border boundaries (0 to 8) preserve strict 1:1 square ratio",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.4.5",
+      "name": "Empty string payload handles gracefully without raising unhandled crash",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.5.1",
+      "name": "Expanded modal bounds (800x900) maintain Done button visibility",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.5.2",
+      "name": "Minimum sizing constraints prevent resizing below usable bounds",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.5.3",
+      "name": "Extremely long download URL does not de-align dialog or clip controls",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.5.4",
+      "name": "Tab 2 (1-Click TCP 5555) controls properly initialized and visible",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.5.5",
+      "name": "Rapid modal open/close cycle terminates worker threads safely",
+      "feature_id": 5,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.6.1",
+      "name": "AOSP fw.max_users privilege boundary handled safely without unhandled crash",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:42Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.6.2",
+      "name": "Clone allocation executes cleanly within system profile bounds (UID: -1)",
+      "feature_id": 6,
+      "passed": false,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:43Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.6.3",
+      "name": "Cloning non-existent package returns False without throwing exception",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:43Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.6.4",
+      "name": "Removing non-existent user ID 99999 returns False safely",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:43Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.6.5",
+      "name": "Allocated fallback user profiles fully cleaned up and verified",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:43Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.7.1",
+      "name": "Zero viewport dimensions handle with graceful default fallback",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.7.2",
+      "name": "Special characters in window title sanitized for OS safety",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.7.3",
+      "name": "Long application title desktop shortcut created and removed safely",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.7.4",
+      "name": "cloner_get_scrcpy provides reliable executable fallback",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.7.5",
+      "name": "Terminated dedicated window process exits without zombie state",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.8.1",
+      "name": "Querying apps on offline emulator returns empty list safely",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.8.2",
+      "name": "AppCloneEntry tags high user ID [Clone #31] accurately",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.8.3",
+      "name": "Regex metacharacters in app drawer search query escaped safely",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.8.4",
+      "name": "Unicode characters and emojis supported in app drawer entries",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.8.5",
+      "name": "get_clone_users handles offline device without unhandled exception",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.9.1",
+      "name": "RCA details all 5 individual failure mechanisms sequentially",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.9.2",
+      "name": "RCA documents Linux fwmark bitmasking and policy routing bypasses",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.9.3",
+      "name": "RCA details user-mode SLIRP limits and VpnService protection architecture",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.9.4",
+      "name": "RCA contrasts SLIRP DNS proxy 10.0.2.3 with upstream 8.8.8.8",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.9.5",
+      "name": "RCA analyzes MTU packet fragmentation under user-mode UDP encapsulation",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.10.1",
+      "name": "get_vpn_and_dns_emulator_args supports custom DNS server strings",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.10.2",
+      "name": "Empty DNS server argument handled safely",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.10.3",
+      "name": "VpnAndDnsArgs maintains backward compatible 2-element length slice",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.10.4",
+      "name": "Wi-Fi and Network user mode IPv6 disable flags are distinct",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.10.5",
+      "name": "Network hardening flags persist across diverse instance configurations",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.11.1",
+      "name": "Offline device returns well-formed contract with overall_success=False",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.11.2",
+      "name": "Unreachable / unrooted targets truthfully report False for kernel modifications",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.11.3",
+      "name": "Command injection attempts in package names rejected safely by AppOps grantor",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:44Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.11.4",
+      "name": "auto_stabilize_vpn_networking is strictly idempotent across consecutive runs",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:49Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.11.5",
+      "name": "fix_guest_vpn_and_dns gracefully returns status='error' on offline device",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:49Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.12.1",
+      "name": "detect_installed_vpn_apps handles unreachable device returning empty list",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:49Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.12.2",
+      "name": "grant_vpn_permission rejects empty and None package names",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:49Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.12.3",
+      "name": "Ping test to unreachable documentation IP (192.0.2.1) correctly detects packet loss",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.12.4",
+      "name": "Network timeout or DNS resolution failure handled safely during IP lookup",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.12.5",
+      "name": "Character device /dev/tun validated for VPN tunnel creation",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.13.1",
+      "name": "Research report contains all in-depth AOSP and Shizuku protocol identifiers",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.13.2",
+      "name": "Report documents SPAKE2 cryptographic key exchange mechanism",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.13.3",
+      "name": "Report analyzes Shizuku Binder IPC transactions and security boundaries",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.13.4",
+      "name": "Report details dynamic ephemeral pairing ports vs static port 5555",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.13.5",
+      "name": "Report provides architecture for continuous background reconnection watchdog",
+      "feature_id": 13,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.14.1",
+      "name": "query_device_lan_ip resolves device network address: 10.0.2.16",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.14.2",
+      "name": "pair_device handles malformed host:port string with graceful False return",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.14.3",
+      "name": "Port 5555 diagnostic probe inspects listening socket state without error",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.14.4",
+      "name": "WirelessReconnectionWatchdog deduplicates added targets",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 2 - Boundary & Corner",
+      "test_id": "T2.14.5",
+      "name": "WirelessReconnectionWatchdog removes target cleanly",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:50Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.1",
+      "name": "F1+F6: Secondary display configuration 1440x3120 co-exists with App Cloner profiles",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:51Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.2",
+      "name": "F6+F7: App clone successfully created and launched into dedicated Scrcpy floating window",
+      "feature_id": 6,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:43:55Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.3",
+      "name": "F7+F11: Dedicated floating window operates concurrently with active Netd stabilization",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:00Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.4",
+      "name": "F11+F12: Netd MTU stabilization active while granting AppOps to commercial VPN apps",
+      "feature_id": 11,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:06Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.5",
+      "name": "F1+F4: Secondary display resolution 1440x3120 co-exists with 1:1 QR modal pixmap",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:06Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.6",
+      "name": "F4+F14: SPAKE2 credentials rendered into 1:1 aspect ratio QR image with intact finder patterns",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:06Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.7",
+      "name": "F8+F7: App Drawer entry successfully creates dedicated floating window desktop shortcut",
+      "feature_id": 8,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:07Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.8",
+      "name": "F10+F11: QEMU hardened DNS flags (-dns-server 8.8.8.8) align with guest Private DNS (dns.google)",
+      "feature_id": 10,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:07Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.9",
+      "name": "F3+F10: Settings key preservation preserves display configuration while launcher includes network flags",
+      "feature_id": 3,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:07Z"
+    },
+    {
+      "tier": "Tier 3 - Cross-Feature",
+      "test_id": "T3.10",
+      "name": "F2+F14: Multi-display launch arguments co-exist with Wireless ADB LAN diagnostic state",
+      "feature_id": 2,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:07Z"
+    },
+    {
+      "tier": "Tier 4 - Real-World Workloads",
+      "test_id": "T4.1",
+      "name": "Scenario 1: Multi-Account Floating Workflow - Independent clone created, tagged, and floating window verified",
+      "feature_id": 6,
+      "passed": false,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:12Z"
+    },
+    {
+      "tier": "Tier 4 - Real-World Workloads",
+      "test_id": "T4.2",
+      "name": "Scenario 2: Secure Geo-Restricted Browsing - Netd stabilization, /dev/tun, gateway ping, and VPN authorization verified",
+      "feature_id": 12,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:16Z"
+    },
+    {
+      "tier": "Tier 4 - Real-World Workloads",
+      "test_id": "T4.3",
+      "name": "Scenario 3: Zero-Cable Wireless Development - SPAKE2 QR pairing and watchdog auto-reconnection verified",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:18Z"
+    },
+    {
+      "tier": "Tier 4 - Real-World Workloads",
+      "test_id": "T4.4",
+      "name": "Scenario 4: Dual-Display Power User Setup - Galaxy S24 Ultra 1440x3120 presets, letterbox fix, and key preservation verified",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:18Z"
+    },
+    {
+      "tier": "Tier 4 - Real-World Workloads",
+      "test_id": "T4.5",
+      "name": "Scenario 5: Cross-Subsystem Stress Test - Multi-clone floating windows under concurrent Netd stabilization and VPN authorization",
+      "feature_id": 7,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:24Z"
+    },
+    {
+      "tier": "Subsystem Suite Orchestration",
+      "test_id": "TSUB.1",
+      "name": "M1/R1 Secondary Display Verification Suite (scripts/verify_secondary_display.py in 0.16s)",
+      "feature_id": 1,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:24Z"
+    },
+    {
+      "tier": "Subsystem Suite Orchestration",
+      "test_id": "TSUB.2",
+      "name": "M1/R4 Screen-Fitted 1:1 QR Code Modal Suite (scripts/verify_qr_dialog.py in 0.20s)",
+      "feature_id": 4,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:25Z"
+    },
+    {
+      "tier": "Subsystem Suite Orchestration",
+      "test_id": "TSUB.3",
+      "name": "M2/R2 App Cloner & Dedicated Floating Window Suite (scripts/test_app_cloner_and_window.py in 1.35s)",
+      "feature_id": 6,
+      "passed": false,
+      "details": "Exit code 1\nStdout: STEP 1: Query Existing Clone Users ---\n[RESULT] Found 3 initial clone profile(s):\n  \ufffd ID=10, Name='GNDROiD', Type=android.os.usertype.profile.CLONE, State=running\n  \ufffd ID=11, Name='GNDROiD', Type=android.os.usertype.full.SECONDARY, State=running\n  \ufffd ID=62, Name='GNDROiD', Type=android.os.usertype.full.SECONDARY, State=running\n\n--- STEP 2: Create Clone User ('GNDROiD Test Clone 10') ---\n[RESULT] Created Clone User ID: -1\n\n[FATAL ERROR] Verification failed: Failed to create clone user! Returned -1\n\nStderr: or: couldn't create User.\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Reader-Branch\\Desktop\\Android Emulator\\scripts/test_app_cloner_and_window.py\", line 235, in <module>\n    run_full_verification()\n  File \"C:\\Users\\Reader-Branch\\Desktop\\Android Emulator\\scripts/test_app_cloner_and_window.py\", line 113, in run_full_verification\n    assert clone_uid > 0, f\"Failed to create clone user! Returned {clone_uid}\"\n           ^^^^^^^^^^^^^\nAssertionError: Failed to create clone user! Returned -1\n",
+      "timestamp": "2026-10-30T10:44:26Z"
+    },
+    {
+      "tier": "Subsystem Suite Orchestration",
+      "test_id": "TSUB.4",
+      "name": "M3/R3 Android Emulator VPN Architecture & Routing Suite (scripts/verify_vpn_routing.py in 10.34s)",
+      "feature_id": 9,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:36Z"
+    },
+    {
+      "tier": "Subsystem Suite Orchestration",
+      "test_id": "TSUB.5",
+      "name": "M4/R5 Wireless Debugging Research & Provisioning Suite (scripts/verify_wireless_debugging.py in 3.35s)",
+      "feature_id": 14,
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-10-30T10:44:40Z"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CuttlefishVirtioConfig",
+  "description": "Hardware specification for VirtIO paravirtualized Android micro-VM",
+  "type": "object",
+  "properties": {
+    "vmm": {
+      "type": "string",
+      "enum": ["crosvm", "firecracker", "qemu-t8030"],
+      "default": "crosvm"
+    },
+    "cpu": {
+      "arch": "x86_64",
+      "cores": 4,
+      "features": ["vmx", "kvm", "nested_virt"]
+    },
+    "memory": {
+      "size_mb": 8192,
+      "overcommit": true,
+      "hugepages": false
+    },
+    "virtio_devices": {
+      "gpu": {
+        "backend": "rutabaga_gfx",
+        "renderer": "gfxstream",
+        "features": ["vulkan_1_3", "gles_3_2", "prime_shm"],
+        "display": {
+          "type": "webrtc",
+          "codec": "h265",
+          "max_fps": 60,
+          "glass_to_glass_target_ms": 15
+        }
+      },
+      "vsock": {
+        "cid": 3,
+        "vhost_user": true,
+        "shared_socket": "/tmp/crosvm_vsock.sock",
+        "ports": {
+          "5000": "AIDL_IRADIO_CELLULAR",
+          "5001": "MCP_AI_CONTROL_PLANE",
+          "5002": "EBPF_CAUSALITY_STREAM",
+          "5003": "KERNELSU_UID_WHITELIST"
+        }
+      },
+      "filesystem": {
+        "type": "virtio-fs",
+        "tag": "shared_workspace",
+        "cache": "always",
+        "dax": true
+      },
+      "network": {
+        "primary": {
+          "type": "virtio-net",
+          "mode": "tap",
+          "device": "crosvm_tap0"
+        },
+        "cellular_wwan": {
+          "type": "macvtap",
+          "device": "wwan0",
+          "pdp_context": "internet"
+        }
+      },
+      "input": [
+        {
+          "type": "multi_touch",
+          "max_contacts": 10,
+          "width": 1080,
+          "height": 2400
+        },
+        {
+          "type": "foldable_hinge",
+          "sensor_id": "hinge_angle",
+          "range_degrees": [0, 180]
+        }
+      ]
+    }
+  }
+}

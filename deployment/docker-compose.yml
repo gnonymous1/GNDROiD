@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  android-microvm:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.crosvm
+    privileged: true
+    devices:
+      - "/dev/kvm:/dev/kvm"
+      - "/dev/dri:/dev/dri"
+    ports:
+      - "8443:8443"    # WebRTC H.265 / AV1 low-latency video streaming
+      - "50051:50051"  # Cellular Bridge gRPC / APDU tunnel
+      - "50052:50052"  # AI Control Plane & MCP Server
+      - "5555:5555"    # Optional fallback ADB port
+    environment:
+      - RUST_LOG=info
+      - WEBRTC_PORT=8443
+    volumes:
+      - ../shared_workspace:/shared_workspace:rw

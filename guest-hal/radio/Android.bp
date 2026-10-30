@@ -1,0 +1,29 @@
+cc_binary {
+    name: "android.hardware.radio-service.vsock",
+    relative_install_path: "hw",
+    vendor: true,
+    init_rc: ["android.hardware.radio-service.vsock.rc"],
+    vintf_fragments: ["android.hardware.radio-service.vsock.xml"],
+    srcs: [
+        "RadioHalVsock.cpp",
+        "service.cpp",
+    ],
+    shared_libs: [
+        "libbase",
+        "libbinder_ndk",
+        "android.hardware.radio.network-V2-ndk",
+        "android.hardware.radio.sim-V2-ndk",
+        "android.hardware.radio.messaging-V2-ndk",
+        "android.hardware.radio.voice-V2-ndk",
+        "android.hardware.radio.data-V2-ndk",
+        "liblog",
+        "libcutils",
+    ],
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-DVSOCK_HOST_CID=2",
+        "-DVSOCK_CELLULAR_PORT=5000",
+    ],
+}

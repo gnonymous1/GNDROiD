@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package indusbridge.emulator.control;
+
+service EmulatorControlService {
+  rpc Tap(TapRequest) returns (CommandStatus);
+  rpc Swipe(SwipeRequest) returns (CommandStatus);
+  rpc TypeText(TypeTextRequest) returns (CommandStatus);
+  rpc GetAccessibilityHierarchy(HierarchyQuery) returns (HierarchyResponse);
+  rpc CaptureScreenShm(CaptureRequest) returns (CaptureResponse);
+  rpc GrantRootAccess(RootGrantRequest) returns (CommandStatus);
+  rpc RevokeRootAccess(RootRevokeRequest) returns (CommandStatus);
+  rpc ProfileJank(ProfileRequest) returns (ProfileResponse);
+}
+
+message TapRequest {
+  int32 x = 1;
+  int32 y = 2;
+  int32 duration_ms = 3;
+}
+
+message SwipeRequest {
+  int32 start_x = 1;
+  int32 start_y = 2;
+  int32 end_x = 3;
+  int32 end_y = 4;
+  int32 duration_ms = 5;
+}
+
+message TypeTextRequest {
+  string text = 1;
+}
+
+message HierarchyQuery {}
+
+message HierarchyResponse {
+  string json_accessibility_tree = 1;
+}
+
+message CaptureRequest {}
+
+message CaptureResponse {
+  string shm_dma_buf_identifier = 1;
+  int32 width = 2;
+  int32 height = 3;
+  int32 format = 4; // 1 = RGBA_8888
+}
+
+message RootGrantRequest {
+  string package_name = 1;
+  uint32 duration_seconds = 2;
+}
+
+message RootRevokeRequest {
+  string package_name = 1;
+}
+
+message CommandStatus {
+  bool success = 1;
+  string message = 2;
+}
+
+message ProfileRequest {
+  uint32 sampling_duration_ms = 1;
+}
+
+message ProfileResponse {
+  int32 dropped_frames = 1;
+  double p99_frame_time_ms = 2;
+  repeated string offending_binder_locks = 3;
+}

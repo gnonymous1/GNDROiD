@@ -1,0 +1,11 @@
+[package]
+name = "gndroid"
+version = "2.2.2"
+edition = "2021"
+authors = ["Ghulam Nabi Kalhoro"]
+description = "GNDROiD NextGen Android Virtual Machine & Physical Phone Suite CLI & Native Launcher"
+
+[dependencies]
+clap = { workspace = true }
+anyhow = { workspace = true }
+colored = { workspace = true }

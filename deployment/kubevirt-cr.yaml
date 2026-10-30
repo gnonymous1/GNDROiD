@@ -1,0 +1,25 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: android-microvm-worker-01
+  labels:
+    special: android-emulator-node
+spec:
+  domain:
+    cpu:
+      cores: 8
+    resources:
+      requests:
+        memory: 16Gi
+    devices:
+      disks:
+        - name: containervolume
+          disk:
+            bus: virtio
+      gpus:
+        - name: nvidia-gpu-passthrough
+          deviceName: nvidia.com/gpu
+  volumes:
+    - name: containervolume
+      containerDisk:
+        image: indusbridge/android-crosvm-microvm:latest

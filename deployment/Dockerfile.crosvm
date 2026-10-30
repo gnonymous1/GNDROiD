@@ -1,0 +1,24 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libcap2 \
+    libfdt1 \
+    libusb-1.0-0 \
+    libepoxy0 \
+    libgbm1 \
+    libdrm2 \
+    libvulkan1 \
+    libpcsclite1 \
+    libqmi-glib5 \
+    libmbim-glib4 \
+    pcscd \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY target/release/emulator-hypervisor /usr/local/bin/emulator-hypervisor
+COPY target/release/cellular-bridge /usr/local/bin/cellular-bridge
+COPY target/release/ai-control-plane /usr/local/bin/ai-control-plane
+
+EXPOSE 8080 50051 50052
+
+ENTRYPOINT ["/usr/local/bin/emulator-hypervisor"]

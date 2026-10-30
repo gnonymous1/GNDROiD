@@ -1,0 +1,24 @@
+# Binaries and executables
+*.exe
+*.dll
+*.iso
+*.qcow2
+*.img
+target/
+dist/
+installer/*.exe
+nextgen-android-emulator/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Runtime and temp files
+logs/
+virtual_storage/
+*.log
+*.tmp
+.agents/
