@@ -1809,25 +1809,35 @@ class LanRadarWorker(QThread):
         except Exception:
             pass
 
-        # 3. Subnet Port 5555 probe (fast concurrent scan)
+        # 3. Subnet Dual-Port (5555 ADB & 51880 Nexus Companion) Concurrent Probe
         try:
             prefix = self.get_subnet_prefix()
             if prefix:
-                found_ips = []
+                found_adb = []
+                found_nexus = []
                 def probe_ip(host_ip):
+                    # Check Wireless ADB port 5555
                     try:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(0.25)
                             if s.connect_ex((host_ip, 5555)) == 0:
-                                found_ips.append(host_ip)
+                                found_adb.append(host_ip)
+                    except Exception:
+                        pass
+                    # Check Nexus Companion HTTP port 51880
+                    try:
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                            s.settimeout(0.25)
+                            if s.connect_ex((host_ip, 51880)) == 0:
+                                found_nexus.append(host_ip)
                     except Exception:
                         pass
 
                 ips_to_check = [f"{prefix}{i}" for i in range(1, 255)]
-                with ThreadPoolExecutor(max_workers=50) as ex:
+                with ThreadPoolExecutor(max_workers=60) as ex:
                     ex.map(probe_ip, ips_to_check)
 
-                for ip in found_ips:
+                for ip in found_adb:
                     addr = f"{ip}:5555"
                     if not any(ip in k for k in results_map.keys()):
                         results_map[addr] = {
@@ -1835,14 +1845,43 @@ class LanRadarWorker(QThread):
                             "model": f"Android Device ({ip})",
                             "address": addr,
                             "protocol": "⚡ Wireless ADB (Port 5555)",
-                            "status": "🟡 Discovered on LAN",
+                            "status": "🟢 Ready to Mirror",
                             "is_connected": False,
                             "can_mirror": True
+                        }
+
+                for ip in found_nexus:
+                    model_name = f"Nexus Companion ({ip})"
+                    try:
+                        import urllib.request, json
+                        req = urllib.request.Request(f"http://{ip}:51880/status", headers={"User-Agent": "GNDROiD"})
+                        with urllib.request.urlopen(req, timeout=0.6) as resp:
+                            if resp.status == 200:
+                                d = json.loads(resp.read().decode("utf-8", "ignore"))
+                                m = d.get("model") or d.get("device") or ""
+                                mfg = d.get("manufacturer") or ""
+                                if m or mfg:
+                                    model_name = f"{mfg} {m}".strip()
+                    except Exception:
+                        pass
+
+                    addr = f"{ip}:5555"
+                    has_adb = (ip in found_adb)
+                    if not any(ip in k for k in results_map.keys()):
+                        results_map[addr] = {
+                            "serial": addr,
+                            "model": model_name,
+                            "address": f"{ip}:51880 (Companion)" if not has_adb else addr,
+                            "protocol": "📲 Nexus Companion (Wi-Fi)",
+                            "status": "🟢 Ready to Mirror" if has_adb else "🟡 Nexus Active (Needs ADB 5555)",
+                            "is_connected": False,
+                            "can_mirror": has_adb,
+                            "nexus_host_ip": ip
                         }
         except Exception:
             pass
 
-        # 4. Check Nexus Companion UDP probe (port 51899)
+        # 4. Check Nexus Companion UDP probe (port 51899 fallback)
         try:
             udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -3504,14 +3543,38 @@ class GNDroidADBFixerDialog(QDialog):
     def action_mirror_radar_device(self, target: str):
         if not target:
             return
-        if ":" in target:
-            adb = SystemPaths.get_adb()
-            try:
-                subprocess.run([adb, "connect", target], capture_output=True, timeout=4, creationflags=0x08000000)
-            except Exception:
-                pass
+        host_ip = target.split(":")[0] if ":" in target else target
+        adb = SystemPaths.get_adb()
+
+        # Check if ADB port 5555 is open
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.4)
+                is_5555_open = (s.connect_ex((host_ip, 5555)) == 0)
+        except Exception:
+            is_5555_open = False
+
+        if not is_5555_open:
+            QMessageBox.information(
+                self,
+                "Activate Wireless ADB on Phone",
+                f"📲 Nexus Companion APK is active on {host_ip}!\n\n"
+                "Android requires ADB TCP mode (port 5555) to be switched on before Scrcpy can mirror the screen.\n\n"
+                "To unlock cable-free mirroring:\n"
+                "1. Connect your phone to PC via USB cable once.\n"
+                "2. Click '📶 1-Click USB to Wireless' in the radar bar.\n"
+                "3. Unplug the USB cable!\n\n"
+                "Your phone will stay connected wirelessly on Wi-Fi permanently."
+            )
+            return
+
+        adb_target = f"{host_ip}:5555"
+        try:
+            subprocess.run([adb, "connect", adb_target], capture_output=True, timeout=4, creationflags=0x08000000)
+        except Exception:
+            pass
         self.accept()
-        start_mirror_with_fallback(target, self.parent())
+        start_mirror_with_fallback(adb_target, self.parent())
 
     def action_grant_full_perms(self, specific_serial: str = ""):
         serial = specific_serial
