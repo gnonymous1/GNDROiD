@@ -63,6 +63,8 @@ Write-Host "[*] Copying application assets..." -ForegroundColor Cyan
 $FilesToCopy = @(
     "gndroid.pyw",
     "gndroid_app_launcher.py",
+    "gndroid_cli_entry.py",
+    "gndroid.exe",
     "gndroid.ico",
     "gndroid.png",
     "README.md"
@@ -79,6 +81,15 @@ foreach ($f in $FilesToCopy) {
 $nexusSrc = Join-Path $ProjectRoot "nexus"
 if (Test-Path $nexusSrc) {
     Copy-Item -Path "$nexusSrc\*" -Destination (Join-Path $TargetDir "nexus") -Recurse -Force
+}
+
+# Copy bundled tools (adb, scrcpy, DLLs)
+$toolsSrc = Join-Path $ProjectRoot "tools"
+if (Test-Path $toolsSrc) {
+    Copy-Item -Path "$toolsSrc\*" -Destination $TargetDir -Recurse -Force
+    New-Item -ItemType Directory -Path (Join-Path $TargetDir "tools") -Force | Out-Null
+    Copy-Item -Path "$toolsSrc\*" -Destination (Join-Path $TargetDir "tools") -Recurse -Force
+    Write-Host "[OK] Bundled runtime tools (ADB, Scrcpy, FFmpeg, SDL3) deployed" -ForegroundColor Green
 }
 
 # Copy compiled dist binaries if present

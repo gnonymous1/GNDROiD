@@ -98,9 +98,15 @@ fn find_workspace_root() -> PathBuf {
 
 fn find_python_executable(gui: bool) -> String {
     let name = if gui { "pythonw.exe" } else { "python.exe" };
+    let root = find_workspace_root();
 
     let user_profile = env::var("USERPROFILE").unwrap_or_default();
     let candidates = [
+        root.join("python").join(name).to_string_lossy().to_string(),
+        root.join("_internal").join(name).to_string_lossy().to_string(),
+        format!(r"C:\Python314\{}", name),
+        format!(r"{}\AppData\Local\Programs\Python\Python314\{}", user_profile, name),
+        format!(r"C:\Program Files\Python314\{}", name),
         format!(r"{}\AppData\Local\Programs\Python\Python312\{}", user_profile, name),
         format!(r"{}\AppData\Local\Programs\Python\Python311\{}", user_profile, name),
         format!(r"{}\AppData\Local\Programs\Python\Python310\{}", user_profile, name),
@@ -146,6 +152,7 @@ fn find_python_executable(gui: bool) -> String {
 fn find_adb() -> String {
     let root = find_workspace_root();
     let candidates = [
+        root.join("tools").join("adb.exe"),
         root.join("adb.exe"),
         root.join("dist").join("gndroid").join("adb.exe"),
         PathBuf::from(format!(

@@ -120,6 +120,7 @@ class SystemPaths:
     def get_adb() -> str:
         base = get_base_dir()
         for cand in [
+            os.path.join(base, "tools", "adb.exe"),
             os.path.join(base, "adb.exe"),
             os.path.join(base, "dist", "gndroid", "adb.exe"),
             os.path.join(base, "dist", "AndroidMobilePlayer", "adb.exe"),
@@ -165,6 +166,7 @@ class SystemPaths:
     def get_scrcpy() -> str:
         base = get_base_dir()
         for cand in [
+            os.path.join(base, "tools", "scrcpy.exe"),
             os.path.join(base, "scrcpy.exe"),
             os.path.join(base, "dist", "gndroid", "scrcpy.exe"),
             os.path.join(base, "dist", "AndroidMobilePlayer", "scrcpy.exe"),

@@ -96,6 +96,8 @@ Name: "associateapk"; Description: "Associate .apk files with GNDROiD (Instant 1
 Source: "dist\gndroid\gndroid.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: core
 Source: "gndroid.pyw"; DestDir: "{app}"; Flags: ignoreversion; Components: core
 Source: "gndroid_app_launcher.py"; DestDir: "{app}"; Flags: ignoreversion; Components: core
+Source: "gndroid_cli_entry.py"; DestDir: "{app}"; Flags: ignoreversion; Components: core
+Source: "tools\*"; DestDir: "{app}\tools"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: mirror
 Source: "dist\gndroid\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: core
 Source: "dist\gndroid\gndroid.ico"; DestDir: "{app}"; Flags: ignoreversion; Components: core
 Source: "dist\gndroid\gndroid.png"; DestDir: "{app}"; Flags: ignoreversion; Components: core

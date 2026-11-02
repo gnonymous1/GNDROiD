@@ -6,8 +6,14 @@
 *.img
 target/
 dist/
-installer/*.exe
 nextgen-android-emulator/
+
+# Unignore official turnkey installer and bundled tools
+!gndroid.exe
+!installer/*.exe
+!tools/*
+!tools/*.exe
+!tools/*.dll
 
 # Python cache
 __pycache__/

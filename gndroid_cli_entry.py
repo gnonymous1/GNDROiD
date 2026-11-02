@@ -50,6 +50,19 @@ def find_workspace_root() -> str:
 
 def find_python_executable(gui: bool = True) -> str:
     name = "pythonw.exe" if gui else "python.exe"
+
+    # Priority 0: If current running python interpreter has PyQt6
+    try:
+        import PyQt6
+        cur_dir = os.path.dirname(sys.executable)
+        pyw = os.path.join(cur_dir, name)
+        if os.path.exists(pyw):
+            return pyw
+        return sys.executable
+    except ImportError:
+        pass
+
+    root = find_workspace_root()
     user_profile = os.environ.get("USERPROFILE", "")
     candidates = [
         os.path.join(r"C:\Python314", name),
@@ -90,6 +103,7 @@ def find_python_executable(gui: bool = True) -> str:
 def find_adb() -> str:
     root = find_workspace_root()
     candidates = [
+        os.path.join(root, "tools", "adb.exe"),
         os.path.join(root, "adb.exe"),
         os.path.join(root, "dist", "gndroid", "adb.exe"),
         os.path.join(os.environ.get("LOCALAPPDATA", ""), "Android", "Sdk", "platform-tools", "adb.exe"),
