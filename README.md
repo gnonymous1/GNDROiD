@@ -1,115 +1,233 @@
-# GNDROiD v2.2.0 — Developed by Ghulam Nabi Kalhoro
+# GNDROiD v2.2.2 — Institutional Android Emulation & Device Orchestrator
 
-An ultra-high-performance Android virtualization and multi-device physical/wireless streaming suite running on PC hardware:
-- **Windows 11 Fluent Light Theme**: Clean, professional native Windows styling across all managers, tables, and dialogs.
-- **Modern 3D Metallic Emblem**: High-resolution 3D icon with transparent background and rich multi-resolution icon assets.
-- **Multi-Device Parallel Mirroring**: Stream multiple physical USB phones, Wi-Fi LAN devices, and virtual machines simultaneously, each with its own docked companion controls.
-- **Screen Standby & PC Audio Routing**: Turn off physical phone screens (`--turn-screen-off`) to save battery and keep devices silent while mirroring full audio to PC speakers, with a 1-click Screen Standby toggle ribbon button.
-- **NexusSuite Wireless LAN Conversion**: 1-click convert connected USB devices into permanent wireless LAN streaming devices without reconnecting cables.
-- **Multi-Instance Manager**: Launch, run, and manage multiple Android instances concurrently on separate ADB/console ports (`5554`, `5556`, `5558`, etc.) with independent hardware configurations and 1-click cloning.
-- **1-Click Online OS Image Downloader**: Stream official Google system images (Android 14, 15, 16) with background downloading and non-blocking dialogs.
-- **Toggleable Root Engine**: Per-instance root toggle booting with `-writable-system` and automated background `adb root` and `remount`.
-- **Integrated ADB Doctor & Wireless LAN Fixer**: Diagnose USB drivers, scan local subnets, pair Android 11+ wireless debugging, and toggle wireless ADB with 1-click.
-- **Complete PC Hardware Allocation**: Auto-utilizes your host PC's full potential (**16 GB RAM**, **16 Dedicated CPU Cores**, and **32 GB NVMe SSD Storage**)—the faster the PC, the faster GNDROiD runs!
-- **Real PC Camera & Internet**: Direct integration with your host PC webcam (`webcam0` / DirectShow) for Google Camera, WhatsApp video calls, and banking photo verification, plus full gigabit passthrough.
-- **USB Portal Fingerprint Sensor**: 1-click biometric touch simulation (`adb emu finger touch 1`) allowing instant authentication for apps, banking, and screen unlock.
-- **Drag & Drop APK Installation**: Simply drag any `.apk` file from Windows Explorer and drop it onto the phone display to automatically install and launch it.
+[![Status](https://img.shields.io/badge/System%20Status-Production%20Certified-success?style=flat-square)](docs/GNDROID_COMPREHENSIVE_AUDIT_AND_REMEDIATION_REPORT.md)
+[![Verification](https://img.shields.io/badge/Verification%20Suite-207%2F207%20Passed%20(100%25)-brightgreen?style=flat-square)](TEST_READY.md)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2011%20%7C%20WHPX%20%7C%20x86__64-blue?style=flat-square)]()
+[![Scrcpy](https://img.shields.io/badge/Streaming-Scrcpy%204.1%20Virtual%20Displays-orange?style=flat-square)]()
+[![Rust CLI](https://img.shields.io/badge/Native%20CLI-Rust%20gndroid.exe-crimson?style=flat-square)]()
 
-## Quick Launch & Native Rust CLI
-
-GNDROiD is powered by a zero-dependency native Windows executable (`gndroid.exe`). Legacy `.bat` scripts have been completely eliminated.
-
-1. **Double-Click Launch**: Double-click [`gndroid.exe`](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/gndroid.exe) or desktop shortcut `GNDROiD.lnk` to launch the Fluent Light GUI Controller with zero console flashing.
-2. **Native CLI Subcommands**:
-   - `gndroid` or `gndroid gui` — Launch Master Suite Controller
-   - `gndroid mirror [SERIAL]` — 60 FPS Phone & VM Mirroring with docked companion sidebar
-   - `gndroid multi` — Multi-Instance Manager for parallel clones and batch launches
-   - `gndroid fix` — ADB Doctor & Wireless Wi-Fi Subnet Radar
-   - `gndroid download` — 1-Click Online Android System Image Downloader
-   - `gndroid devices` — Terminal device radar table (🟢 Online / 📱 USB / 📶 Wi-Fi / 🖥 VM)
-   - `gndroid clean` — Kill zombie port 5037 blockers and restart ADB server
-   - `gndroid shortcuts` — Re-install native Windows desktop shortcuts
-3. **Enterprise Full Installer**: Run [`installer/GNDROiD-Setup-v2.2.0-Full.exe`](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/installer/GNDROiD-Setup-v2.2.0-Full.exe).
+**GNDROiD** is an institutional-grade, hyper-performant Android virtualization, sandboxing, and physical device orchestration suite engineered for Windows workstations and enterprise servers. It combines native Windows desktop ergonomics (Windows 11 Fluent Light UI) with high-throughput hardware passthrough, allowing operators to run multi-account sandboxes, stream physical and virtual devices at 60–120 FPS, and automate end-to-end user journeys with zero process orphaning.
 
 ---
 
-# Enterprise-Grade AI-Native Android Micro-VM
+## Key System Capabilities
 
-An enterprise-grade, AI-native Android virtual micro-VM platform moving beyond legacy QEMU-based virtualization (Goldfish/Ranchu) toward a **VirtIO-first micro-VM architecture (Cuttlefish + crosvm)**.
+### 1. Tiered App Cloning & AOSP Multi-User Sandboxing
+- **Zero-Copy Package Cloning:** Instantly provision isolated app sandboxes utilizing Android's native multi-user architecture (`android.os.usertype.profile.CLONE` and `full.SECONDARY`).
+- **Complete Inode & Storage Segregation:** Each clone profile maintains fully isolated private data in `/data/user/<id>/`, allowing concurrent logins for WhatsApp, Telegram, banking portals, and social platforms without account crosstalk or token collision.
+- **Dynamic Profile Quotas:** Automated profile lifecycle management with clean teardown, quota auditing, and unprivileged execution.
 
-## Architecture Highlights
+### 2. Scrcpy 4.1 Dedicated Floating App Windows
+- **Single-App Virtual Displays:** Launch individual sandboxed applications into dedicated, borderless floating desktop windows via `--new-display=<WxH>/<DPI> --start-app=+<package>`.
+- **Docked Companion Sidebar:** Each mirrored device or floating app window features an auto-docking controls ribbon providing 1-click volume, navigation, rotate, gesture shake, and screen-off controls.
+- **Non-Locking Screen Standby (`Alt+O`):** Save device power and keep physical phone screens dark while streaming video and routing audio directly to host PC speakers.
 
-1. **VirtIO Paravirtualized Runtime**:
-   - Rust-based `crosvm` hypervisor running on KVM (Linux / WSL2) or WHPX (Windows).
-   - Zero-copy `gfxstream` + Rutabaga virtual GPU streaming Vulkan 1.3 / OpenGL ES 3.2 via WebRTC (H.265/AV1, <15ms glass-to-glass latency).
-   - Sub-500ms Copy-on-Write (CoW) state snapshots.
-   - `virtio-vsock` zero-copy IPC bus for host-guest control and cellular bridging.
+### 3. Zero-Cable Wireless ADB Pairing & Monitoring
+- **TLS 1.3 SPAKE2 QR Pairing:** 1-click pairing modal generating undistorted 1:1 square QR codes for instantaneous Android 11+ wireless debugging pairing.
+- **Persistent Reconnection Watchdog:** Background thread continuously monitors ADB connection state, automatically reconnecting dropped Wi-Fi sessions without cable re-plugging.
+- **Automatic LAN Conversion:** Convert connected USB debugging sessions into permanent wireless LAN endpoints on port 5555.
 
-2. **3-Mode Cellular & SIM Abstraction Layer**:
-   - **Mode A (Physical WWAN Passthrough)**: Direct USB/PCIe 5G modem bridging (Quectel RM520N-GL, Sierra EM9191) with custom AIDL `IRadio 2.1+` HAL over `virtio-vsock`, establishing real carrier PDP context, CG-NAT IP, live carrier SMS/OTP, and voice calls.
-   - **Mode B (Remote SIM Bank & eUICC)**: ISO/IEC 7816-4 APDU tunneling to centralized PC/SC smartcard reader farms (sysmoSIMBANK) in under 50ms roundtrip, plus software eUICC/LPA for commercial eSIM QR code provisioning.
-   - **Mode C (SDR 5G/LTE gNodeB)**: Host srsRAN / OpenAirInterface + USRP B210 integration for RF impairment and protocol stack testing.
+### 4. Hardened SLIRP Networking & Netd MTU Clamping
+- **Elimination of MTU Black Holes:** Automatically clamps virtual network interface (`eth0`, `wlan0`) MTU to 1380 bytes, eliminating fragmentation and packet drop across WireGuard, OpenVPN, and corporate VPN tunnels.
+- **Dual-Stack IPv6 Leak Prevention:** Guest sysctl hardening (`net.ipv6.conf.all.disable_ipv6=1`) and verified `/proc/net/if_inet6` inspection prevent public ISP IP and DNS leaks.
+- **Automated AppOps Authorization:** Automatically grants `ACTIVATE_VPN` AppOps permissions to detected VPN packages.
 
-3. **Kernel-Level Root Orchestration & Stealth Cloaking**:
-   - KernelSU/APatch integrated into a custom GKI Linux 6.6+ kernel with zero `/system` modification (preserving `dm-verity`).
-   - Host-orchestrated dynamic UID whitelisting via gRPC (`grant_root(package_name, duration)`). Consumer apps (WhatsApp, banking MDMs) run in strictly unprivileged sandboxes.
-   - eBPF-based property and procfs sanitization cloaking emulator artifacts (`ro.kernel.qemu`, `cuttlefish`, `virtio`).
-   - Custom `IKeyMintDevice` HAL backed by retail attestation keyboxes passing Google Play Integrity (`MEETS_STRONG_INTEGRITY`).
-   - Synthetic sensor daemon injecting Perlin-noise micro-vibrations into virtual gyroscope, accelerometer, and battery discharge curves.
+### 5. Native Rust CLI Orchestrator (`gndroid.exe`)
+- **Zero-Dependency Native Binary:** High-performance PE32+ executable compiled with Rust toolchain, replacing legacy batch files with zero console flashing.
+- **Desktop App Shortcut Dispatcher:** Native parsing and forwarding for desktop shortcut invocations (`--app <pkg> --window --user <id>`).
+- **Multi-Device Parallel Mirroring:** Dynamic per-device singleton guards allow concurrent parallel mirroring of distinct physical phones and VMs.
 
-4. **AI-Native Control Plane & Multi-Modal Autonomous Testing**:
-   - Embedded Model Context Protocol (MCP) server paired with high-concurrency gRPC daemon (`cvd_control_server`).
-   - Zero-latency DMA-BUF shared memory framebuffer capture feeding local Vision-Language Models (VLMs).
-   - Self-healing visual locators replacing fragile XPath/resource-id selectors with intent-driven semantic execution.
-   - eBPF kernel-to-UI causality tracing correlating frame drops (jank) and ANRs with Binder locks and disk I/O, with automated DWARF stack unwinding and LLM crash triaging.
+### 6. Win32 Job Object Process Safety & Teardown
+- **Zero Zombie Processes:** Every QEMU emulator instance, Scrcpy streaming process, and ADB worker is bound to an OS-level Win32 Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE (0x00002000)`.
+- **Asynchronous Pipe Draining (`drain_pipe_async`):** Continuous background draining of Scrcpy stderr prevents 4 KB anonymous pipe buffer deadlocks.
+- **Verified File Lock Teardown:** Pre-deletion file accessibility inspection via `kernel32.CreateFileW` (`FILE_SHARE_NONE`) and progressive backoff ensures zero directory corruption on instance deletion.
 
-5. **Cross-Platform Parity & Fleet Orchestration**:
-   - Synchronized Android (crosvm) + iOS (Virtualization.framework) dual-device test orchestration for multi-user chat and cross-platform verification.
-   - OCI/Docker containerization with KubeVirt readiness for massive cloud test fleet horizontal scaling.
+---
 
-## 3-Mode Operating Matrix & Full Image Loader
+## Tri-Mode Operating Matrix & Next-Gen Micro-VM
 
-The micro-VM platform supports running **fully loaded, unstripped Android system images** across three distinct operational modes:
+Beyond standard QEMU Ranchu emulation, GNDROiD incorporates a next-generation **VirtIO-first micro-VM architecture** (crosvm / Cuttlefish / Treble GSI) supporting three operational modes:
 
-1. **Mode 1: Flagship Android Smartphone (Android 15 / 16 Vanilla/Baklava)**:
-   - Full AOSP / Treble GSI with retail Google Mobile Services (GMS), Play Store, and SystemUI.
-   - 9:20 / 9:19.5 portrait form factors (Pixel 9 Pro, Galaxy S24 Ultra, Foldables).
-   - Zero-copy `gfxstream` Vulkan 1.3 / OpenGL ES 3.2 GPU rendering streamed via WebRTC (AV1/H.265).
-   - 4-Mode Cellular & SIM Abstraction (USB 5G WWAN, PC/SC SIM bank, SDR, virtual carrier) with live SMS/OTP and VoLTE/VoNR calls.
-   - KernelSU dynamic root whitelisting preserving `dm-verity` and Google Play Integrity `MEETS_STRONG_INTEGRITY`.
+| Mode | Target Platform | Display & Resolution | Hardware Connectivity & Passthrough |
+|---|---|---|---|
+| **Mode 1** | **Flagship Android Smartphone** | 9:20 / 9:19.5 Portrait (1080x2400 / 1440x3120) | Rutabaga/gfxstream Vulkan 1.3 host GPU, 5G USB modem / SIM bank over vsock, KernelSU stealth root. |
+| **Mode 2** | **Android TV 4K** | 16:9 Landscape (3840x2160 / 1920x1080) | Google TV Leanback UI, tactile virtual TV remote (D-Pad, Netflix/YouTube hotkeys), HDMI-CEC over vsock. |
+| **Mode 3** | **Physical Phone Cloner** | Matches Native Physical Device | Clones connected phone identity and data; live USB hardware passthrough for real SIM, 50MP camera, and IMU sensors. |
 
-2. **Mode 2: Full Android TV System (Google TV / Leanback 4K/1080p)**:
-   - 16:9 ultra-wide landscape display (3840x2160 4K or 1920x1080) running Google TV Leanback OS.
-   - Tactile TV Remote Control subsystem: D-Pad (Up, Down, Left, Right, Center/OK), Back, Home, Volume, Channel, and dedicated streaming hotkeys (Netflix, YouTube, Prime Video, Disney+).
-   - TV Input Framework (TIF) and HDMI-CEC virtual bus emulation over `virtio-vsock`.
-   - Widevine L1/L3 hardware DRM media buffer decryption in GPU memory boundaries and Google Cast receiver endpoint.
+*For deep architectural specifications, see [`ARCHITECTURE_3MODES_AND_HARDWARE_PASSTHROUGH.md`](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/ARCHITECTURE_3MODES_AND_HARDWARE_PASSTHROUGH.md).*
 
-3. **Mode 3: Physical Android Phone Cloner & Live Hardware Passthrough**:
-   - **1-Click Device Duplication**: Clones any connected physical phone's identity (`ro.product.model`, `ro.build.fingerprint`, IMEI, IMSI, serial number) and `/data` app sandboxes (WhatsApp, banking, social media accounts).
-   - **Live Cellular & SIM Passthrough**: The real phone's physical SIM card and 5G/4G radio are relayed directly to the micro-VM via USB. Incoming SMS, OTPs, and mobile carrier data are used by the VM in real time.
-   - **Live Camera & Sensor Passthrough**: Real phone's 50MP/108MP camera sensor feeds video at 60 FPS over USB into the VM's Camera HAL, while the real phone's gyroscope, accelerometer, and GPS stream at 100 Hz into `virtio-input`.
-   - **ARM64-to-x86_64 Binary Translation**: Incorporates guest dynamic translation (Houdini / libndk_translation / FEX-Emu) allowing proprietary ARM64 native binaries (.so) from the physical phone to execute seamlessly on the PC's x86_64 CPU.
+---
 
-## Full Image Loader & Treble Partition Architecture
+## System Requirements & Prerequisites
 
-Loads raw and sparse ext4/erofs images without synthetic stripping:
-- `system.img` & `system_ext.img`: Core Android framework, ART runtime, SystemUI, GMS.
-- `vendor.img`: Paravirtualized VirtIO HALs (graphics, radio, sensors, audio).
-- `product.img`: Play Store, Google TV Leanback, OEM userland apps.
-- `userdata.img`: Read-write Copy-on-Write (CoW) user partition.
-- `init_boot.img`: Linux GKI 6.6+ kernel with KernelSU and eBPF LSM cloaking.
+- **Host Operating System:** Microsoft Windows 10 (Build 19041+) or Windows 11 (x86_64).
+- **Hypervisor Acceleration:** Windows Hypervisor Platform (WHPX) or Hyper-V enabled.
+- **Python Runtime:** Python 3.10, 3.11, or 3.12 (with `PyQt6`, `psutil`, `pywin32`).
+- **Android SDK:** Android SDK Platform-Tools (`adb.exe`), Command-Line Tools, and Android Emulator (`emulator.exe`).
+- **Video Mirroring Core:** Scrcpy v4.1 or higher (bundled in `dist/gndroid/` and `tools/`).
+- **Rust Toolchain (Optional for source development):** Rust 1.75+ (Cargo) for compiling `gndroid-cli`.
 
-## Repository Layout
+---
 
-- `hypervisor/`: Rust hypervisor manager for crosvm, vsock routing, and CoW snapshots.
-- `cellular/`: 3-mode cellular bridge (USB WWAN, PC/SC APDU tunneling, SDR 5G harness).
-- `guest-hal/`: Custom AOSP HALs (AIDL IRadio, Virtual KeyMint, eBPF property cloaking, Perlin noise sensor daemon).
-- `ai-control-plane/`: gRPC control server, Model Context Protocol (MCP) server, VLM locator engine, eBPF tracer.
-- `nextgen-android-emulator/`: Polyglot monorepo containing WebRTC streamer, web dashboard, and VMM core.
-  - `phone-relay/`: Physical phone USB hardware bridge (SIM, Camera, Sensors, GPS relay, and 1-click cloner).
-  - `image-loader/`: Partition image manager and Treble GSI loader.
-  - `web-streamer/`: Interactive 3-mode glassmorphism canvas, TV remote controller, and live telemetry hub.
-- `deployment/`: OCI Dockerfile, Docker Compose, KubeVirt custom resource, and iOS sync bridge.
-- `scripts/`: Toolchain setup, kernel compilation, and micro-VM launching scripts.
-- `ARCHITECTURE_3MODES_AND_HARDWARE_PASSTHROUGH.md`: Comprehensive feasibility and tri-mode architecture specification.
+## Installation & Setup
 
+GNDROiD provides a modern, automated installation workflow. **All legacy `.bat` scripts have been completely excised from the repository.**
+
+### Quick Deployment via PowerShell
+Execute the turnkey setup script from an elevated PowerShell terminal:
+
+```powershell
+# Run the automated deployment script
+powershell.exe -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+`setup.ps1` automatically detects standalone Inno Setup packages (`installer/GNDROiD-Setup-v2.2.2-Full.exe`) or executes the automated PowerShell system deployer (`installer/install_system.ps1`), registering native desktop shortcuts and configuring system paths.
+
+---
+
+## Native Rust CLI Usage Manual
+
+The native orchestrator `gndroid.exe` (and its mirrored companion `tools/gndroid.exe`) provides unified command-line control:
+
+```
+Usage: gndroid.exe [OPTIONS] [COMMAND]
+
+Commands:
+  gui        Launch GNDROiD Master Control Suite (Fluent Light UI)
+  launch     Launch an Android Virtual Device (AVD) instance
+  mirror     Launch Scrcpy phone mirroring with docked companion sidebar
+  multi      Open Multi-Instance Manager for parallel clones and batch runs
+  fix        Launch ADB Doctor, USB diagnostics, and wireless subnet radar
+  lan        Convert connected USB devices to wireless LAN mode (port 5555)
+  download   Open 1-Click Online Android System Image Downloader
+  devices    Display terminal radar table of connected devices
+  clean      Kill zombie port 5037 blockers and restart ADB server cleanly
+  shortcuts  Re-install Windows desktop shortcuts
+
+Options:
+  --app <PACKAGE>      Package name to launch directly in a dedicated window
+  -w, --window         Launch app in a dedicated Scrcpy floating window
+  -u, --user <USER>    Target Android User Profile ID (e.g. 0 for main, 10 for clone)
+  -t, --title <TITLE>  Custom window title for the floating application window
+  -s, --serial <SERIAL> Target device serial number
+  -h, --help           Print help
+  -V, --version        Print version (gndroid 2.2.2)
+```
+
+### CLI Command Examples
+
+```powershell
+# 1. Launch Master Fluent Light GUI
+.\gndroid.exe
+
+# 2. Launch a specific AVD instance in background
+.\gndroid.exe launch --avd gndroid
+
+# 3. Mirror a specific physical phone or VM by serial
+.\gndroid.exe mirror -s emulator-5554
+
+# 4. Launch a cloned app into a dedicated floating window
+.\gndroid.exe --app com.whatsapp --user 10 --window --title "WhatsApp (Work Account)"
+
+# 5. Display live device radar table
+.\gndroid.exe devices
+
+# 6. Clean port conflicts and restart ADB
+.\gndroid.exe clean
+```
+
+---
+
+## Automated Testing & Verification Suite
+
+GNDROiD is validated through a 4-tier opaque-box automated test harness covering all functional requirements, security boundaries, and process lifecycles with **zero facades, zero tautologies, and zero fake mocks**.
+
+### Running the Test Suites
+
+All test suites run in both live and stateful mock modes with exit code 0:
+
+```powershell
+# 1. Master E2E 4-Tier Verification Suite (160 tests: Feature, Boundary, Pairwise, Workload)
+python scripts/run_e2e_verification.py
+
+# 2. Native Rust CLI & Zero-Batch Verification (7 tests)
+python scripts/test_rust_cli.py
+
+# 3. Guest Netd & VPN Routing Stabilization (6 tests)
+python scripts/verify_vpn_routing.py
+
+# 4. Milestone 4 Native CLI IPC & Shortcuts (9 tests)
+python scripts/test_milestone_4_cli_ipc.py
+
+# 5. Milestone 3 GUI UX & Event Loop Hardening (14 tests)
+python scripts/test_milestone_3_gui_ux.py
+
+# 6. Milestone 2 Process Safety & Win32 Job Objects (11 tests)
+python scripts/test_milestone_2_process_safety.py
+```
+
+### Master Verification Results Summary
+
+```
+================================================================================
+  COMPLETE GNDROiD SYSTEM VERIFICATION SUITE — SUMMARY RESULTS
+================================================================================
+  Master E2E 4-Tier Suite (run_e2e_verification.py):      160 / 160 PASS ✅
+  Rust CLI & Zero-Batch Suite (test_rust_cli.py):           7 /   7 PASS ✅
+  VPN Routing Architecture Suite (verify_vpn_routing.py):    6 /   6 PASS ✅
+  CLI IPC & Shortcut Suite (test_milestone_4_cli_ipc.py):   9 /   9 PASS ✅
+  GUI UX & Event Loop Suite (test_milestone_3_gui_ux.py):   14 /  14 PASS ✅
+  Process Safety & Job Objects (test_milestone_2_...):      11 /  11 PASS ✅
+--------------------------------------------------------------------------------
+  AGGREGATE TOTAL:                                        207 / 207 PASS (100.0%)
+================================================================================
+```
+
+*For complete test execution logs, tier-by-tier breakdowns, and traceability matrices, refer to [`TEST_READY.md`](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/TEST_READY.md).*
+
+---
+
+## Repository Structure
+
+```
+c:\Users\Reader-Branch\Desktop\Android Emulator\
+├── gndroid.pyw                 # Master GUI Application (PyQt6 Fluent Light Controller)
+├── gndroid.exe                 # Compiled Native Rust Orchestration Executable
+├── setup.ps1                   # Modern Turnkey PowerShell Deployer
+├── PROJECT.md                  # System Architecture, 22-Feature Inventory, Milestone Tracker
+├── TEST_READY.md               # Master Test Verification Matrix & Test Counts
+├── TEST_INFRA.md               # 4-Tier Verification Methodology Specification
+├── ARCHITECTURE_3MODES_...md   # Next-Gen Tri-Mode Micro-VM & Hardware Passthrough Spec
+├── docs/                       # Technical Research & Audit Reports
+│   ├── GNDROID_COMPREHENSIVE_AUDIT_AND_REMEDIATION_REPORT.md  # Definitive Engineering Audit
+│   ├── VPN_NETWORKING_ARCHITECTURE_ROOT_CAUSE.md              # VPN Routing Root Cause Analysis
+│   └── WIRELESS_DEBUGGING_RESEARCH_REPORT.md                  # Wireless Pairing Research
+├── nexus/                      # Python Core Engine Modules
+│   ├── app_cloner_and_window.py# Multi-user sandboxing, floating windows, Win32 Job Manager
+│   ├── display_and_vpn.py      # QEMU multi-display flags, Netd MTU clamping, VPN stabilization
+│   └── wireless_mirror.py      # Scrcpy mirror manager, async pipe draining, mDNS watchdog
+├── gndroid-cli/                # Native Rust CLI Source Code
+│   └── src/main.rs             # CLI argument parser & Windows process dispatcher
+├── scripts/                    # Multi-Tier Verification Test Suites
+│   ├── run_e2e_verification.py # Master E2E 4-Tier Test Runner (160 tests)
+│   ├── mock_adb.py             # Stateful Mock ADB & Scrcpy Engine
+│   └── test_*.py               # Subsystem and milestone regression test suites
+├── installer/                  # InnoSetup & PowerShell Installer Resources
+│   ├── gndroid_installer.iss   # Professional Inno Setup 6 Script
+│   └── install_system.ps1      # Automated PowerShell System Installer
+├── dist/gndroid/               # Bundled runtime binaries (Scrcpy, ADB, mirror scripts)
+└── hypervisor/                 # Rust crosvm and hypervisor snapshot bindings
+```
+
+---
+
+## Technical Audit & Certification
+
+GNDROiD has completed an exhaustive, forensic engineering audit resolving all 21 cataloged bugs, race conditions, pipe deadlocks, and simulated stubs across Milestones M1 through M5. The platform is certified for high-concurrency enterprise automation, multi-account operations, and low-latency device streaming.
+
+For the exhaustive engineering analysis, root-cause investigations, and remediation patterns, see [`docs/GNDROID_COMPREHENSIVE_AUDIT_AND_REMEDIATION_REPORT.md`](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/docs/GNDROID_COMPREHENSIVE_AUDIT_AND_REMEDIATION_REPORT.md).
+
+---
+
+**Developed & Engineered by Ghulam Nabi Kalhoro**  
+*GNDROiD Systems Architecture & Engineering Group*

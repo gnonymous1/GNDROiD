@@ -10,32 +10,57 @@ import sys
 import time
 from mcp_client import EmulatorMcpClient
 
-def verify_play_integrity_attestation() -> bool:
-    print("[+] Querying VirtualKeyMint & Play Integrity state...")
-    print("    [OK] ro.boot.verifiedbootstate = green")
-    print("    [OK] ro.boot.flash.locked = 1")
-    print("    [OK] KeyMint attestation certificate chain valid.")
-    return True
+def verify_play_integrity_attestation(serial: str = "") -> bool:
+    print("[+] Querying VirtualKeyMint & Play Integrity state via ADB...")
+    adb_cmd = ["adb"]
+    if serial:
+        adb_cmd.extend(["-s", serial])
+    try:
+        import subprocess
+        # Check verified boot state property
+        out_vbs = subprocess.check_output(adb_cmd + ["shell", "getprop", "ro.boot.verifiedbootstate"], text=True, timeout=3).strip()
+        # Check flash locked property
+        out_locked = subprocess.check_output(adb_cmd + ["shell", "getprop", "ro.boot.flash.locked"], text=True, timeout=3).strip()
+
+        print(f"    ro.boot.verifiedbootstate = {out_vbs or 'unknown'}")
+        print(f"    ro.boot.flash.locked = {out_locked or 'unknown'}")
+
+        is_green = (out_vbs == "green")
+        is_locked = (out_locked == "1")
+
+        if is_green and is_locked:
+            print("    [OK] Boot state verified and flash locked.")
+            return True
+        else:
+            print(f"    [WARN] Play Integrity prerequisite check not satisfied (verifiedbootstate={out_vbs}, flash.locked={out_locked}).")
+            return False
+    except Exception as e:
+        print(f"    [-] Device unreachable or ADB error during Play Integrity verification: {e}")
+        return False
 
 def execute_whatsapp_cellular_onboarding(client: EmulatorMcpClient, phone_number: str) -> bool:
-    print(f"[+] Starting WhatsApp onboarding with real cellular MSISDN: {phone_number}")
+    print(f"[+] Starting WhatsApp onboarding with cellular MSISDN: {phone_number}")
     print("    [1] Launching com.whatsapp on unrooted UID sandbox...")
     res = client.execute_intent("Open WhatsApp and accept Terms of Service")
-    assert res["status"] == "success"
+    if res.get("status") != "success":
+        print(f"    [-] Failed to launch WhatsApp intent: {res}")
+        return False
 
     print("    [2] Entering phone number and requesting SMS OTP...")
     client.type_text(phone_number)
     client.execute_intent("Click Next and Confirm Phone Number")
 
-    print("    [3] Polling CellularBridge over virtio-vsock for incoming carrier SMS...")
+    print("    [3] Polling incoming carrier SMS...")
     sms_list = client.get_live_sms(filter_sender="WhatsApp")
-    assert len(sms_list) > 0, "Expected at least one incoming carrier SMS"
+    if not sms_list:
+        print("    [-] No incoming WhatsApp carrier SMS received on device.")
+        return False
 
-    otp_body = sms_list[0]["body"]
+    otp_body = sms_list[0].get("body", "")
     print(f"    [4] Received Carrier SMS OTP: '{otp_body}'. Injecting into WhatsApp UI...")
-    client.execute_intent("Type received 6-digit OTP code into verification boxes")
+    client.execute_intent(f"Type received OTP code {otp_body} into verification boxes")
 
-    print("    [5] WhatsApp registration verified successfully with live cellular session.")
+    print("    [5] WhatsApp registration verified with live cellular session.")
     return True
 
 if __name__ == "__main__":

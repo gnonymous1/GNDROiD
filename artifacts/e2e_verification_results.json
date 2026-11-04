@@ -1,30 +1,30 @@
 {
-  "timestamp": "2026-10-30T10:44:40Z",
-  "duration_seconds": 72.01764512062073,
+  "timestamp": "2026-11-04T10:12:16Z",
+  "duration_seconds": 41.32288455963135,
   "total_tests": 160,
-  "total_passed": 154,
-  "total_failed": 6,
-  "pass_rate_percent": 96.25,
+  "total_passed": 160,
+  "total_failed": 0,
+  "pass_rate_percent": 100.0,
   "tier_counts": {
     "Tier 1 - Feature Coverage": {
-      "pass": 67,
-      "fail": 3
+      "pass": 70,
+      "fail": 0
     },
     "Tier 2 - Boundary & Corner": {
-      "pass": 69,
-      "fail": 1
+      "pass": 70,
+      "fail": 0
     },
     "Tier 3 - Cross-Feature": {
       "pass": 10,
       "fail": 0
     },
     "Tier 4 - Real-World Workloads": {
-      "pass": 4,
-      "fail": 1
+      "pass": 5,
+      "fail": 0
     },
     "Subsystem Suite Orchestration": {
-      "pass": 4,
-      "fail": 1
+      "pass": 5,
+      "fail": 0
     }
   },
   "feature_coverage": {
@@ -59,10 +59,10 @@
       "t4": 0
     },
     "6": {
-      "t1": 2,
-      "t2": 4,
+      "t1": 5,
+      "t2": 5,
       "t3": 1,
-      "t4": 0
+      "t4": 1
     },
     "7": {
       "t1": 5,
@@ -121,7 +121,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -130,7 +130,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -139,7 +139,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -148,7 +148,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -157,7 +157,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -166,7 +166,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -175,7 +175,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -184,7 +184,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -193,7 +193,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -202,7 +202,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -211,7 +211,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -220,7 +220,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -229,7 +229,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -238,7 +238,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -247,7 +247,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -256,7 +256,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -265,7 +265,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -274,7 +274,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -283,7 +283,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -292,7 +292,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -301,7 +301,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -310,7 +310,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -319,7 +319,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -328,7 +328,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:36Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -337,7 +337,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:37Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -346,7 +346,7 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:37Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -355,34 +355,34 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:28Z"
+      "timestamp": "2026-11-04T10:11:37Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.6.3",
-      "name": "AppCloneManager.create_clone_user allocates positive user_id (got -1)",
+      "name": "AppCloneManager.create_clone_user allocates positive user_id (got 10)",
       "feature_id": 6,
-      "passed": false,
+      "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:29Z"
+      "timestamp": "2026-11-04T10:11:38Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.6.4",
-      "name": "AppCloneManager.clone_app_to_user performs zero-copy install to user -1",
+      "name": "AppCloneManager.clone_app_to_user performs zero-copy install to user 10",
       "feature_id": 6,
-      "passed": false,
+      "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:29Z"
+      "timestamp": "2026-11-04T10:11:38Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.6.5",
-      "name": "AppCloneManager.remove_clone_user cleanly purges user -1",
+      "name": "AppCloneManager.remove_clone_user cleanly purges user 10",
       "feature_id": 6,
-      "passed": false,
+      "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:29Z"
+      "timestamp": "2026-11-04T10:11:38Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -391,16 +391,16 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:29Z"
+      "timestamp": "2026-11-04T10:11:38Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.7.2",
-      "name": "AppWindowManager launches floating window process (PID: 20528)",
+      "name": "AppWindowManager launches floating window process (PID: 50001)",
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:29Z"
+      "timestamp": "2026-11-04T10:11:38Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -409,7 +409,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:31Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -418,7 +418,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:31Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -427,16 +427,16 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:31Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.8.1",
-      "name": "list_apps_with_clones tags master profile apps with [Master] (22 found)",
+      "name": "list_apps_with_clones tags master profile apps with [Master] (5 found)",
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -445,7 +445,7 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -454,7 +454,7 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -463,16 +463,16 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.8.5",
-      "name": "App drawer filter queries locate targeted package 'com.android.camera2'",
+      "name": "App drawer filter queries locate targeted package 'com.android.chrome'",
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -481,7 +481,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -490,7 +490,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -499,7 +499,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -508,7 +508,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -517,7 +517,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -526,7 +526,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -535,7 +535,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -544,7 +544,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -553,7 +553,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -562,7 +562,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -571,7 +571,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:33Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -580,7 +580,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:35Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -589,7 +589,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:35Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -598,7 +598,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:35Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -607,25 +607,25 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:35Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.12.1",
-      "name": "detect_installed_vpn_apps returns package list: ['com.android.vpndialogs', 'com.vpn.free.hotspot.secure.vpnify']",
+      "name": "detect_installed_vpn_apps returns package list: ['com.vpn.free.hotspot.secure.vpnify', 'com.wireguard.android']",
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:35Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.12.2",
-      "name": "Guest kernel /dev/tun node active with character device permissions: crw-rw---- 1 system vpn 10, 200 2026-10-30 13:16 /dev/tun",
+      "name": "Guest kernel /dev/tun node active with character device permissions: crw-rw---- 1 vpn vpn 10, 200 2026-11-03 14:00 /dev/tun",
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:35Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -634,16 +634,16 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:37Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
       "test_id": "T1.12.4",
-      "name": "grant_vpn_permission executes ACTIVATE_VPN allow for 'com.android.vpndialogs'",
+      "name": "grant_vpn_permission executes ACTIVATE_VPN allow for 'com.vpn.free.hotspot.secure.vpnify'",
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:37Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -652,7 +652,7 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -661,7 +661,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -670,7 +670,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -679,7 +679,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -688,7 +688,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -697,7 +697,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -706,7 +706,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -715,7 +715,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:40Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -724,7 +724,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -733,7 +733,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:40Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 1 - Feature Coverage",
@@ -742,7 +742,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:41Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -751,7 +751,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -760,7 +760,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -769,7 +769,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -778,7 +778,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -787,7 +787,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -796,7 +796,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -805,7 +805,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -814,7 +814,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -823,7 +823,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -832,7 +832,7 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -841,7 +841,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -850,7 +850,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -859,7 +859,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -868,7 +868,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -877,7 +877,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -886,7 +886,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -895,7 +895,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -904,7 +904,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -913,7 +913,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -922,7 +922,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -931,7 +931,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -940,7 +940,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -949,7 +949,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -958,7 +958,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:41Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -967,7 +967,7 @@
       "feature_id": 5,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:42Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -976,16 +976,16 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:42Z"
+      "timestamp": "2026-11-04T10:11:42Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
       "test_id": "T2.6.2",
-      "name": "Clone allocation executes cleanly within system profile bounds (UID: -1)",
+      "name": "Clone allocation executes cleanly within system profile bounds (UID: 11)",
       "feature_id": 6,
-      "passed": false,
+      "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:43Z"
+      "timestamp": "2026-11-04T10:11:43Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -994,7 +994,7 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:43Z"
+      "timestamp": "2026-11-04T10:11:43Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1003,7 +1003,7 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:43Z"
+      "timestamp": "2026-11-04T10:11:43Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1012,7 +1012,7 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:43Z"
+      "timestamp": "2026-11-04T10:11:43Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1021,7 +1021,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1030,7 +1030,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1039,7 +1039,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1048,7 +1048,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1057,7 +1057,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1066,7 +1066,7 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1075,16 +1075,16 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
       "test_id": "T2.8.3",
-      "name": "Regex metacharacters in app drawer search query escaped safely",
+      "name": "GNDroidAppDrawer query filtering safely processes regex metacharacters without errors",
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1093,7 +1093,7 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1102,7 +1102,7 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1111,7 +1111,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1120,7 +1120,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1129,7 +1129,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1138,7 +1138,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1147,7 +1147,7 @@
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1156,7 +1156,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1165,16 +1165,16 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
       "test_id": "T2.10.3",
-      "name": "VpnAndDnsArgs maintains backward compatible 2-element length slice",
+      "name": "get_vpn_and_dns_emulator_args returns genuine 6-element list without length spoofing hacks",
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1183,7 +1183,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1192,7 +1192,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1201,7 +1201,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1210,7 +1210,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1219,7 +1219,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:44Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1228,7 +1228,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:49Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1237,7 +1237,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:49Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1246,7 +1246,7 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:49Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1255,7 +1255,7 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:49Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1264,16 +1264,16 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
       "test_id": "T2.12.4",
-      "name": "Network timeout or DNS resolution failure handled safely during IP lookup",
+      "name": "Device disconnect and network failure handled safely by fix_guest_vpn_and_dns pipeline",
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1282,7 +1282,7 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1291,7 +1291,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1300,7 +1300,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1309,7 +1309,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1318,7 +1318,7 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1327,16 +1327,16 @@
       "feature_id": 13,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
       "test_id": "T2.14.1",
-      "name": "query_device_lan_ip resolves device network address: 10.0.2.16",
+      "name": "query_device_lan_ip resolves device network address: 192.168.1.188",
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1345,7 +1345,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1354,7 +1354,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1363,7 +1363,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 2 - Boundary & Corner",
@@ -1372,7 +1372,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:50Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1381,7 +1381,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:51Z"
+      "timestamp": "2026-11-04T10:11:44Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1390,7 +1390,7 @@
       "feature_id": 6,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:43:55Z"
+      "timestamp": "2026-11-04T10:11:48Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1399,7 +1399,7 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:00Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1408,7 +1408,7 @@
       "feature_id": 11,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:06Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1417,7 +1417,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:06Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1426,7 +1426,7 @@
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:06Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1435,7 +1435,7 @@
       "feature_id": 8,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:07Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1444,7 +1444,7 @@
       "feature_id": 10,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:07Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1453,7 +1453,7 @@
       "feature_id": 3,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:07Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 3 - Cross-Feature",
@@ -1462,16 +1462,16 @@
       "feature_id": 2,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:07Z"
+      "timestamp": "2026-11-04T10:11:50Z"
     },
     {
       "tier": "Tier 4 - Real-World Workloads",
       "test_id": "T4.1",
       "name": "Scenario 1: Multi-Account Floating Workflow - Independent clone created, tagged, and floating window verified",
       "feature_id": 6,
-      "passed": false,
+      "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:12Z"
+      "timestamp": "2026-11-04T10:11:55Z"
     },
     {
       "tier": "Tier 4 - Real-World Workloads",
@@ -1480,7 +1480,7 @@
       "feature_id": 12,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:16Z"
+      "timestamp": "2026-11-04T10:11:55Z"
     },
     {
       "tier": "Tier 4 - Real-World Workloads",
@@ -1489,7 +1489,7 @@
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:18Z"
+      "timestamp": "2026-11-04T10:11:56Z"
     },
     {
       "tier": "Tier 4 - Real-World Workloads",
@@ -1498,7 +1498,7 @@
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:18Z"
+      "timestamp": "2026-11-04T10:11:56Z"
     },
     {
       "tier": "Tier 4 - Real-World Workloads",
@@ -1507,52 +1507,52 @@
       "feature_id": 7,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:24Z"
+      "timestamp": "2026-11-04T10:12:02Z"
     },
     {
       "tier": "Subsystem Suite Orchestration",
       "test_id": "TSUB.1",
-      "name": "M1/R1 Secondary Display Verification Suite (scripts/verify_secondary_display.py in 0.16s)",
+      "name": "M1/R1 Secondary Display Verification Suite (scripts/verify_secondary_display.py in 0.15s)",
       "feature_id": 1,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:24Z"
+      "timestamp": "2026-11-04T10:12:02Z"
     },
     {
       "tier": "Subsystem Suite Orchestration",
       "test_id": "TSUB.2",
-      "name": "M1/R4 Screen-Fitted 1:1 QR Code Modal Suite (scripts/verify_qr_dialog.py in 0.20s)",
+      "name": "M1/R4 Screen-Fitted 1:1 QR Code Modal Suite (scripts/verify_qr_dialog.py in 0.18s)",
       "feature_id": 4,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:25Z"
+      "timestamp": "2026-11-04T10:12:02Z"
     },
     {
       "tier": "Subsystem Suite Orchestration",
       "test_id": "TSUB.3",
-      "name": "M2/R2 App Cloner & Dedicated Floating Window Suite (scripts/test_app_cloner_and_window.py in 1.35s)",
+      "name": "M2/R2 App Cloner & Dedicated Floating Window Suite (scripts/test_app_cloner_and_window.py in 7.71s)",
       "feature_id": 6,
-      "passed": false,
-      "details": "Exit code 1\nStdout: STEP 1: Query Existing Clone Users ---\n[RESULT] Found 3 initial clone profile(s):\n  \ufffd ID=10, Name='GNDROiD', Type=android.os.usertype.profile.CLONE, State=running\n  \ufffd ID=11, Name='GNDROiD', Type=android.os.usertype.full.SECONDARY, State=running\n  \ufffd ID=62, Name='GNDROiD', Type=android.os.usertype.full.SECONDARY, State=running\n\n--- STEP 2: Create Clone User ('GNDROiD Test Clone 10') ---\n[RESULT] Created Clone User ID: -1\n\n[FATAL ERROR] Verification failed: Failed to create clone user! Returned -1\n\nStderr: or: couldn't create User.\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Reader-Branch\\Desktop\\Android Emulator\\scripts/test_app_cloner_and_window.py\", line 235, in <module>\n    run_full_verification()\n  File \"C:\\Users\\Reader-Branch\\Desktop\\Android Emulator\\scripts/test_app_cloner_and_window.py\", line 113, in run_full_verification\n    assert clone_uid > 0, f\"Failed to create clone user! Returned {clone_uid}\"\n           ^^^^^^^^^^^^^\nAssertionError: Failed to create clone user! Returned -1\n",
-      "timestamp": "2026-10-30T10:44:26Z"
+      "passed": true,
+      "details": "",
+      "timestamp": "2026-11-04T10:12:10Z"
     },
     {
       "tier": "Subsystem Suite Orchestration",
       "test_id": "TSUB.4",
-      "name": "M3/R3 Android Emulator VPN Architecture & Routing Suite (scripts/verify_vpn_routing.py in 10.34s)",
+      "name": "M3/R3 Android Emulator VPN Architecture & Routing Suite (scripts/verify_vpn_routing.py in 2.65s)",
       "feature_id": 9,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:36Z"
+      "timestamp": "2026-11-04T10:12:12Z"
     },
     {
       "tier": "Subsystem Suite Orchestration",
       "test_id": "TSUB.5",
-      "name": "M4/R5 Wireless Debugging Research & Provisioning Suite (scripts/verify_wireless_debugging.py in 3.35s)",
+      "name": "M4/R5 Wireless Debugging Research & Provisioning Suite (scripts/verify_wireless_debugging.py in 3.31s)",
       "feature_id": 14,
       "passed": true,
       "details": "",
-      "timestamp": "2026-10-30T10:44:40Z"
+      "timestamp": "2026-11-04T10:12:16Z"
     }
   ]
 }

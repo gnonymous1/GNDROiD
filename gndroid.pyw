@@ -4,7 +4,7 @@ Developed by Ghulam Nabi Kalhoro
 
 Features:
 - Single working window architecture
-- Full hardware allocation (16 GB RAM, 16 CPU cores, 32 GB NVMe SSD)
+- Dynamic hardware allocation (Host RAM, CPU cores, and disk introspection)
 - Real PC Camera (Webcam0 / DirectShow passthrough)
 - Real PC Internet & Wi-Fi adapter toggle
 - High-Speed USB & Wireless LAN (TCP/IP) Phone Mirroring
@@ -49,7 +49,7 @@ from nexus.wireless_mirror import (
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QProgressBar, QDialog, QFileDialog,
+    QLabel, QPushButton, QProgressBar, QProgressDialog, QDialog, QFileDialog,
     QComboBox, QFrame, QMessageBox, QTabWidget, QGridLayout,
     QScrollArea, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, QToolTip,
     QInputDialog, QGraphicsDropShadowEffect, QTableWidget,
@@ -241,6 +241,51 @@ class SystemPaths:
             return False
 
     @staticmethod
+    def get_host_hardware_summary() -> Dict[str, Any]:
+        """Performs live host hardware introspection for memory, CPU cores, and storage."""
+        ram_gb = 16
+        try:
+            import psutil
+            ram_gb = max(1, round(psutil.virtual_memory().total / (1024 ** 3)))
+        except Exception:
+            try:
+                class _MEMORYSTATUSEX(ctypes.Structure):
+                    _fields_ = [
+                        ("dwLength", ctypes.c_ulong),
+                        ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong),
+                        ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong),
+                        ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong),
+                        ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("sllAvailExtendedVirtual", ctypes.c_ulonglong),
+                    ]
+                stat = _MEMORYSTATUSEX()
+                stat.dwLength = ctypes.sizeof(_MEMORYSTATUSEX)
+                if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+                    ram_gb = max(1, round(stat.ullTotalPhys / (1024 ** 3)))
+            except Exception:
+                pass
+
+        cores = os.cpu_count() or 8
+
+        free_gb = 32
+        try:
+            drive = os.path.splitdrive(os.getcwd())[0] or "C:"
+            _, _, free = shutil.disk_usage(drive)
+            free_gb = max(1, round(free / (1024 ** 3)))
+        except Exception:
+            pass
+
+        return {
+            "ram_gb": ram_gb,
+            "cores": cores,
+            "free_disk_gb": free_gb,
+            "summary_text": f"{ram_gb} GB RAM | {cores} Cores | {free_gb} GB Free Disk | GPU Direct3D/Vulkan"
+        }
+
+    @staticmethod
     def list_port_forwards() -> List[Dict[str, str]]:
         adb = SystemPaths.get_adb()
         rules = []
@@ -352,7 +397,7 @@ class SystemPaths:
             out_txt = (conn_res.stdout + " " + conn_res.stderr).strip()
             if "connected" in out_txt.lower() or "already" in out_txt.lower():
                 return True, target_lan
-            return True, target_lan
+            return False, f"Failed to connect to {target_lan}: {out_txt or 'connection refused or timed out'}"
         except Exception as e:
             return False, str(e)
 
@@ -484,8 +529,14 @@ class DeviceScannerWorker(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._running = True
-        self.auto_lan_enabled = True
+        # Feature 10: Default to False to preserve active USB debug sessions.
+        # Do NOT automatically force adb tcpip 5555 on connected USB devices.
+        self.auto_lan_enabled = False
         self._converted_serials = set()
+
+    def set_auto_lan_enabled(self, enabled: bool):
+        """Explicitly enables or disables background wireless LAN conversion."""
+        self.auto_lan_enabled = bool(enabled)
 
     def run(self):
         last_sig = None
@@ -1277,14 +1328,33 @@ class GNDroidAppDrawer(QDialog):
 # # Modern Window Finder & Custom Vector Ribbon Controls
 # ----------------------------------------------------------------------
 def find_target_window(target_serial: str = "") -> Optional[int]:
+    # Feature 15: Filter out GNDROiD launcher itself and management dialogs
+    excluded_keywords = [
+        "controls", "not connected", "control & settings", "settings",
+        "master control suite", "multi-instance", "manager", "doctor",
+        "downloader", "drawer", "pairing", "dialog", "quick clone", "clean locks"
+    ]
+
+    def is_launcher_or_mgmt(title_str: str) -> bool:
+        t_low = title_str.lower()
+        if any(k in t_low for k in excluded_keywords):
+            return True
+        if re.search(r"gndroid\s+v\d", t_low):
+            return True
+        return False
+
     # 1. Exact match for scrcpy window titled "GNDROiD - {target_serial}" or "gndroid"
     if target_serial:
         for prefix in ["GNDROiD - ", "gndroid - ", ""]:
             hwnd = user32.FindWindowW(None, f"{prefix}{target_serial}")
-            if hwnd and user32.IsWindowVisible(hwnd):
-                return hwnd
+            if hwnd and user32.IsWindowVisible(hwnd) and not user32.IsIconic(hwnd):
+                length = user32.GetWindowTextLengthW(hwnd)
+                buf = ctypes.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, buf, length + 1)
+                if not is_launcher_or_mgmt(buf.value):
+                    return hwnd
 
-    # 2. Search for any visible window matching serial or GNDROiD / gndroid / Android Emulator
+    # 2. Search for any visible window matching serial or Scrcpy/Emulator window, excluding GNDROiD launcher/management windows
     found_hwnd = None
     def enum_cb(h, lparam):
         nonlocal found_hwnd
@@ -1294,13 +1364,18 @@ def find_target_window(target_serial: str = "") -> Optional[int]:
                 buf = ctypes.create_unicode_buffer(length + 1)
                 user32.GetWindowTextW(h, buf, length + 1)
                 title = buf.value
-                if "GNDROiD Controls" not in title and "gndroid Controls" not in title and "Not Connected" not in title and "Control & Settings" not in title:
-                    if target_serial and target_serial in title:
-                        found_hwnd = h
-                        return False
-                    elif not target_serial and ("GNDROiD" in title or "gndroid" in title or "Android Emulator" in title):
-                        found_hwnd = h
-                        return False
+                if not is_launcher_or_mgmt(title):
+                    if target_serial:
+                        if target_serial.lower() in title.lower():
+                            found_hwnd = h
+                            return False
+                    else:
+                        t_low = title.lower()
+                        if (title.startswith("GNDROiD - ") or title.startswith("gndroid - ") or
+                            title.startswith("GNDROiD: ") or title.strip() in ("GNDROiD", "gndroid") or
+                            "android emulator" in t_low):
+                            found_hwnd = h
+                            return False
         return True
 
     WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
@@ -1618,7 +1693,8 @@ class GNDroidNoDeviceDialog(QDialog):
         c_layout.addWidget(desc)
 
         # Hero Action: Launch GNDROiD VM
-        self.btn_run_gndroid = QPushButton("⚡  Launch GNDROiD Virtual Machine Instead\n     (16 GB RAM • 16 CPU Cores • Hardware Vulkan 60 FPS)")
+        hw_info = SystemPaths.get_host_hardware_summary()
+        self.btn_run_gndroid = QPushButton(f"⚡  Launch GNDROiD Virtual Machine Instead\n     ({hw_info['ram_gb']} GB Host RAM • {hw_info['cores']} CPU Cores • Hardware Accelerated 60 FPS)")
         self.btn_run_gndroid.setObjectName("btnHero")
         self.btn_run_gndroid.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_run_gndroid.clicked.connect(lambda: self.set_action("run_vm"))
@@ -1817,13 +1893,16 @@ class LanRadarWorker(QThread):
             if prefix:
                 found_adb = []
                 found_nexus = []
+                found_lock = threading.Lock()
+
                 def probe_ip(host_ip):
                     # Check Wireless ADB port 5555
                     try:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(0.25)
                             if s.connect_ex((host_ip, 5555)) == 0:
-                                found_adb.append(host_ip)
+                                with found_lock:
+                                    found_adb.append(host_ip)
                     except Exception:
                         pass
                     # Check Nexus Companion HTTP port 51880
@@ -1831,12 +1910,14 @@ class LanRadarWorker(QThread):
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(0.25)
                             if s.connect_ex((host_ip, 51880)) == 0:
-                                found_nexus.append(host_ip)
+                                with found_lock:
+                                    found_nexus.append(host_ip)
                     except Exception:
                         pass
 
                 ips_to_check = [f"{prefix}{i}" for i in range(1, 255)]
-                with ThreadPoolExecutor(max_workers=60) as ex:
+                # Feature 10: Capped at 16 concurrent workers to avoid thread churn
+                with ThreadPoolExecutor(max_workers=16) as ex:
                     ex.map(probe_ip, ips_to_check)
 
                 for ip in found_adb:
@@ -3599,17 +3680,19 @@ class GNDroidADBFixerDialog(QDialog):
         QApplication.processEvents()
 
         found = []
+        found_lock = threading.Lock()
         def check_host(host_ip):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.settimeout(0.35)
                     if s.connect_ex((host_ip, 5555)) == 0:
-                        found.append(host_ip)
+                        with found_lock:
+                            found.append(host_ip)
             except Exception:
                 pass
 
         ips = [f"{subnet}{i}" for i in range(1, 255)]
-        with ThreadPoolExecutor(max_workers=60) as executor:
+        with ThreadPoolExecutor(max_workers=16) as executor:
             executor.map(check_host, ips)
 
         self.btn_lan_scan.setEnabled(True)
@@ -4086,6 +4169,101 @@ GOOGLE_SYS_IMAGES = {
 }
 
 class AVDManager:
+    _active_instances: Dict[str, Dict[str, Any]] = {}
+    _instances_lock = threading.Lock()
+
+    @classmethod
+    def get_active_instance(cls, name: str) -> Optional[Dict[str, Any]]:
+        with cls._instances_lock:
+            inst = cls._active_instances.get(name)
+            if inst:
+                proc = inst.get("proc")
+                if proc and hasattr(proc, "poll") and proc.poll() is not None:
+                    cls._active_instances.pop(name, None)
+                    return None
+            return inst
+
+    @classmethod
+    def get_all_active_instances(cls) -> Dict[str, Dict[str, Any]]:
+        with cls._instances_lock:
+            dead = [k for k, v in cls._active_instances.items() if v.get("proc") and hasattr(v["proc"], "poll") and v["proc"].poll() is not None]
+            for k in dead:
+                cls._active_instances.pop(k, None)
+            return dict(cls._active_instances)
+
+    @classmethod
+    def stop_instance(cls, name: str, timeout: float = 5.0) -> bool:
+        """
+        Gracefully stops a running VM instance:
+        1. Issues 'adb emu kill'
+        2. Polls proc.poll()
+        3. Falls back to proc.terminate() and proc.kill()
+        4. Verifies complete process exit and unregisters from registry.
+        """
+        inst = None
+        with cls._instances_lock:
+            inst = cls._active_instances.get(name)
+
+        serial = inst.get("serial") if inst else None
+        proc = inst.get("proc") if inst else None
+        pid = inst.get("pid") if inst else None
+
+        if not serial:
+            devs = SystemPaths.list_devices()
+            match = next((d for d in devs if d.get("is_emulator") and (name in d.get("model", "") or name in d.get("name", ""))), None)
+            if match:
+                serial = match.get("serial")
+
+        adb = SystemPaths.get_adb()
+        if serial:
+            try:
+                subprocess.run([adb, "-s", serial, "emu", "kill"], timeout=2.5, creationflags=0x08000000)
+            except Exception:
+                pass
+
+        start = time.time()
+        if proc and hasattr(proc, "poll"):
+            poll_res = None
+            while time.time() - start < timeout:
+                poll_res = proc.poll()
+                if poll_res is not None:
+                    break
+                if time.time() - start > (timeout / 2):
+                    try:
+                        proc.terminate()
+                    except Exception:
+                        pass
+                time.sleep(0.1)
+
+            if poll_res is None:
+                try:
+                    proc.kill()
+                    proc.wait(timeout=1.0)
+                except Exception:
+                    pass
+
+        if pid:
+            try:
+                import psutil
+                if psutil.pid_exists(pid):
+                    p = psutil.Process(pid)
+                    p.terminate()
+                    p.wait(timeout=1.5)
+            except Exception:
+                pass
+
+        with cls._instances_lock:
+            cls._active_instances.pop(name, None)
+        return True
+
+    @classmethod
+    def stop_all_instances(cls, timeout: float = 4.0):
+        """Stops all tracked active VM instances."""
+        with cls._instances_lock:
+            names = list(cls._active_instances.keys())
+        for n in names:
+            cls.stop_instance(n, timeout=timeout)
+
     @staticmethod
     def get_avd_dir() -> str:
         d = os.path.join(os.path.expanduser("~"), ".android", "avd")
@@ -4144,12 +4322,17 @@ class AVDManager:
                 api = cand_api
                 break
         try:
+            hw_info = SystemPaths.get_host_hardware_summary()
+            host_ram_mb = hw_info["ram_gb"] * 1024
+            safe_ram_mb = min(8192, max(2048, host_ram_mb // 2))
+            safe_cores = min(8, max(2, hw_info["cores"] // 2))
+            disp_name = f"GNDROiD Flagship ({safe_ram_mb // 1024}GB RAM / {safe_cores} Cores)"
             AVDManager.create_instance(
                 name="gndroid",
-                display_name="GNDROiD Flagship (16GB RAM / 16 Cores)",
+                display_name=disp_name,
                 api_level=api,
-                ram_mb=16384,
-                cores=16,
+                ram_mb=safe_ram_mb,
+                cores=safe_cores,
                 width=1080,
                 height=2400,
                 density=420,
@@ -4369,7 +4552,7 @@ gndroid.root={'yes' if root_enabled else 'no'}
             f.write(cfg_content)
 
     @staticmethod
-    def clone_instance(src_name: str, dst_name: str, dst_display_name: str, ram_mb: int = None, cores: int = None, root_enabled: bool = None, full_clone: bool = True, progress_cb=None) -> None:
+    def clone_instance(src_name: str, dst_name: str, dst_display_name: str, ram_mb: int = None, cores: int = None, root_enabled: bool = None, full_clone: bool = True, progress_cb=None, deep_copy_snapshots: bool = False) -> None:
         avd_base = AVDManager.get_avd_dir()
         src_dir = os.path.join(avd_base, f"{src_name}.avd")
         src_ini = os.path.join(avd_base, f"{src_name}.ini")
@@ -4381,7 +4564,7 @@ gndroid.root={'yes' if root_enabled else 'no'}
 
         os.makedirs(dst_dir, exist_ok=True)
 
-                # Fast clone: exclude transient locks, temp commands, and massive 16GB snapshot RAM dumps
+        # Fast clone: exclude transient locks, temp commands, and massive 16GB snapshot RAM dumps
         skip_files = {"hardware-qemu.ini.lock", "multiinstance.lock"}
         if not full_clone:
             skip_files.update({"userdata-qemu.img", "userdata-qemu.img.qcow2", "cache.img", "cache.img.qcow2"})
@@ -4391,7 +4574,7 @@ gndroid.root={'yes' if root_enabled else 'no'}
             # Always skip lock files, sockets, and memory dump files that cause 16GB bloat or crashes
             if "tmpAdbCmds" in root:
                 continue
-            if not full_clone and "snapshots" in root:
+            if (not full_clone or not deep_copy_snapshots) and "snapshots" in root:
                 continue
             for f in files:
                 if f.endswith(".lock") or f in skip_files or f in ("ram.img", "ram.bin"):
@@ -4556,6 +4739,26 @@ gndroid.root={'yes' if root_enabled else 'no'}
             stderr=subprocess.STDOUT,
             creationflags=CREATE_NO_WINDOW
         )
+
+        # Feature 8: Assign QEMU process to Win32 Job Object for process tree containment
+        try:
+            from nexus.app_cloner_and_window import assign_to_job_object
+            assign_to_job_object(proc)
+        except Exception:
+            pass
+
+        target_serial = f"emulator-{port}"
+        with AVDManager._instances_lock:
+            AVDManager._active_instances[name] = {
+                "proc": proc,
+                "pid": proc.pid if hasattr(proc, "pid") else None,
+                "port": port,
+                "serial": target_serial,
+                "name": name,
+                "launch_time": time.time(),
+                "gpu": gpu_mode,
+                "root": is_root
+            }
 
         # 3. Retitle window in background (rename from 'Android Emulator - ...' to 'GNDROiD Flagship:port')
         def _retitle_watcher(parent_pid: int, inst_name: str, inst_port: int):
@@ -4855,16 +5058,144 @@ gndroid.root={'yes' if root_enabled else 'no'}
         return result
 
     @staticmethod
-    def delete_instance(name: str) -> None:
+    def is_file_locked(filepath: str) -> bool:
+        """
+        Checks if a file has an active open handle or lock.
+        Uses Win32 CreateFileW with FILE_SHARE_NONE for definitive Windows handle inspection.
+        """
+        if not os.path.exists(filepath):
+            return False
+        if sys.platform == "win32":
+            try:
+                k32 = ctypes.windll.kernel32
+                GENERIC_READ = 0x80000000
+                GENERIC_WRITE = 0x40000000
+                FILE_SHARE_NONE = 0
+                OPEN_EXISTING = 3
+                FILE_ATTRIBUTE_NORMAL = 0x80
+                INVALID_HANDLE_VALUE = -1
+
+                h = k32.CreateFileW(
+                    filepath,
+                    GENERIC_READ | GENERIC_WRITE,
+                    FILE_SHARE_NONE,
+                    None,
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    None
+                )
+                if h == INVALID_HANDLE_VALUE or h == -1:
+                    return True
+                k32.CloseHandle(h)
+                return False
+            except Exception:
+                pass
+        try:
+            with open(filepath, "r+b"):
+                pass
+            return False
+        except (PermissionError, OSError):
+            return True
+
+    @staticmethod
+    def wait_for_file_locks_released(dir_path: str, timeout: float = 6.0) -> bool:
+        """
+        Progressive backoff retry loop ensuring open handles on virtual disk images
+        (userdata.img, system.img.qcow2, etc.) are fully released before disk removal.
+        """
+        if not os.path.exists(dir_path):
+            return True
+
+        target_exts = (".img", ".qcow2", ".lock", ".ini")
+        start = time.time()
+        backoffs = [0.1, 0.2, 0.4, 0.8, 1.2, 1.5, 2.0]
+        backoff_idx = 0
+
+        while time.time() - start < timeout:
+            any_locked = False
+            try:
+                for root, _, files in os.walk(dir_path):
+                    for f in files:
+                        if f.lower().endswith(target_exts) or "userdata" in f.lower() or "system" in f.lower():
+                            fpath = os.path.join(root, f)
+                            if AVDManager.is_file_locked(fpath):
+                                any_locked = True
+                                break
+                    if any_locked:
+                        break
+            except Exception:
+                pass
+
+            if not any_locked:
+                return True
+
+            delay = backoffs[min(backoff_idx, len(backoffs) - 1)]
+            backoff_idx += 1
+            time.sleep(delay)
+
+        return False
+
+    @staticmethod
+    def delete_instance(name: str) -> bool:
+        """
+        Feature 9: Multi-Instance Clean Teardown & File Lock Guard
+        1. Verifies process termination (waits for process exit / kills if needed).
+        2. Executes progressive backoff file lock guard on userdata.img / system.img.qcow2.
+        3. Removes .ini pointer file and safely removes disk folder with retry loop.
+        """
         avd_base = AVDManager.get_avd_dir()
         ini_path = os.path.join(avd_base, f"{name}.ini")
         dir_path = os.path.join(avd_base, f"{name}.avd")
-        if os.path.exists(ini_path):
-            try: os.remove(ini_path)
-            except: pass
+
+        # 1. Verify process termination before attempting disk cleanup
+        active_inst = AVDManager.get_active_instance(name)
+        if active_inst:
+            AVDManager.stop_instance(name, timeout=5.0)
+        else:
+            try:
+                import psutil
+                for p in psutil.process_iter(['name', 'cmdline']):
+                    cmd = p.info.get('cmdline') or []
+                    if any(name in arg for arg in cmd) and any("qemu" in c.lower() or "emulator" in c.lower() for c in cmd):
+                        try:
+                            p.terminate()
+                            p.wait(timeout=2.0)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        # 2. File lock checking and retry loop with progressive backoff
         if os.path.exists(dir_path):
-            try: shutil.rmtree(dir_path, ignore_errors=True)
-            except: pass
+            AVDManager.wait_for_file_locks_released(dir_path, timeout=6.0)
+
+        # 3. Clean .ini pointer file
+        if os.path.exists(ini_path):
+            try:
+                os.remove(ini_path)
+            except Exception:
+                pass
+
+        # 4. Safely delete directory with progressive retries
+        deleted = False
+        if os.path.exists(dir_path):
+            for attempt in range(5):
+                try:
+                    shutil.rmtree(dir_path)
+                    deleted = True
+                    break
+                except OSError:
+                    time.sleep(0.3 * (attempt + 1))
+            if not deleted:
+                try:
+                    shutil.rmtree(dir_path, ignore_errors=True)
+                    deleted = not os.path.exists(dir_path)
+                except Exception:
+                    pass
+        else:
+            deleted = True
+
+        return deleted
 
 
 # ----------------------------------------------------------------------
@@ -6498,7 +6829,11 @@ def tile_running_windows() -> int:
                 buf = ctypes.create_unicode_buffer(length + 1)
                 user32.GetWindowTextW(h, buf, length + 1)
                 t = buf.value
-                if ("gndroid" in t or "Android Emulator" in t) and "Controls" not in t and "Manager" not in t and "Doctor" not in t and "Settings" not in t:
+                t_lower = t.lower()
+                # Feature 12: Case-insensitive window matching so Scrcpy ("GNDROiD - ...", "GNDROiD: ...") windows are properly detected and arranged
+                is_scrcpy_app = t.startswith("GNDROiD:") or t.startswith("gndroid:") or t.startswith("GNDROiD -") or t.startswith("gndroid -")
+                is_mgmt = any(k in t_lower for k in ["controls", "manager", "doctor", "settings & hardware", "suite", "launcher"]) or "gndroid settings" in t_lower
+                if (is_scrcpy_app or ("gndroid" in t_lower or "android emulator" in t_lower)) and not is_mgmt:
                     hwnds.append(h)
         return True
 
@@ -6520,6 +6855,10 @@ def tile_running_windows() -> int:
         y = 40 + r * h
         user32.MoveWindow(h_wnd, x, y, w, h, True)
     return n
+
+# Feature 12: tile_windows alias
+tile_windows = tile_running_windows
+
 
 
 class InstanceScannerWorker(QThread):
@@ -7199,6 +7538,8 @@ class GNDroidMultiInstanceManager(QDialog):
         else:
             QMessageBox.information(self, "Tile Windows", f"Successfully tiled {count} emulator window(s) in a desktop grid.")
 
+    action_auto_tile_desktop = action_tile_windows
+
     def action_clean_locks(self):
         cleaned = AVDManager.clean_stale_locks()
         QMessageBox.information(self, "Clean Locks", f"Cleaned {cleaned} stale .lock file(s) across all instances.\nInstances are ready for immediate launch.")
@@ -7266,7 +7607,13 @@ class GNDroidMultiInstanceManager(QDialog):
                 is_root=inst.get("root", False)
             )
             target_serial = f"emulator-{port}"
-            self.starting_instances[name] = {"port": port, "serial": target_serial, "attempts": 0}
+            self.starting_instances[name] = {
+                "proc": proc,
+                "pid": proc.pid if hasattr(proc, "pid") else None,
+                "port": port,
+                "serial": target_serial,
+                "attempts": 0
+            }
             self.refresh_table()
 
             def poll_manager_boot():
@@ -7299,14 +7646,8 @@ class GNDroidMultiInstanceManager(QDialog):
 
 
     def action_stop_instance(self, name: str):
-        inst = next((i for i in self.instances if i["name"] == name), None)
-        if not inst or not inst["serial"]: return
-
-        adb = SystemPaths.get_adb()
-        try:
-            subprocess.run([adb, "-s", inst["serial"], "emu", "kill"], timeout=3, creationflags=0x08000000)
-        except Exception:
-            pass
+        # Feature 8: Gracefully stop instance with fallback to process termination
+        AVDManager.stop_instance(name, timeout=4.0)
         QTimer.singleShot(1000, self.refresh_table)
 
     def action_delete_instance(self, name: str):
@@ -7318,8 +7659,8 @@ class GNDroidMultiInstanceManager(QDialog):
             is_danger=True
         ):
             return
+        # Feature 9: Stop instance first, then delete_instance verifies termination & file locks
         self.action_stop_instance(name)
-        time.sleep(0.5)
         AVDManager.delete_instance(name)
         self.refresh_table()
 
@@ -7355,10 +7696,112 @@ class GNDroidMultiInstanceManager(QDialog):
             return
         for n in targets:
             self.action_stop_instance(n)
-            time.sleep(0.3)
             AVDManager.delete_instance(n)
         self.selected_instances.clear()
         self.refresh_table()
+
+
+# ----------------------------------------------------------------------
+# Feature 13 & 14: Non-Blocking ADB Package Installation & File Push Worker
+# ----------------------------------------------------------------------
+class AdbInstallOrPushWorker(QThread):
+    progress = pyqtSignal(str)
+    file_result = pyqtSignal(str, bool, str)  # (filename, is_success, message)
+    finished_all = pyqtSignal(int, int)       # (success_count, fail_count)
+
+    def __init__(self, files: List[str], target_serial: str = "", destination_folder: str = "/sdcard/Download/", parent=None):
+        super().__init__(parent)
+        self.files = list(files)
+        self.target_serial = target_serial or ""
+        self.destination_folder = destination_folder
+        self._is_cancelled = False
+
+    def cancel(self):
+        self._is_cancelled = True
+
+    def run(self):
+        adb = SystemPaths.get_adb()
+        target = ["-s", self.target_serial] if self.target_serial else []
+        success_count = 0
+        fail_count = 0
+        total = len(self.files)
+
+        for idx, fpath in enumerate(self.files):
+            if self._is_cancelled:
+                break
+            if not fpath or not os.path.exists(fpath):
+                continue
+
+            fname = os.path.basename(fpath)
+            is_apk = fname.lower().endswith(".apk")
+
+            if is_apk:
+                self.progress.emit(f"Installing {fname} ({idx + 1}/{total})...")
+                try:
+                    res = subprocess.run(
+                        [adb] + target + ["install", "-r", fpath],
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                        creationflags=0x08000000
+                    )
+                    out = ((res.stdout or "") + "\n" + (res.stderr or "")).strip()
+                    out_low = out.lower()
+                    has_error = (
+                        res.returncode != 0 or
+                        "failure" in out_low or
+                        "install_failed" in out_low or
+                        "install_parse_failed" in out_low or
+                        "error:" in out_low
+                    )
+                    if not has_error:
+                        success_count += 1
+                        self.file_result.emit(fname, True, out or "Success")
+                    else:
+                        fail_count += 1
+                        err = out or f"Installation failed with exit code {res.returncode}"
+                        self.file_result.emit(fname, False, err)
+                except subprocess.TimeoutExpired:
+                    fail_count += 1
+                    self.file_result.emit(fname, False, "Installation timed out after 120 seconds.")
+                except Exception as e:
+                    fail_count += 1
+                    self.file_result.emit(fname, False, str(e))
+            else:
+                self.progress.emit(f"Pushing {fname} ({idx + 1}/{total})...")
+                try:
+                    res = subprocess.run(
+                        [adb] + target + ["push", fpath, self.destination_folder],
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                        creationflags=0x08000000
+                    )
+                    out = ((res.stdout or "") + "\n" + (res.stderr or "")).strip()
+                    out_low = out.lower()
+                    has_error = (
+                        res.returncode != 0 or
+                        "failed to copy" in out_low or
+                        "permission denied" in out_low or
+                        "no space left" in out_low or
+                        "read-only file system" in out_low or
+                        "error:" in out_low
+                    )
+                    if not has_error:
+                        success_count += 1
+                        self.file_result.emit(fname, True, out or "File transferred successfully")
+                    else:
+                        fail_count += 1
+                        err = out or f"File transfer failed with exit code {res.returncode}"
+                        self.file_result.emit(fname, False, err)
+                except subprocess.TimeoutExpired:
+                    fail_count += 1
+                    self.file_result.emit(fname, False, "File transfer timed out after 120 seconds.")
+                except Exception as e:
+                    fail_count += 1
+                    self.file_result.emit(fname, False, str(e))
+
+        self.finished_all.emit(success_count, fail_count)
 
 
 class GNDroidCompanionSidebar(QWidget):
@@ -7390,6 +7833,7 @@ class GNDroidCompanionSidebar(QWidget):
         self._user_positioned = False
         self._is_recording = False
         self._record_proc = None
+        self._active_workers: List[QThread] = []
 
         self.setup_ui()
 
@@ -7403,6 +7847,12 @@ class GNDroidCompanionSidebar(QWidget):
             self.track_timer.stop()
         if self._is_recording:
             self.stop_recording()
+        if hasattr(self, "_active_workers"):
+            for w in list(self._active_workers):
+                try:
+                    w.cancel()
+                except Exception:
+                    pass
         key = self.target_serial or "default"
         if GNDroidCompanionSidebar._active_sidebars.get(key) is self:
             del GNDroidCompanionSidebar._active_sidebars[key]
@@ -7535,7 +7985,7 @@ class GNDroidCompanionSidebar(QWidget):
         c_layout.addWidget(btn_apps)
 
         btn_set = GNDroidRibbonButton("settings", "#1e293b", "Hardware & System Settings", "Alt+G")
-        btn_set.clicked.connect(self.action_settings)
+        btn_set.clicked.connect(self.action_open_settings)
         c_layout.addWidget(btn_set)
 
         btn_close = GNDroidRibbonButton("close", "#dc2626", "Close Mirror & Controls", "Alt+Q")
@@ -7545,8 +7995,27 @@ class GNDroidCompanionSidebar(QWidget):
         root_layout.addWidget(self.container)
 
     def action_toggle_device_screen(self):
-        # Keycode 26: KEYCODE_POWER (toggles standby / screen off while keeping mirror active)
-        self.send_key(26)
+        # Genuine standby toggle: use scrcpy non-locking turn-screen-off (MOD+o / Alt+O) or non-locking wake/sleep
+        hwnd = find_target_window(self.target_serial)
+        if hwnd:
+            # Send Alt+O to Scrcpy mirror window (scrcpy native MOD+o toggles physical screen off while keeping mirror stream active)
+            user32.PostMessageW(hwnd, 0x0104, 0x12, 0x20380001)  # WM_SYSKEYDOWN VK_MENU (Alt)
+            user32.PostMessageW(hwnd, 0x0104, 0x4F, 0x20180001)  # WM_SYSKEYDOWN 'O' with Alt
+            user32.PostMessageW(hwnd, 0x0105, 0x4F, 0xC0180001)  # WM_SYSKEYUP 'O'
+            user32.PostMessageW(hwnd, 0x0105, 0x12, 0xC0380001)  # WM_SYSKEYUP VK_MENU
+            return
+
+        # Fallback to non-locking Android standby control via ADB
+        adb = SystemPaths.get_adb()
+        target = ["-s", self.target_serial] if self.target_serial else []
+        try:
+            out = subprocess.check_output([adb] + target + ["shell", "dumpsys", "power"], text=True, timeout=2, creationflags=0x08000000)
+            if "mWakefulness=Awake" in out:
+                subprocess.run([adb] + target + ["shell", "input", "keyevent", "223"], timeout=2, creationflags=0x08000000)
+            else:
+                subprocess.run([adb] + target + ["shell", "input", "keyevent", "224"], timeout=2, creationflags=0x08000000)
+        except Exception:
+            self.send_key(223)
 
     def send_key(self, keycode: int):
         adb = SystemPaths.get_adb()
@@ -7592,13 +8061,6 @@ class GNDroidCompanionSidebar(QWidget):
         except Exception:
             self.send_key(3)
 
-    def action_settings(self):
-        adb = SystemPaths.get_adb()
-        target = ["-s", self.target_serial] if self.target_serial else []
-        try:
-            subprocess.run([adb] + target + ["shell", "am", "start", "-a", "android.settings.SETTINGS"], timeout=3, creationflags=0x08000000)
-        except Exception:
-            pass
 
     def close_all(self):
         if self.scrcpy_proc:
@@ -7624,7 +8086,21 @@ class GNDroidCompanionSidebar(QWidget):
         adb = SystemPaths.get_adb()
         target = ["-s", self.target_serial] if self.target_serial else []
         try:
-            subprocess.run([adb] + target + ["shell", "input", "keyevent", "82"], timeout=2, creationflags=0x08000000)
+            # For emulators, inject real accelerometer shake vector variations
+            if not self.target_serial or self.target_serial.startswith("emulator-"):
+                vectors = [(25, 0, 0), (-25, 0, 0), (20, 10, 0), (-20, -10, 0), (0, 9.81, 0)]
+                for x, y, z in vectors:
+                    subprocess.run(
+                        [adb] + target + ["emu", "sensor", "set", "acceleration", f"{x}:{y}:{z}"],
+                        timeout=1, creationflags=0x08000000
+                    )
+                    time.sleep(0.04)
+            else:
+                # For physical devices, broadcast genuine developer shake action
+                subprocess.run(
+                    [adb] + target + ["shell", "am", "broadcast", "-a", "com.android.internal.action.SHAKE"],
+                    timeout=2, creationflags=0x08000000
+                )
         except Exception:
             pass
 
@@ -7741,16 +8217,52 @@ class GNDroidCompanionSidebar(QWidget):
         except Exception as e:
             QMessageBox.warning(self, "Pull Error", f"Recording stopped but file transfer failed: {e}")
 
+    def _start_async_file_transfer(self, file_paths: List[str]):
+        if not file_paths:
+            return
+
+        prog = QProgressDialog("Preparing transfer...", "Cancel", 0, 0, self)
+        prog.setWindowTitle("GNDROiD Package & File Transfer")
+        prog.setWindowModality(Qt.WindowModality.NonModal)
+        prog.setMinimumDuration(0)
+        prog.show()
+
+        worker = AdbInstallOrPushWorker(files=file_paths, target_serial=self.target_serial, parent=self)
+        self._active_workers.append(worker)
+
+        worker.progress.connect(prog.setLabelText)
+        prog.canceled.connect(worker.cancel)
+
+        def on_file_result(fname: str, is_success: bool, msg: str):
+            is_apk = fname.lower().endswith(".apk")
+            if is_success:
+                QMessageBox.information(
+                    self,
+                    "APK Installed" if is_apk else "File Transferred",
+                    f"Successfully installed:\n\n{fname}" if is_apk else f"Successfully copied to phone Downloads:\n\n{fname}"
+                )
+            else:
+                QMessageBox.critical(
+                    self,
+                    "Install Error" if is_apk else "Transfer Error",
+                    f"Operation failed for {fname}:\n\n{msg}"
+                )
+
+        def on_finished(succ: int, fail: int):
+            prog.close()
+            prog.deleteLater()
+            if worker in self._active_workers:
+                self._active_workers.remove(worker)
+
+        worker.file_result.connect(on_file_result)
+        worker.finished_all.connect(on_finished)
+        worker.start()
+
     def action_install_apk_dialog(self):
         path, _ = QFileDialog.getOpenFileName(self, "Select APK to Install", "", "Android Package (*.apk);;All Files (*.*)")
-        if not path: return
-        adb = SystemPaths.get_adb()
-        target = ["-s", self.target_serial] if self.target_serial else []
-        try:
-            subprocess.run([adb] + target + ["install", "-r", path], timeout=20, creationflags=0x08000000)
-            QMessageBox.information(self, "APK Installed", f"Successfully installed:\n\n{os.path.basename(path)}")
-        except Exception as e:
-            QMessageBox.critical(self, "Install Error", str(e))
+        if not path:
+            return
+        self._start_async_file_transfer([path])
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -7839,9 +8351,22 @@ class GNDroidCompanionSidebar(QWidget):
         dlg = GNDroidAppDrawer(self.target_serial, self)
         dlg.exec()
 
-    def action_settings(self):
-        dlg = GNDroidSettingsDialog(self.target_serial, self)
+    def action_open_settings(self):
+        instance_name = "gndroid"
+        if self.target_serial and self.target_serial.startswith("emulator-"):
+            try:
+                adb = SystemPaths.get_adb()
+                name_out = subprocess.check_output([adb, "-s", self.target_serial, "emu", "avd", "name"], text=True, timeout=1, creationflags=0x08000000).strip()
+                avd_n = name_out.splitlines()[0].strip() if name_out else ""
+                if avd_n:
+                    instance_name = avd_n
+            except Exception:
+                pass
+        dlg = GNDroidSettingsDialog(target_serial=self.target_serial, instance_name=instance_name, parent=self)
         dlg.exec()
+
+    def action_settings(self):
+        return self.action_open_settings()
 
     def close_all(self):
         if self.scrcpy_proc:
@@ -7871,24 +8396,13 @@ class GNDroidCompanionSidebar(QWidget):
 
     def dropEvent(self, event: QDropEvent):
         self.dragLeaveEvent(None)
-        adb = SystemPaths.get_adb()
-        target = ["-s", self.target_serial] if self.target_serial else []
+        file_paths = []
         for url in event.mimeData().urls():
-            file_path = url.toLocalFile()
-            if not file_path: continue
-
-            if file_path.lower().endswith(".apk"):
-                try:
-                    subprocess.run([adb] + target + ["install", "-r", file_path], timeout=20, creationflags=0x08000000)
-                    QMessageBox.information(self, "APK Installed", f"Successfully installed:\n{os.path.basename(file_path)}")
-                except Exception as e:
-                    QMessageBox.warning(self, "Install Error", str(e))
-            else:
-                try:
-                    subprocess.run([adb] + target + ["push", file_path, "/sdcard/Download/"], timeout=20, creationflags=0x08000000)
-                    QMessageBox.information(self, "File Transferred", f"Successfully copied to phone Downloads:\n{os.path.basename(file_path)}")
-                except Exception as e:
-                    QMessageBox.warning(self, "Transfer Error", str(e))
+            fpath = url.toLocalFile()
+            if fpath:
+                file_paths.append(fpath)
+        if file_paths:
+            self._start_async_file_transfer(file_paths)
 
 
 # ----------------------------------------------------------------------
@@ -7957,6 +8471,12 @@ def start_mirror_with_fallback(target_serial: str = "", parent=None):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE
         )
+        # Feature 8: Assign Scrcpy mirror process to Win32 Job Object
+        try:
+            from nexus.app_cloner_and_window import assign_to_job_object
+            assign_to_job_object(scrcpy_proc)
+        except Exception:
+            pass
 
         sidebar = GNDroidCompanionSidebar(selected_serial, scrcpy_proc)
         sidebar.show()
@@ -7995,6 +8515,14 @@ def start_mirror_with_fallback(target_serial: str = "", parent=None):
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.PIPE
                         )
+                        # Feature 8: Assign fallback proc to Job Object
+                        try:
+                            from nexus.app_cloner_and_window import assign_to_job_object
+                            assign_to_job_object(fallback_proc)
+                        except Exception:
+                            pass
+                        # Feature 7: Asynchronously drain fallback stderr pipe to prevent deadlock
+                        WirelessMirrorManager.drain_pipe_async(fallback_proc)
                         sidebar.scrcpy_proc = fallback_proc
                         return
                     except Exception:
@@ -8004,6 +8532,9 @@ def start_mirror_with_fallback(target_serial: str = "", parent=None):
                 if any(k in err_text for k in ["Could not find any ADB device", "Server connection failed", "device offline"]):
                     QTimer.singleShot(0, sidebar.close)
                     QTimer.singleShot(100, lambda: start_mirror_with_fallback("", parent))
+            else:
+                # Feature 7: Asynchronously drain scrcpy_proc.stderr continuously to prevent 4KB pipe deadlock
+                WirelessMirrorManager.drain_pipe_async(scrcpy_proc)
 
         t = threading.Thread(target=monitor_process_supervision, daemon=True)
         t.start()
@@ -8015,6 +8546,10 @@ def start_mirror_with_fallback(target_serial: str = "", parent=None):
 
 class GNDroidSettingsDialog(QDialog):
     def __init__(self, target_serial: str = "", instance_name: str = "gndroid", parent=None):
+        # Feature 12: Protect against argument shifting if parent is passed as 2nd positional argument
+        if isinstance(instance_name, QWidget) and parent is None:
+            parent = instance_name
+            instance_name = "gndroid"
         super().__init__(parent)
         self.target_serial = target_serial or ""
         self.instance_name = instance_name or "gndroid"
@@ -8690,7 +9225,8 @@ class GNDroidApp(QMainWindow):
         self.center_on_screen()
 
         # Initial populate
-        self.dev_combo.addItem("⚡ [A34] GNDROiD Flagship (16GB RAM / 16 Cores • Stable)", {
+        hw_info = SystemPaths.get_host_hardware_summary()
+        self.dev_combo.addItem(f"⚡ [A34] GNDROiD Flagship ({hw_info['ram_gb']}GB Host RAM / {hw_info['cores']} Cores • Stable)", {
             "type": "vm", "name": "gndroid", "running": False, "serial": "", "api": 34, "inst": None
         })
         self.dev_combo.addItem("📱 Auto-Detect Physical Phone (Plug USB Cable)", {
@@ -8707,8 +9243,52 @@ class GNDroidApp(QMainWindow):
         self.dev_scanner.start()
 
     def closeEvent(self, event):
+        # Feature 8: Clean shutdown across the complete process tree
+        # 1. Stop background scanner worker
         if hasattr(self, 'dev_scanner') and self.dev_scanner:
-            self.dev_scanner.stop()
+            try:
+                self.dev_scanner.stop()
+            except Exception:
+                pass
+
+        # 2. Stop radar worker if running
+        if hasattr(self, 'radar_worker') and self.radar_worker:
+            try:
+                self.radar_worker.stop()
+            except Exception:
+                pass
+
+        # 3. Close companion sidebars and terminate scrcpy mirrors
+        try:
+            sidebars = list(GNDroidCompanionSidebar._active_sidebars.values())
+            for sb in sidebars:
+                try:
+                    sb.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        # 4. Terminate all dedicated floating app windows
+        try:
+            from nexus.app_cloner_and_window import AppWindowManager
+            AppWindowManager.terminate_all_windows(timeout=2.0)
+        except Exception:
+            pass
+
+        # 5. Gracefully terminate all managed VM instances
+        try:
+            AVDManager.stop_all_instances(timeout=3.0)
+        except Exception:
+            pass
+
+        # 6. Terminate any remaining Win32 Job Object tracked child processes
+        try:
+            from nexus.app_cloner_and_window import Win32JobManager
+            Win32JobManager.get_instance().terminate_all_tracked_processes(timeout=2.0)
+        except Exception:
+            pass
+
         super().closeEvent(event)
 
     def center_on_screen(self):
@@ -8758,7 +9338,8 @@ class GNDroidApp(QMainWindow):
         hb_layout = QHBoxLayout(hw_banner)
         hb_layout.setContentsMargins(14, 10, 14, 10)
 
-        hw_text = QLabel("🚀 <b>PC Hardware Allocated:</b> 16 GB RAM | 16 Cores | 32 GB SSD | GPU Vulkan 60 FPS")
+        hw_info = SystemPaths.get_host_hardware_summary()
+        hw_text = QLabel(f"🚀 <b>Host PC Hardware:</b> {hw_info['summary_text']}")
         hw_text.setStyleSheet("color: #0f172a; font-size: 11px;")
         hb_layout.addWidget(hw_text)
 
@@ -8962,7 +9543,8 @@ class GNDroidApp(QMainWindow):
                 })
 
         if not instances:
-            self.dev_combo.addItem("⚡ [A36] GNDROiD Flagship (Normal Android Instance • 16GB RAM / 16 Cores)", {
+            hw_info = SystemPaths.get_host_hardware_summary()
+            self.dev_combo.addItem(f"⚡ [A36] GNDROiD Flagship (Normal Android Instance • {hw_info['ram_gb']}GB Host RAM / {hw_info['cores']} Cores)", {
                 "type": "vm", "name": "gndroid", "running": False, "serial": "", "api": 36, "inst": None
             })
 
@@ -9157,6 +9739,14 @@ class GNDroidApp(QMainWindow):
                 is_root=inst.get("root", False) if inst else False
             )
             target_serial = f"emulator-{port}"
+            self.running_proc = proc
+            if not hasattr(self, "active_vm_procs"):
+                self.active_vm_procs = {}
+            self.active_vm_procs[name] = {
+                "proc": proc,
+                "pid": proc.pid if hasattr(proc, "pid") else None,
+                "serial": target_serial
+            }
 
             self.btn_launch_vm.setEnabled(False)
             self.btn_launch_vm.setText(f"⏳ Booting {name} ({target_serial})...")
@@ -9313,29 +9903,65 @@ class GNDroidApp(QMainWindow):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
-    def dropEvent(self, event: QDropEvent):
-        adb = SystemPaths.get_adb()
-        target = self.get_selected_target()
-        t_args = ["-s", target] if target and target != "gndroid" else []
+    def _start_async_file_transfer(self, file_paths: List[str]):
+        if not file_paths:
+            return
 
+        target = self.get_selected_target()
+        serial = target if target and target != "gndroid" else ""
+
+        prog = QProgressDialog("Preparing transfer...", "Cancel", 0, 0, self)
+        prog.setWindowTitle("GNDROiD Package & File Transfer")
+        prog.setWindowModality(Qt.WindowModality.NonModal)
+        prog.setMinimumDuration(0)
+        prog.show()
+
+        worker = AdbInstallOrPushWorker(files=file_paths, target_serial=serial, parent=self)
+        if not hasattr(self, "_active_transfer_workers"):
+            self._active_transfer_workers = []
+        self._active_transfer_workers.append(worker)
+
+        def on_progress(text: str):
+            self.status_bar.setText(text)
+            prog.setLabelText(text)
+
+        worker.progress.connect(on_progress)
+        prog.canceled.connect(worker.cancel)
+
+        def on_file_result(fname: str, is_success: bool, msg: str):
+            is_apk = fname.lower().endswith(".apk")
+            if is_success:
+                QMessageBox.information(
+                    self,
+                    "APK Installed" if is_apk else "File Transferred",
+                    f"Successfully installed:\n\n{fname}" if is_apk else f"Successfully copied to phone Downloads folder:\n\n{fname}"
+                )
+            else:
+                QMessageBox.critical(
+                    self,
+                    "Install Error" if is_apk else "Transfer Error",
+                    f"Operation failed for {fname}:\n\n{msg}"
+                )
+
+        def on_finished(succ: int, fail: int):
+            prog.close()
+            prog.deleteLater()
+            if hasattr(self, "_active_transfer_workers") and worker in self._active_transfer_workers:
+                self._active_transfer_workers.remove(worker)
+            self.status_bar.setText(f"GNDROiD v{VERSION} System Ready • Developed by Ghulam Nabi Kalhoro")
+
+        worker.file_result.connect(on_file_result)
+        worker.finished_all.connect(on_finished)
+        worker.start()
+
+    def dropEvent(self, event: QDropEvent):
+        file_paths = []
         for url in event.mimeData().urls():
             fpath = url.toLocalFile()
-            if not fpath: continue
-            if fpath.lower().endswith(".apk"):
-                self.status_bar.setText(f"Installing {os.path.basename(fpath)}...")
-                try:
-                    subprocess.run([adb] + t_args + ["install", "-r", fpath], timeout=20, creationflags=0x08000000)
-                    QMessageBox.information(self, "APK Installed", f"Successfully installed:\n\n{os.path.basename(fpath)}")
-                except Exception as e:
-                    QMessageBox.warning(self, "Install Error", str(e))
-            else:
-                self.status_bar.setText(f"Transferring {os.path.basename(fpath)}...")
-                try:
-                    subprocess.run([adb] + t_args + ["push", fpath, "/sdcard/Download/"], timeout=20, creationflags=0x08000000)
-                    QMessageBox.information(self, "File Transferred", f"Successfully copied to phone Downloads folder:\n\n{os.path.basename(fpath)}")
-                except Exception as e:
-                    QMessageBox.warning(self, "Transfer Error", str(e))
-        self.status_bar.setText(f"GNDROiD v{VERSION} System Ready • Developed by Ghulam Nabi Kalhoro")
+            if fpath:
+                file_paths.append(fpath)
+        if file_paths:
+            self._start_async_file_transfer(file_paths)
 
     def apply_styles(self):
         self.setStyleSheet("""
@@ -9512,15 +10138,107 @@ def main():
                 pass
             sys.exit(0)
 
-    # 2. Direct Mirror Launcher: gndroid.exe --mirror
+    # 2. Direct AVD / Instance Launcher: gndroid.exe --avd <name> or --instance <name> (or launch --avd <name>)
+    if "--avd" in args or "--instance" in args or ("launch" in args and not ("--app" in args or "--launch" in args)):
+        avd_name = ""
+        if "--avd" in args:
+            idx = args.index("--avd")
+            if idx + 1 < len(args) and not args[idx + 1].startswith("-"):
+                avd_name = args[idx + 1]
+        elif "--instance" in args:
+            idx = args.index("--instance")
+            if idx + 1 < len(args) and not args[idx + 1].startswith("-"):
+                avd_name = args[idx + 1]
+        elif "launch" in args:
+            idx = args.index("launch")
+            if idx + 1 < len(args) and not args[idx + 1].startswith("-"):
+                avd_name = args[idx + 1]
+
+        if not avd_name and ("--avd" in args or "--instance" in args):
+            avd_name = "gndroid"
+
+        if avd_name:
+            AVDManager.launch_emulator_instance(avd_name)
+            sys.exit(0)
+
+    # 3. Direct Mirror Launcher: gndroid.exe --mirror [serial]
     if "--mirror" in args or "mirror" in args:
-        # Cross-process singleton guard: if a ribbon is already open in another process, bring it to front and exit
-        existing_ribbon = user32.FindWindowW(None, "GNDROiD Controls") or user32.FindWindowW(None, "gndroid Controls")
+        target_serial = ""
+        if "--mirror" in args:
+            m_idx = args.index("--mirror")
+            if m_idx + 1 < len(args) and not args[m_idx + 1].startswith("-"):
+                target_serial = args[m_idx + 1]
+        elif "mirror" in args:
+            m_idx = args.index("mirror")
+            if m_idx + 1 < len(args) and not args[m_idx + 1].startswith("-"):
+                target_serial = args[m_idx + 1]
+
+        if not target_serial:
+            if "--serial" in args:
+                s_idx = args.index("--serial")
+                if s_idx + 1 < len(args):
+                    target_serial = args[s_idx + 1]
+            elif "-s" in args:
+                s_idx = args.index("-s")
+                if s_idx + 1 < len(args):
+                    target_serial = args[s_idx + 1]
+
+        # Feature 18: Multi-Device Mirroring Guard
+        # Check if a ribbon is already open for THAT SPECIFIC serial/title.
+        # Allow concurrent mirroring of distinct device serials so users can mirror multiple devices simultaneously.
+        existing_ribbon = None
+        check_serial = target_serial
+        if not check_serial:
+            devs = SystemPaths.list_devices()
+            phys = [d for d in devs if not d.get("is_emulator") and d.get("state") == "device"]
+            emus = [d for d in devs if d.get("is_emulator") and d.get("state") == "device"]
+            if phys:
+                check_serial = phys[0]["serial"]
+            elif emus:
+                check_serial = emus[0]["serial"]
+
+        if check_serial:
+            # 1. Exact match for target serial ribbon
+            candidate_titles = [
+                f"GNDROiD Controls - {check_serial}",
+                f"gndroid Controls - {check_serial}"
+            ]
+            for c_title in candidate_titles:
+                h = user32.FindWindowW(None, c_title)
+                if h and user32.IsWindowVisible(h):
+                    existing_ribbon = h
+                    break
+
+            # 2. Window enumeration fallback for target serial ribbon
+            if not existing_ribbon:
+                def enum_ribbon_cb(h, lparam):
+                    nonlocal existing_ribbon
+                    if user32.IsWindowVisible(h):
+                        length = user32.GetWindowTextLengthW(h)
+                        if length > 0:
+                            buf = ctypes.create_unicode_buffer(length + 1)
+                            user32.GetWindowTextW(h, buf, length + 1)
+                            w_title = buf.value.lower()
+                            if "controls" in w_title and check_serial.lower() in w_title:
+                                existing_ribbon = h
+                                return False
+                    return True
+
+                WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+                user32.EnumWindows(WNDENUMPROC(enum_ribbon_cb), 0)
+        else:
+            # No specific serial: check for generic controls ribbon
+            for c_title in ["GNDROiD Controls", "gndroid Controls"]:
+                h = user32.FindWindowW(None, c_title)
+                if h and user32.IsWindowVisible(h):
+                    existing_ribbon = h
+                    break
+
         if existing_ribbon and user32.IsWindowVisible(existing_ribbon):
             user32.SetForegroundWindow(existing_ribbon)
             sys.exit(0)
 
-        sidebar = start_mirror_with_fallback("", None)
+        sidebar = start_mirror_with_fallback(target_serial, None)
         if sidebar:
             sys.exit(app.exec())
         sys.exit(0)

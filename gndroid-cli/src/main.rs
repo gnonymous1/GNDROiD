@@ -21,6 +21,26 @@ const DETACHED_PROCESS: u32 = 0x00000008;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
+
+    /// Launch an Android app directly by package name (supports desktop shortcut routing)
+    #[arg(long)]
+    app: Option<String>,
+
+    /// Launch app in a dedicated separate floating window (Scrcpy virtual display)
+    #[arg(long, short = 'w')]
+    window: bool,
+
+    /// Target Android multi-user/clone profile user ID (e.g. 0 for main, 10 for clone)
+    #[arg(long)]
+    user: Option<String>,
+
+    /// Optional window title for dedicated app window
+    #[arg(long)]
+    title: Option<String>,
+
+    /// Target device serial number
+    #[arg(long, short = 's')]
+    serial: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -31,8 +51,12 @@ enum Commands {
     /// Launch a virtual machine instance or the main controller
     Launch {
         /// Optional AVD name to launch directly
-        #[arg(short, long)]
+        #[arg(short, long, visible_alias = "instance")]
         avd: Option<String>,
+
+        /// Optional positional AVD name (e.g. `gndroid launch MyAVD`)
+        #[arg(value_name = "AVD_NAME")]
+        name: Option<String>,
     },
 
     /// Start phone mirroring with docked companion sidebar
@@ -40,6 +64,10 @@ enum Commands {
         /// Optional target serial (USB or IP:Port)
         #[arg(short, long)]
         serial: Option<String>,
+
+        /// Optional positional target serial
+        #[arg(value_name = "TARGET_SERIAL")]
+        target: Option<String>,
     },
 
     /// Open the Multi-Instance Manager for parallel clones and batch management
@@ -66,34 +94,46 @@ enum Commands {
 }
 
 fn find_workspace_root() -> PathBuf {
-    // 1. Try current executable's directory
+    // 1. Try current executable's directory and its parent ancestors
     if let Ok(exe_path) = env::current_exe() {
-        if let Some(dir) = exe_path.parent() {
-            if dir.join("gndroid.pyw").exists() {
-                return dir.to_path_buf();
-            }
-            if let Some(parent) = dir.parent() {
-                if parent.join("gndroid.pyw").exists() {
-                    return parent.to_path_buf();
-                }
-                if let Some(grandparent) = parent.parent() {
-                    if grandparent.join("gndroid.pyw").exists() {
-                        return grandparent.to_path_buf();
-                    }
-                }
+        let check_path = exe_path.canonicalize().unwrap_or(exe_path);
+        for ancestor in check_path.ancestors() {
+            if ancestor.join("gndroid.pyw").exists() {
+                return ancestor.to_path_buf();
             }
         }
     }
 
-    // 2. Try current working directory
+    // 2. Try current working directory and its parent ancestors
     if let Ok(cwd) = env::current_dir() {
-        if cwd.join("gndroid.pyw").exists() {
-            return cwd;
+        let check_cwd = cwd.canonicalize().unwrap_or(cwd);
+        for ancestor in check_cwd.ancestors() {
+            if ancestor.join("gndroid.pyw").exists() {
+                return ancestor.to_path_buf();
+            }
         }
     }
 
-    // Fallback to default installation path
-    PathBuf::from(r"c:\Users\Reader-Branch\Desktop\Android Emulator")
+    // 3. Try environment variables
+    if let Ok(env_home) = env::var("GNDROID_HOME").or_else(|_| env::var("GNDROID_ROOT")) {
+        let p = PathBuf::from(env_home);
+        if p.join("gndroid.pyw").exists() {
+            return p;
+        }
+    }
+
+    // 4. Dynamic fallback relative to current executable or cwd
+    if let Ok(exe_path) = env::current_exe() {
+        if let Some(parent) = exe_path.parent() {
+            return parent.to_path_buf();
+        }
+    }
+
+    if let Ok(cwd) = env::current_dir() {
+        return cwd;
+    }
+
+    PathBuf::from(".")
 }
 
 fn find_python_executable(gui: bool) -> String {
@@ -348,6 +388,30 @@ fn cmd_shortcuts() -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
+    // Feature 16: Rust CLI Desktop App Shortcut Support
+    // When gndroid.exe --app <pkg> [--window] [--user <id>] [--title <title>] [-s <serial>] is executed,
+    // forward arguments directly to gndroid.pyw so desktop shortcuts launch dedicated app windows without clap crashing.
+    if let Some(ref pkg) = cli.app {
+        let mut script_args: Vec<&str> = vec!["--app", pkg];
+        if cli.window {
+            script_args.push("--window");
+        }
+        if let Some(ref u) = cli.user {
+            script_args.push("--user");
+            script_args.push(u);
+        }
+        if let Some(ref t) = cli.title {
+            script_args.push("--title");
+            script_args.push(t);
+        }
+        if let Some(ref s) = cli.serial {
+            script_args.push("--serial");
+            script_args.push(s);
+        }
+        launch_python_script(&script_args, false)?;
+        return Ok(());
+    }
+
     match cli.command {
         None => {
             // Default action (double click or bare 'gndroid'): Launch full GUI silently
@@ -356,15 +420,17 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Gui) => {
             launch_python_script(&[], false)?;
         }
-        Some(Commands::Launch { avd }) => {
-            if let Some(name) = avd {
-                launch_python_script(&["--avd", &name], false)?;
+        Some(Commands::Launch { avd, name }) => {
+            let target = avd.or(name);
+            if let Some(target_name) = target {
+                launch_python_script(&["--avd", &target_name], false)?;
             } else {
                 launch_python_script(&[], false)?;
             }
         }
-        Some(Commands::Mirror { serial }) => {
-            if let Some(s) = serial {
+        Some(Commands::Mirror { serial, target }) => {
+            let target_serial = serial.or(target).or(cli.serial);
+            if let Some(s) = target_serial {
                 launch_python_script(&["--mirror", &s], false)?;
             } else {
                 launch_python_script(&["--mirror"], false)?;

@@ -16,12 +16,172 @@ import shutil
 import logging
 import subprocess
 import threading
+import ctypes
+from ctypes import wintypes
 from typing import List, Dict, Any, Optional
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] [%(levelname)s] [NexusCloner] %(message)s")
 logger = logging.getLogger("NexusAppCloner")
 
 CREATE_NO_WINDOW = 0x08000000
+
+
+class Win32JobManager:
+    """
+    Win32 Job Object manager for child process containment and orphan prevention.
+    Configured with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE so child processes terminate
+    cleanly when the host application exits or crashes.
+    """
+    _instance: Optional["Win32JobManager"] = None
+    _lock = threading.Lock()
+
+    def __init__(self):
+        self._job_handle = None
+        self._tracked_pids = set()
+        self._tracked_procs: List[subprocess.Popen] = []
+        self._init_job_object()
+
+    @classmethod
+    def get_instance(cls) -> "Win32JobManager":
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = Win32JobManager()
+            return cls._instance
+
+    def _init_job_object(self):
+        if sys.platform != "win32":
+            return
+        try:
+            k32 = ctypes.windll.kernel32
+            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
+            JobObjectExtendedLimitInformation = 9
+
+            class IO_COUNTERS(ctypes.Structure):
+                _fields_ = [
+                    ('ReadOperationCount', ctypes.c_uint64),
+                    ('WriteOperationCount', ctypes.c_uint64),
+                    ('OtherOperationCount', ctypes.c_uint64),
+                    ('ReadTransferCount', ctypes.c_uint64),
+                    ('WriteTransferCount', ctypes.c_uint64),
+                    ('OtherTransferCount', ctypes.c_uint64),
+                ]
+
+            class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+                _fields_ = [
+                    ('PerProcessUserTimeLimit', ctypes.c_int64),
+                    ('PerJobUserTimeLimit', ctypes.c_int64),
+                    ('LimitFlags', wintypes.DWORD),
+                    ('MinimumWorkingSetSize', ctypes.c_size_t),
+                    ('MaximumWorkingSetSize', ctypes.c_size_t),
+                    ('ActiveProcessLimit', wintypes.DWORD),
+                    ('Affinity', ctypes.c_size_t),
+                    ('PriorityClass', wintypes.DWORD),
+                    ('SchedulingClass', wintypes.DWORD),
+                ]
+
+            class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+                _fields_ = [
+                    ('BasicLimitInformation', JOBOBJECT_BASIC_LIMIT_INFORMATION),
+                    ('IoInfo', IO_COUNTERS),
+                    ('ProcessMemoryLimit', ctypes.c_size_t),
+                    ('JobMemoryLimit', ctypes.c_size_t),
+                    ('PeakProcessMemoryLimit', ctypes.c_size_t),
+                    ('PeakJobMemoryLimit', ctypes.c_size_t),
+                ]
+
+            h_job = k32.CreateJobObjectW(None, None)
+            if h_job:
+                info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+                info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+                res = k32.SetInformationJobObject(
+                    h_job,
+                    JobObjectExtendedLimitInformation,
+                    ctypes.byref(info),
+                    ctypes.sizeof(info)
+                )
+                if res:
+                    self._job_handle = h_job
+                    logger.info(f"Win32 Job Object initialized successfully (handle={h_job}) with KILL_ON_JOB_CLOSE.")
+        except Exception as e:
+            logger.debug(f"Job Object initialization note: {e}")
+
+    def assign_process(self, proc_or_pid) -> bool:
+        """
+        Assigns a subprocess.Popen object or an integer PID to the Job Object.
+        Also tracks the process object for graceful shutdown.
+        """
+        if proc_or_pid is None:
+            return False
+
+        proc = proc_or_pid if isinstance(proc_or_pid, subprocess.Popen) else None
+        pid = proc.pid if proc else int(proc_or_pid)
+
+        with self._lock:
+            self._tracked_pids.add(pid)
+            if proc and proc not in self._tracked_procs:
+                self._tracked_procs.append(proc)
+
+        if sys.platform != "win32" or not self._job_handle:
+            return True
+
+        try:
+            k32 = ctypes.windll.kernel32
+            # 1. Prefer proc._handle if available (opened with PROCESS_ALL_ACCESS)
+            if proc and hasattr(proc, "_handle") and proc._handle:
+                res = k32.AssignProcessToJobObject(self._job_handle, int(proc._handle))
+                if res:
+                    return True
+
+            # 2. OpenProcess fallback
+            PROCESS_SET_QUOTA = 0x0100
+            PROCESS_TERMINATE = 0x0001
+            h_proc = k32.OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, False, pid)
+            if h_proc:
+                try:
+                    res = k32.AssignProcessToJobObject(self._job_handle, h_proc)
+                    return bool(res)
+                finally:
+                    k32.CloseHandle(h_proc)
+        except Exception as e:
+            logger.debug(f"AssignProcessToJobObject note for PID {pid}: {e}")
+        return False
+
+    def get_tracked_pids(self) -> List[int]:
+        with self._lock:
+            return list(self._tracked_pids)
+
+    def terminate_all_tracked_processes(self, timeout: float = 3.0):
+        """Gracefully terminates and waits for all tracked child processes."""
+        with self._lock:
+            procs = list(self._tracked_procs)
+
+        for p in procs:
+            if hasattr(p, "poll") and p.poll() is None:
+                try:
+                    p.terminate()
+                except Exception:
+                    pass
+
+        start = time.time()
+        for p in procs:
+            remaining = max(0.1, timeout - (time.time() - start))
+            if hasattr(p, "poll") and p.poll() is None:
+                try:
+                    p.wait(timeout=remaining)
+                except Exception:
+                    try:
+                        p.kill()
+                    except Exception:
+                        pass
+
+
+def get_job_manager() -> Win32JobManager:
+    return Win32JobManager.get_instance()
+
+
+def assign_to_job_object(proc_or_pid) -> bool:
+    return Win32JobManager.get_instance().assign_process(proc_or_pid)
+
 
 
 def get_base_dir() -> str:
@@ -426,6 +586,45 @@ class AppWindowManager:
     Leverages Scrcpy 4.1 virtual display engine (`--new-display`) to project
     individual Android apps and isolated clone sandboxes directly onto the Windows desktop.
     """
+    _active_windows: List[Dict[str, Any]] = []
+    _windows_lock = threading.Lock()
+
+    @classmethod
+    def get_active_windows(cls) -> List[Dict[str, Any]]:
+        """Returns a snapshot of all active dedicated floating app windows."""
+        with cls._windows_lock:
+            # Purge terminated processes
+            cls._active_windows = [
+                w for w in cls._active_windows
+                if w.get("proc") and (hasattr(w["proc"], "poll") and w["proc"].poll() is None)
+            ]
+            return list(cls._active_windows)
+
+    @classmethod
+    def terminate_all_windows(cls, timeout: float = 2.0):
+        """Gracefully terminates and closes all dedicated floating app windows."""
+        with cls._windows_lock:
+            procs = [w.get("proc") for w in cls._active_windows if w.get("proc")]
+            cls._active_windows.clear()
+
+        for p in procs:
+            if hasattr(p, "poll") and p.poll() is None:
+                try:
+                    p.terminate()
+                except Exception:
+                    pass
+
+        start = time.time()
+        for p in procs:
+            rem = max(0.05, timeout - (time.time() - start))
+            if hasattr(p, "poll") and p.poll() is None:
+                try:
+                    p.wait(timeout=rem)
+                except Exception:
+                    try:
+                        p.kill()
+                    except Exception:
+                        pass
 
     @staticmethod
     def launch_app_in_dedicated_window(
@@ -474,6 +673,26 @@ class AppWindowManager:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
+
+        # Assign process to Win32 Job Object for strict lifecycle containment
+        try:
+            Win32JobManager.get_instance().assign_process(proc)
+        except Exception as e:
+            logger.debug(f"Job Object assignment note for dedicated window: {e}")
+
+        # Register in active instance registry
+        entry = {
+            "proc": proc,
+            "pid": proc.pid if hasattr(proc, "pid") else None,
+            "serial": serial,
+            "package": package_name,
+            "app_title": app_title,
+            "user_id": user_id,
+            "window_title": window_title,
+            "launch_time": time.time()
+        }
+        with AppWindowManager._windows_lock:
+            AppWindowManager._active_windows.append(entry)
 
         # If user_id is a clone profile, dispatch background trigger to ensure
         # the clone user's isolated data sandbox is foregrounded on the newly opened virtual display

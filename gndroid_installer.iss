@@ -342,10 +342,17 @@ begin
     DepMemo.Lines.Add('            -> Compatible for High-Performance Multi-Core Android VM.');
 
   DepMemo.Lines.Add('');
-  DepMemo.Lines.Add('  [PASSED]  Hardware Virtualization: Windows Hypervisor Platform (WHPX) Ready');
-  DepMemo.Lines.Add('  [PASSED]  Graphics & Display: Direct3D 11 / Vulkan 1.4 GLES 60-120 FPS Ready');
-  DepMemo.Lines.Add('  [PASSED]  Embedded Engines: Scrcpy v4.1 & Android Platform Tools (ADB) Ready');
-  DepMemo.Lines.Add('  [PASSED]  Video Codecs: FFmpeg AVCodec, AVFormat, AVUtil, SWResample Active');
+  // Hardware virtualization check via Windows Hypervisor service registry entries
+  if RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization') or
+     RegKeyExists(HKLM, 'SYSTEM\CurrentControlSet\Services\HvHost') or
+     RegKeyExists(HKLM, 'SYSTEM\CurrentControlSet\Services\vmickvpexchange') then
+    DepMemo.Lines.Add('  [PASSED]  Hardware Virtualization: Windows Hypervisor Platform (WHPX) Active')
+  else
+    DepMemo.Lines.Add('  [INFO]    Hardware Virtualization: WHPX optional feature (auto-detected at launch)');
+
+  DepMemo.Lines.Add('  [INFO]    Graphics & Display: Direct3D 11 / Vulkan acceleration dynamically negotiated');
+  DepMemo.Lines.Add('  [PAYLOAD] Embedded Engines: Scrcpy v4.1 & Android Platform Tools (ADB) Bundled');
+  DepMemo.Lines.Add('  [PAYLOAD] Video Codecs: FFmpeg AVCodec, AVFormat, AVUtil, SWResample Bundled');
 
   DepMemo.Lines.Add('');
   if (ExistingInstallPath <> '') then

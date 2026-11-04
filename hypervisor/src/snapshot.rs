@@ -47,13 +47,7 @@ impl SnapshotEngine {
                 anyhow::bail!("crosvm snapshot returned non-zero status: {:?}", s.code());
             }
             Err(e) => {
-                // If crosvm binary is not present in local path during offline dev, log and return target
-                info!(
-                    "[Simulated/Dry-Run] Snapshot engine invoked in {:.2}ms: {}",
-                    start_time.elapsed().as_secs_f64() * 1000.0,
-                    e
-                );
-                Ok(target_path)
+                Err(e).context("Failed to execute crosvm snapshot command")
             }
         }
     }
@@ -85,12 +79,7 @@ impl SnapshotEngine {
                 anyhow::bail!("crosvm snapshot restore failed: {:?}", s.code());
             }
             Err(e) => {
-                info!(
-                    "[Simulated/Dry-Run] Snapshot restore invoked in {:.2}ms: {}",
-                    start_time.elapsed().as_secs_f64() * 1000.0,
-                    e
-                );
-                Ok(())
+                Err(e).context("Failed to execute crosvm snapshot restore command")
             }
         }
     }

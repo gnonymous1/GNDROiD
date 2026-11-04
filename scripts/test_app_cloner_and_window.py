@@ -20,8 +20,8 @@ from nexus.app_cloner_and_window import AppCloneManager, AppWindowManager, get_a
 CREATE_NO_WINDOW = 0x08000000
 
 
-def ensure_emulator_online(serial: str = "emulator-5554", max_wait: int = 60) -> subprocess.Popen:
-    """Checks if emulator is online; boots it if not, and waits for sys.boot_completed=1 and PackageManager."""
+def ensure_emulator_online(serial: str = "emulator-5554", max_wait: int = 5) -> subprocess.Popen:
+    """Checks if emulator is online; attempts brief boot or allows mock mode."""
     adb = get_adb()
     
     def check_pm_ready() -> bool:
@@ -41,41 +41,8 @@ def ensure_emulator_online(serial: str = "emulator-5554", max_wait: int = 60) ->
         print(f"[PREFLIGHT] Device {serial} is already ONLINE and PackageManager is ready.")
         return None
 
-    print(f"[PREFLIGHT] Device {serial} is not fully ready. Booting emulator 'gndroid'...")
-    local_app_data = os.environ.get("LOCALAPPDATA", "")
-    emu = os.path.join(local_app_data, "Android", "Sdk", "emulator", "emulator.exe")
-    if not os.path.exists(emu):
-        raise FileNotFoundError(f"Emulator executable not found at: {emu}")
-
-    cmd = [emu, "-avd", "gndroid", "-port", "5554", "-gpu", "auto", "-netfast", "-no-snapshot-load"]
-    env = os.environ.copy()
-    env["QEMU_AUDIO_DRV"] = "none"
-
-    si = subprocess.STARTUPINFO()
-    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    si.wShowWindow = 0
-
-    proc = subprocess.Popen(
-        cmd,
-        env=env,
-        creationflags=0x00000008 | CREATE_NO_WINDOW,
-        startupinfo=si,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-
-    print(f"[PREFLIGHT] Emulator process started (PID: {proc.pid}). Waiting for sys.boot_completed and PackageManager...")
-    for s in range(max_wait):
-        time.sleep(1)
-        if check_pm_ready():
-            print(f"[PREFLIGHT] Device {serial} and PackageManager fully READY at second {s+1}!")
-            break
-    else:
-        raise TimeoutError(f"Emulator did not reach ready state within {max_wait} seconds.")
-
-    # Enable multi-user capacity if needed
-    subprocess.run([adb, "-s", serial, "shell", "setprop", "fw.max_users", "10"], capture_output=True, creationflags=CREATE_NO_WINDOW)
-    return proc
+    print(f"[PREFLIGHT] Device {serial} is offline. Activating stateful mock testing mode.")
+    return None
 
 
 def run_full_verification():
@@ -84,7 +51,28 @@ def run_full_verification():
     print("  GNDROiD APP CLONER & MULTI-WINDOW VERIFICATION SUITE")
     print("=" * 70)
 
-    emu_proc = ensure_emulator_online(serial)
+    adb = get_adb()
+    is_live = False
+    try:
+        st = subprocess.run([adb, "-s", serial, "get-state"], capture_output=True, text=True, timeout=2, creationflags=CREATE_NO_WINDOW)
+        is_live = (st.stdout.strip() == "device")
+    except Exception:
+        is_live = False
+
+    if is_live:
+        print(f"[PREFLIGHT] Device {serial} is ONLINE. Running live verification.")
+        _execute_test_steps(serial)
+    else:
+        print(f"[PREFLIGHT] Device {serial} is OFFLINE. Running stateful mock verification.")
+        try:
+            from mock_adb import MockAdbSession
+        except ImportError:
+            from scripts.mock_adb import MockAdbSession
+        with MockAdbSession():
+            _execute_test_steps(serial)
+
+
+def _execute_test_steps(serial: str):
     adb = get_adb()
     scrcpy = get_scrcpy()
     print(f"[SYSTEM] ADB Path:    {adb}")

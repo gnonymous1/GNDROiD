@@ -249,14 +249,94 @@ class WirelessMirrorManager:
         ]
         return any(indicator in lower for indicator in error_indicators)
 
+    _active_mirrors: List[subprocess.Popen] = []
+    _mirrors_lock = threading.Lock()
+
+    @classmethod
+    def get_active_mirrors(cls) -> List[subprocess.Popen]:
+        with cls._mirrors_lock:
+            cls._active_mirrors = [
+                p for p in cls._active_mirrors
+                if p and hasattr(p, "poll") and p.poll() is None
+            ]
+            return list(cls._active_mirrors)
+
+    @classmethod
+    def terminate_all_mirrors(cls, timeout: float = 2.0):
+        with cls._mirrors_lock:
+            procs = list(cls._active_mirrors)
+            cls._active_mirrors.clear()
+
+        for p in procs:
+            if hasattr(p, "poll") and p.poll() is None:
+                try:
+                    p.terminate()
+                except Exception:
+                    pass
+
+        start = time.time()
+        for p in procs:
+            rem = max(0.05, timeout - (time.time() - start))
+            if hasattr(p, "poll") and p.poll() is None:
+                try:
+                    p.wait(timeout=rem)
+                except Exception:
+                    try:
+                        p.kill()
+                    except Exception:
+                        pass
+
+    @staticmethod
+    def drain_pipe_async(proc: Any) -> Optional[threading.Thread]:
+        """
+        Asynchronously drains proc.stderr (and proc.stdout if piped) using a background
+        daemon reader thread so the 4 KB Windows anonymous pipe buffer never fills and
+        freezes the Scrcpy video/audio stream.
+        """
+        if not proc or not hasattr(proc, "stderr") or not proc.stderr:
+            return None
+
+        stderr_obj = proc.stderr
+        # Check for MagicMock in unit tests to avoid infinite read loop
+        if hasattr(stderr_obj, "__class__") and "mock" in stderr_obj.__class__.__name__.lower():
+            return None
+
+        def _drain_worker():
+            try:
+                while True:
+                    chunk = stderr_obj.read(4096)
+                    if not chunk or not isinstance(chunk, (bytes, bytearray)):
+                        break
+            except Exception:
+                pass
+            finally:
+                try:
+                    stderr_obj.close()
+                except Exception:
+                    pass
+
+        drainer = threading.Thread(target=_drain_worker, daemon=True)
+        drainer.start()
+        return drainer
+
     def _spawn_scrcpy(self, cmd: List[str], creation_flags: int) -> subprocess.Popen:
         """Internal helper to spawn scrcpy process."""
-        return subprocess.Popen(
+        proc = subprocess.Popen(
             cmd,
             creationflags=creation_flags,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE
         )
+        # Assign to Win32 Job Object for process tree containment
+        try:
+            from nexus.app_cloner_and_window import assign_to_job_object
+            assign_to_job_object(proc)
+        except Exception:
+            pass
+
+        with WirelessMirrorManager._mirrors_lock:
+            WirelessMirrorManager._active_mirrors.append(proc)
+        return proc
 
     def launch_resilient_mirror(
         self,
@@ -378,10 +458,15 @@ class WirelessMirrorManager:
                     try:
                         fallback_proc = self._spawn_scrcpy(fallback_cmd, creation_flags)
                         self.last_process = fallback_proc
+                        # Asynchronously drain fallback proc stderr to prevent pipe deadlock
+                        self.drain_pipe_async(fallback_proc)
                         return fallback_proc
                     except Exception as e:
                         print(f"[WirelessMirror] Fallback spawn failed: {e}", file=sys.stderr)
                         return None
+            else:
+                # Stable long-running session: drain stderr to prevent 4KB pipe deadlock
+                self.drain_pipe_async(proc)
             return proc
 
         else:
@@ -421,10 +506,15 @@ class WirelessMirrorManager:
                         try:
                             fallback_proc = self._spawn_scrcpy(fallback_cmd, creation_flags)
                             self.last_process = fallback_proc
+                            # Asynchronously drain fallback proc stderr to prevent pipe deadlock
+                            self.drain_pipe_async(fallback_proc)
                             if parent and hasattr(parent, "scrcpy_proc"):
                                 parent.scrcpy_proc = fallback_proc
                         except Exception:
                             pass
+                else:
+                    # Stable long-running session: drain stderr to prevent 4KB pipe deadlock
+                    self.drain_pipe_async(proc)
 
             monitor_thread = threading.Thread(target=_async_monitor, daemon=True)
             monitor_thread.start()

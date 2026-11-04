@@ -6,6 +6,6 @@ authors = ["Ghulam Nabi Kalhoro"]
 description = "GNDROiD NextGen Android Virtual Machine & Physical Phone Suite CLI & Native Launcher"
 
 [dependencies]
-clap = { workspace = true }
+clap = { version = "4.5", default-features = false, features = ["derive", "std", "help", "usage", "error-context"] }
 anyhow = { workspace = true }
 colored = { workspace = true }

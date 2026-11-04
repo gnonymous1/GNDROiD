@@ -511,31 +511,13 @@ def sanitize_multi_display_config(config_path: str) -> SanitizeResult:
 # -----------------------------------------------------------------------------
 
 class VpnAndDnsArgs(list):
-    """
-    List subclass for VPN and DNS emulator CLI launch arguments containing:
-    ['-dns-server', <dns_servers>, '-wifi-user-mode-options', 'ipv6=off', '-network-user-mode-options', 'ipv6=off'].
-    Maintains full backward compatibility with legacy tests expecting 2-element lists.
-    """
-    def __init__(self, dns_servers: str = "8.8.8.8,1.1.1.1"):
-        self.dns_servers = str(dns_servers)
-        super().__init__([
-            "-dns-server", self.dns_servers,
-            "-wifi-user-mode-options", "ipv6=off",
-            "-network-user-mode-options", "ipv6=off"
-        ])
+    """Standard list representation for VPN and DNS launch arguments without spoofing."""
+    pass
 
-    def __len__(self):
-        return 2
 
-    def __eq__(self, other):
-        if super().__eq__(other):
-            return True
-        if isinstance(other, list) and list(other) == self[:2]:
-            return True
-        return False
-
-    def __radd__(self, other):
-        return list(other) + self[:2]
+class MultiDisplayArgs(list):
+    """Standard list representation for multi-display launch arguments without spoofing."""
+    pass
 
 
 def get_vpn_and_dns_emulator_args(dns_servers: str = "8.8.8.8,1.1.1.1") -> List[str]:
@@ -547,21 +529,11 @@ def get_vpn_and_dns_emulator_args(dns_servers: str = "8.8.8.8,1.1.1.1") -> List[
     -network-user-mode-options ipv6=off
     Defaults to 8.8.8.8,1.1.1.1.
     """
-    return VpnAndDnsArgs(dns_servers)
-
-
-class MultiDisplayArgs(list):
-    """
-    List subclass for multi-display CLI arguments containing
-    ['-multidisplay', '1,<w>,<h>,<dpi>,<flag>', '-hotplug-multi-display'].
-    Maintains full backward compatibility with tests expecting 2-element or 3-element lists.
-    """
-    def __eq__(self, other):
-        if super().__eq__(other):
-            return True
-        if isinstance(other, list) and list(other) == self[:2] and len(self) == 3 and self[2] == "-hotplug-multi-display":
-            return True
-        return False
+    return [
+        "-dns-server", str(dns_servers),
+        "-wifi-user-mode-options", "ipv6=off",
+        "-network-user-mode-options", "ipv6=off"
+    ]
 
 
 def get_multi_display_emulator_args(instance_name: str = "gndroid") -> List[str]:
@@ -577,7 +549,7 @@ def get_multi_display_emulator_args(instance_name: str = "gndroid") -> List[str]
         flag = _safe_int(sec.get("flag"), 0)
         if w <= 0 or h <= 0 or d <= 0:
             return []
-        return MultiDisplayArgs(["-multidisplay", f"1,{w},{h},{d},{flag}", "-hotplug-multi-display"])
+        return ["-multidisplay", f"1,{w},{h},{d},{flag}", "-hotplug-multi-display"]
     return []
 
 
@@ -726,16 +698,58 @@ OFFLINE_STABILIZATION_RESULT: Dict[str, Any] = {
 
 def _check_hypervisor_ipv6_disabled(serial: str = "emulator-5554") -> bool:
     """
-    Checks if IPv6 is disabled at the QEMU hypervisor level:
-    1. Check if emulator launch flags include -wifi-user-mode-options ipv6=off
-       and -network-user-mode-options ipv6=off from get_vpn_and_dns_emulator_args().
+    Checks if IPv6 is genuinely disabled at the guest network interface level via ADB shell:
+    1. Checks guest '/proc/net/if_inet6' via ADB shell - if empty or only loopback (lo),
+       IPv6 addresses are completely disabled across physical/virtual network interfaces.
+    2. Checks guest 'ip -6 addr' / 'ip -6 addr show' via ADB shell - verifies no non-loopback
+       or non-link-local global IPv6 addresses are active.
+    3. Checks guest sysctl 'cat /proc/sys/net/ipv6/conf/all/disable_ipv6' == '1'.
     """
+    adb = _find_adb()
     try:
-        args = get_vpn_and_dns_emulator_args()
-        if "-wifi-user-mode-options" in args and "-network-user-mode-options" in args:
+        # 1. Check guest /proc/net/if_inet6 via ADB shell
+        p_inet6 = subprocess.run(
+            [adb, "-s", serial, "shell", "cat", "/proc/net/if_inet6"],
+            capture_output=True, text=True, timeout=3, creationflags=0x08000000
+        )
+        if p_inet6.returncode == 0:
+            lines = [l.strip() for l in p_inet6.stdout.splitlines() if l.strip()]
+            # If the file is completely empty, IPv6 is disabled on all interfaces
+            if not lines:
+                return True
+            # Check if all entries belong to loopback ('lo' or starting with ::1 representation '00000000000000000000000000000001')
+            non_lo = [
+                l for l in lines
+                if not l.endswith("lo") and not l.startswith("00000000000000000000000000000001")
+            ]
+            if not non_lo:
+                return True
+
+        # 2. Check guest 'ip -6 addr' via ADB shell
+        p_addr = subprocess.run(
+            [adb, "-s", serial, "shell", "ip", "-6", "addr"],
+            capture_output=True, text=True, timeout=3, creationflags=0x08000000
+        )
+        if p_addr.returncode == 0:
+            out = p_addr.stdout.strip()
+            # If output is empty or only contains loopback address
+            lines = [
+                l.strip() for l in out.splitlines()
+                if "inet6" in l and "::1/128" not in l and "scope host" not in l
+            ]
+            if not lines:
+                return True
+
+        # 3. Check guest sysctl net.ipv6.conf.all.disable_ipv6
+        p_sysctl = subprocess.run(
+            [adb, "-s", serial, "shell", "cat", "/proc/sys/net/ipv6/conf/all/disable_ipv6"],
+            capture_output=True, text=True, timeout=3, creationflags=0x08000000
+        )
+        if p_sysctl.returncode == 0 and p_sysctl.stdout.strip() == "1":
             return True
     except Exception:
         pass
+
     return False
 
 
@@ -865,20 +879,19 @@ def auto_stabilize_vpn_networking(serial: str = "emulator-5554") -> Dict[str, An
             if grant_vpn_permission(serial, pkg):
                 granted_packages.append(pkg)
 
-        if detected_vpns:
-            vpn_appops_ok = len(granted_packages) > 0
-        else:
-            vpn_appops_ok = len(granted_packages) > 0 or True
+        vpn_appops_ok = len(granted_packages) > 0
     except Exception:
         vpn_appops_ok = False
 
     # Check hypervisor-level IPv6 disablement
     hypervisor_ipv6_off = _check_hypervisor_ipv6_disabled(serial)
 
-    # Truthful calculation: captive portal disabled AND private DNS set AND (ipv6 disabled at guest or hypervisor level)
+    # Truthful calculation: MTU clamped AND captive portal disabled AND private DNS set AND vpn_appops_ok AND (ipv6 disabled at guest or interface level)
     overall_success = (
+        bool(mtu_clamped) and
         bool(captive_portal_disabled) and
         bool(private_dns_set) and
+        bool(vpn_appops_ok) and
         (bool(ipv6_disabled) or hypervisor_ipv6_off)
     )
 
@@ -932,7 +945,8 @@ def fix_guest_vpn_and_dns(serial: str = "emulator-5554") -> Dict[str, Any]:
             "status": "error",
             "serial": serial,
             "online": False,
-            "message": f"Device {serial} is not currently online or reachable via adb."
+            "message": f"Device {serial} is not currently online or reachable via adb.",
+            "stabilization": dict(OFFLINE_STABILIZATION_RESULT)
         }
 
     # 0. Apply Netd, MTU clamping, IPv6 leak cutoff, and captive portal stabilization
