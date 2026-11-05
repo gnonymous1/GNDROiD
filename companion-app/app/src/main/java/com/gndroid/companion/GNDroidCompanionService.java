@@ -17,6 +17,18 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
+import android.media.Image;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.os.Handler;
+import android.os.HandlerThread;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+
 
 /**
  * GNDROiD Unbreakable Companion Service
@@ -41,6 +53,104 @@ public class GNDroidCompanionService extends Service {
     private GNDroidAudioEngine mAudioEngine = null;
     private Thread mWatchdogThread = null;
     private volatile boolean mRunning = false;
+
+    public static volatile MediaProjection activeMediaProjection = null;
+    public static volatile VirtualDisplay activeVirtualDisplay = null;
+    public static volatile ImageReader activeImageReader = null;
+    public static volatile byte[] lastLiveScreenJpeg = null;
+    public static volatile long lastLiveScreenTimestamp = 0;
+    public static volatile int screenCaptureWidth = 540;
+    public static volatile int screenCaptureHeight = 960;
+    private static HandlerThread sImageWorkerThread = null;
+    private static Handler sImageWorkerHandler = null;
+
+    public static synchronized void setMediaProjection(MediaProjection mp, int width, int height, int dpi) {
+        if (activeVirtualDisplay != null) {
+            try { activeVirtualDisplay.release(); } catch (Exception ignored) {}
+            activeVirtualDisplay = null;
+        }
+        if (activeImageReader != null) {
+            try { activeImageReader.close(); } catch (Exception ignored) {}
+            activeImageReader = null;
+        }
+
+        activeMediaProjection = mp;
+        if (mp == null) return;
+
+        int targetW = 540;
+        int targetH = (width > 0) ? (int) Math.round((double) height * 540.0 / Math.max(1, width)) : 960;
+        targetH = (targetH / 2) * 2;
+        screenCaptureWidth = targetW;
+        screenCaptureHeight = targetH;
+
+        if (sImageWorkerThread == null) {
+            sImageWorkerThread = new HandlerThread("GNDroidImageWorker");
+            sImageWorkerThread.start();
+            sImageWorkerHandler = new Handler(sImageWorkerThread.getLooper());
+        }
+
+        try {
+            activeImageReader = ImageReader.newInstance(targetW, targetH, PixelFormat.RGBA_8888, 3);
+            activeImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = null;
+                    try {
+                        image = reader.acquireLatestImage();
+                        if (image != null) {
+                            byte[] jpeg = processImageToJpegBytes(image);
+                            if (jpeg != null && jpeg.length > 50) {
+                                lastLiveScreenJpeg = jpeg;
+                                lastLiveScreenTimestamp = System.currentTimeMillis();
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                    } finally {
+                        if (image != null) {
+                            try { image.close(); } catch (Exception ignored) {}
+                        }
+                    }
+                }
+            }, sImageWorkerHandler);
+
+            activeVirtualDisplay = mp.createVirtualDisplay(
+                "GNDROiDDirectCast",
+                targetW, targetH, dpi > 0 ? dpi : 320,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                activeImageReader.getSurface(),
+                null, sImageWorkerHandler
+            );
+            Log.i(TAG, "Direct Wireless Screen Cast active at " + targetW + "x" + targetH);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create Direct Screen Cast VirtualDisplay", e);
+        }
+    }
+
+    public static byte[] processImageToJpegBytes(Image image) {
+        try {
+            Image.Plane[] planes = image.getPlanes();
+            ByteBuffer buffer = planes[0].getBuffer();
+            int pixelStride = planes[0].getPixelStride();
+            int rowStride = planes[0].getRowStride();
+            int imgW = image.getWidth();
+            int imgH = image.getHeight();
+            int rowPadding = rowStride - pixelStride * imgW;
+            Bitmap rawBmp = Bitmap.createBitmap(imgW + (rowPadding > 0 ? (rowPadding / pixelStride) : 0), imgH, Bitmap.Config.ARGB_8888);
+            rawBmp.copyPixelsFromBuffer(buffer);
+            Bitmap cleanBmp = (rowPadding > 0) ? Bitmap.createBitmap(rawBmp, 0, 0, imgW, imgH) : rawBmp;
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(32768);
+            cleanBmp.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+            if (cleanBmp != rawBmp) {
+                cleanBmp.recycle();
+            }
+            rawBmp.recycle();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 
     @Override
     public void onCreate() {

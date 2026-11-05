@@ -14,6 +14,11 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.util.DisplayMetrics;
+import android.net.Uri;
+
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -40,6 +45,43 @@ public class MainActivity extends Activity {
 
     private Handler mHandler;
     private Runnable mRefreshRunnable;
+
+    public static final int SCREEN_CAPTURE_REQ_CODE = 3001;
+
+    public void requestScreenCapture() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                if (mpm != null) {
+                    startActivityForResult(mpm.createScreenCaptureIntent(), SCREEN_CAPTURE_REQ_CODE);
+                }
+            } catch (Exception e) {
+                Log.e("MainActivity", "Failed to request screen capture", e);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SCREEN_CAPTURE_REQ_CODE && resultCode == RESULT_OK && data != null) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                    if (mpm != null) {
+                        MediaProjection mp = mpm.getMediaProjection(resultCode, data);
+                        if (mp != null) {
+                            DisplayMetrics dm = getResources().getDisplayMetrics();
+                            GNDroidCompanionService.setMediaProjection(mp, dm.widthPixels, dm.heightPixels, dm.densityDpi);
+                            Toast.makeText(this, "🎉 Direct Pure Wi-Fi Mirroring Active!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("MainActivity", "Error handling screen capture result", e);
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +123,70 @@ public class MainActivity extends Activity {
 
         // Ensure companion background service is running
         startCompanionService();
+
+        // Make permission rows interactive
+        mTvPermAccessibility.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Open Settings > Accessibility to enable", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        mTvPermOverlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Open Settings > Apps > Display over other apps", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        mTvPermDoze.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Open Settings > Battery > Battery Optimization", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        Button btnStartMirror = findViewById(R.id.btn_start_mirror);
+        if (btnStartMirror != null) {
+            btnStartMirror.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    requestScreenCapture();
+                }
+            });
+        }
+
+        // Auto-request screen capture on initial launch if not yet active
+        if (GNDroidCompanionService.activeMediaProjection == null) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!isFinishing()) {
+                        requestScreenCapture();
+                    }
+                }
+            }, 800);
+        }
 
         mHandler = new Handler(Looper.getMainLooper());
         mRefreshRunnable = new Runnable() {

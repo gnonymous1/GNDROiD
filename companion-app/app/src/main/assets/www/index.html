@@ -64,6 +64,26 @@
             </div>
         </div>
 
+                <!-- Live Direct Screen Mirror -->
+        <div class="card" id="mirrorCard">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="card-title">🖥️ Live Screen Mirror (Pure Wi-Fi)</div>
+                <div id="fpsBadge" style="font-size:11px; color:#10b981; font-weight:600;">Stream Ready</div>
+            </div>
+            <div id="screenContainer" style="position:relative; width:100%; display:flex; justify-content:center; align-items:center; background:#000; border-radius:8px; overflow:hidden; min-height:280px;">
+                <img id="liveScreenImg" src="/api/v1/screen" style="max-width:100%; max-height:480px; display:block; cursor:crosshair; user-select:none;" draggable="false" onerror="onStreamError()" onload="onStreamLoaded()" />
+                <div id="streamOverlay" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(15,23,42,0.85); color:#f8fafc; font-size:13px; text-align:center; padding:20px; gap:10px;">
+                    <div style="font-size:15px; font-weight:bold; color:#38bdf8;">Waiting for Phone Screen Stream</div>
+                    <div>Tap <b>"Start Pure Wireless Mirror"</b> in the GNDROiD Link app on your phone to activate casting.</div>
+                    <button class="btn-primary" onclick="retryStream()" style="padding:6px 14px; font-size:12px;">🔄 Re-check Stream</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button id="btnToggleStream" class="btn-primary" style="flex:1;" onclick="toggleLiveStream()">⏸ Pause Stream</button>
+                <button style="flex:1;" onclick="sendAction('wake')">⚡ Wake Phone Screen</button>
+            </div>
+        </div>
+
         <!-- Hardware & Volume -->
         <div class="card">
             <div class="card-title">Hardware &amp; Volume Controls</div>
@@ -203,6 +223,82 @@
 
         setInterval(updateTelemetry, 2000);
         updateTelemetry();
+    
+        let streaming = true;
+        let streamTimer = null;
+        let deviceW = 1080;
+        let deviceH = 2400;
+
+        function updateScreenFrame() {
+            if (!streaming) return;
+            const img = document.getElementById('liveScreenImg');
+            if (img) {
+                img.src = '/api/v1/screen?t=' + Date.now();
+            }
+        }
+
+        function onStreamLoaded() {
+            const overlay = document.getElementById('streamOverlay');
+            if (overlay) overlay.style.display = 'none';
+            const badge = document.getElementById('fpsBadge');
+            if (badge) {
+                badge.textContent = 'Stream Active (30 FPS)';
+                badge.style.color = '#10b981';
+            }
+            if (streaming) {
+                streamTimer = setTimeout(updateScreenFrame, 40);
+            }
+        }
+
+        function onStreamError() {
+            const overlay = document.getElementById('streamOverlay');
+            if (overlay) overlay.style.display = 'flex';
+            const badge = document.getElementById('fpsBadge');
+            if (badge) {
+                badge.textContent = 'Waiting for permission...';
+                badge.style.color = '#eab308';
+            }
+            if (streaming) {
+                streamTimer = setTimeout(updateScreenFrame, 1500);
+            }
+        }
+
+        function retryStream() {
+            const overlay = document.getElementById('streamOverlay');
+            if (overlay) overlay.style.display = 'none';
+            updateScreenFrame();
+        }
+
+        function toggleLiveStream() {
+            streaming = !streaming;
+            const btn = document.getElementById('btnToggleStream');
+            if (streaming) {
+                btn.textContent = '⏸ Pause Stream';
+                updateScreenFrame();
+            } else {
+                btn.textContent = '▶ Resume Stream';
+                if (streamTimer) clearTimeout(streamTimer);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const screenImg = document.getElementById('liveScreenImg');
+            if (screenImg) {
+                screenImg.addEventListener('click', function(e) {
+                    const rect = screenImg.getBoundingClientRect();
+                    const relX = (e.clientX - rect.left) / rect.width;
+                    const relY = (e.clientY - rect.top) / rect.height;
+                    const clickX = Math.round(relX * deviceW);
+                    const clickY = Math.round(relY * deviceH);
+                    fetch('/api/v1/control', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'tap', x: clickX, y: clickY })
+                    });
+                });
+            }
+        });
+
     </script>
 </body>
 </html>

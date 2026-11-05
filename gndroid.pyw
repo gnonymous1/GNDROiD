@@ -1895,7 +1895,11 @@ class LanRadarWorker(QThread):
                 found_nexus = []
                 found_lock = threading.Lock()
 
+                my_local_ips = self.get_local_ips()
+
                 def probe_ip(host_ip):
+                    if host_ip in my_local_ips:
+                        return
                     # Check Wireless ADB port 5555
                     try:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -1937,31 +1941,53 @@ class LanRadarWorker(QThread):
                         }
 
                 for ip in found_nexus:
-                    model_name = f"Nexus Companion ({ip})"
+                    cport = 51888
+                    for p in (51888, 51880):
+                        try:
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                                s.settimeout(0.2)
+                                if s.connect_ex((ip, p)) == 0:
+                                    cport = p
+                                    break
+                        except Exception:
+                            pass
+
+                    model_name = f"Android Device ({ip})"
                     try:
                         import urllib.request, json
-                        req = urllib.request.Request(f"http://{ip}:51880/status", headers={"User-Agent": "GNDROiD"})
-                        with urllib.request.urlopen(req, timeout=0.6) as resp:
-                            if resp.status == 200:
-                                d = json.loads(resp.read().decode("utf-8", "ignore"))
-                                m = d.get("model") or d.get("device") or ""
-                                mfg = d.get("manufacturer") or ""
-                                if m or mfg:
-                                    model_name = f"{mfg} {m}".strip()
+                        for ep in (f"http://{ip}:{cport}/api/v1/status", f"http://{ip}:{cport}/status"):
+                            try:
+                                req = urllib.request.Request(ep, headers={"User-Agent": "GNDROiD"})
+                                with urllib.request.urlopen(req, timeout=0.6) as resp:
+                                    if resp.status == 200:
+                                        d = json.loads(resp.read().decode("utf-8", "ignore"))
+                                        m = d.get("device_name") or d.get("model") or d.get("device") or ""
+                                        mfg = d.get("manufacturer") or ""
+                                        if m:
+                                            model_name = m.strip()
+                                        elif mfg:
+                                            model_name = f"{mfg} Handset".strip()
+                                        break
+                            except Exception:
+                                pass
                     except Exception:
                         pass
 
-                    addr = f"{ip}:5555"
                     has_adb = (ip in found_adb)
+                    serial_key = f"{ip}:5555" if has_adb else f"{ip}:{cport}"
                     if not any(ip in k for k in results_map.keys()):
-                        results_map[addr] = {
-                            "serial": addr,
+                        results_map[serial_key] = {
+                            "serial": serial_key,
                             "model": model_name,
-                            "address": f"{ip}:51880 (Companion)" if not has_adb else addr,
-                            "protocol": "📲 Nexus Companion (Wi-Fi)",
-                            "status": "🟢 Ready to Mirror" if has_adb else "🟡 Nexus Active (Needs ADB 5555)",
-                            "is_connected": False,
-                            "can_mirror": has_adb,
+                            "address": f"{ip}:{cport} (Wireless)",
+                            "protocol": "⚡ Pure Wi-Fi Companion (Zero Cable)",
+                            "status": "🟢 Ready to Mirror (Direct Wi-Fi)",
+                            "is_connected": True,
+                            "can_mirror": True,
+                            "is_companion": True,
+                            "companion_ip": ip,
+                            "companion_port": cport,
+                            "has_adb": has_adb,
                             "nexus_host_ip": ip
                         }
         except Exception:
@@ -1999,6 +2025,23 @@ class LanRadarWorker(QThread):
             pass
 
         return list(results_map.values())
+
+    def get_local_ips(self) -> set:
+        ips = {"127.0.0.1", "localhost"}
+        try:
+            import socket
+            for info in socket.getaddrinfo(socket.gethostname(), None):
+                ips.add(info[4][0])
+        except Exception:
+            pass
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ips.add(s.getsockname()[0])
+            s.close()
+        except Exception:
+            pass
+        return ips
 
     def get_subnet_prefix(self) -> str:
         try:
@@ -2296,6 +2339,305 @@ class NexusCompanionManager:
 GNDroidCompanionManager = NexusCompanionManager
 
 
+# ----------------------------------------------------------------------
+# GNDroidWirelessMirrorWindow: Pure Wi-Fi Mirror & KVM Remote (Zero Cable)
+# ----------------------------------------------------------------------
+class WirelessStreamWorker(QThread):
+    sig_frame = pyqtSignal(QPixmap, int)
+    sig_status = pyqtSignal(str)
+
+    def __init__(self, host_ip: str, port: int = 51888, parent=None):
+        super().__init__(parent)
+        self.host_ip = host_ip
+        self.port = port
+        self._running = True
+
+    def stop(self):
+        self._running = False
+        self.wait(1000)
+
+    def run(self):
+        import urllib.request, time
+        endpoints = [
+            f"http://{self.host_ip}:{self.port}/api/v1/screen",
+            f"http://{self.host_ip}:{self.port}/screen.jpg",
+            f"http://{self.host_ip}:{self.port}/screen/raw"
+        ]
+
+        while self._running:
+            t0 = time.time()
+            frame_data = None
+            for ep in endpoints:
+                try:
+                    req = urllib.request.Request(ep, headers={"User-Agent": "GNDROiD-WirelessMirror"})
+                    with urllib.request.urlopen(req, timeout=1.2) as resp:
+                        if resp.status == 200:
+                            frame_data = resp.read()
+                            if frame_data and len(frame_data) > 80:
+                                break
+                except Exception:
+                    continue
+
+            latency = int((time.time() - t0) * 1000)
+            if frame_data:
+                pix = QPixmap()
+                if pix.loadFromData(frame_data):
+                    self.sig_frame.emit(pix, latency)
+            else:
+                time.sleep(0.15)
+
+            elapsed = time.time() - t0
+            to_sleep = max(0.015, 0.033 - elapsed)
+            time.sleep(to_sleep)
+
+
+class ScreenInteractiveLabel(QLabel):
+    sig_tap = pyqtSignal(float, float)
+    sig_swipe = pyqtSignal(float, float, float, float, int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setMouseTracking(True)
+        self.drag_start = None
+        self.drag_start_time = 0
+        self.current_pixmap = None
+        self.setStyleSheet("background-color: #0b0f19; border-radius: 12px;")
+
+    def update_frame(self, pixmap: QPixmap):
+        self.current_pixmap = pixmap
+        scaled = pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        self.setPixmap(scaled)
+
+    def mousePressEvent(self, evt):
+        if evt.button() == Qt.MouseButton.LeftButton:
+            self.drag_start = evt.pos()
+            self.drag_start_time = time.time()
+
+    def mouseReleaseEvent(self, evt):
+        if evt.button() == Qt.MouseButton.LeftButton and self.drag_start:
+            p1 = self.drag_start
+            p2 = evt.pos()
+            self.drag_start = None
+            dist = ((p2.x() - p1.x())**2 + (p2.y() - p1.y())**2)**0.5
+
+            nx, ny = self.point_to_norm(p2)
+            if nx is None:
+                return
+
+            if dist < 8:
+                self.sig_tap.emit(nx, ny)
+            else:
+                nx1, ny1 = self.point_to_norm(p1)
+                dur = int((time.time() - self.drag_start_time) * 1000)
+                self.sig_swipe.emit(nx1, ny1, nx, ny, max(150, dur))
+
+    def point_to_norm(self, pt):
+        if not self.pixmap() or not self.current_pixmap:
+            return None, None
+        pw = self.pixmap().width()
+        ph = self.pixmap().height()
+        ox = (self.width() - pw) / 2.0
+        oy = (self.height() - ph) / 2.0
+        rx = pt.x() - ox
+        ry = pt.y() - oy
+        if 0 <= rx <= pw and 0 <= ry <= ph:
+            return rx / float(pw), ry / float(ph)
+        return None, None
+
+
+class GNDroidWirelessMirrorWindow(QMainWindow):
+    _active_windows = {}
+
+    def __init__(self, host_ip: str, port: int = 51888, model_name: str = "Android Device", parent=None):
+        super().__init__(parent)
+        self.host_ip = host_ip
+        self.port = port
+        self.model_name = model_name
+        self.target_key = f"{host_ip}:{port}"
+        GNDroidWirelessMirrorWindow._active_windows[self.target_key] = self
+
+        self.setWindowTitle(f"📱 {self.model_name} — Pure Wi-Fi Mirror (Zero Cable) [{self.host_ip}:{self.port}]")
+        self.resize(440, 840)
+        self.setMinimumSize(360, 600)
+        self.setup_ui()
+
+        # Start stream worker
+        self.stream_worker = WirelessStreamWorker(self.host_ip, self.port, self)
+        self.stream_worker.sig_frame.connect(self.on_frame_received)
+        self.stream_worker.start()
+
+    def setup_ui(self):
+        self.setStyleSheet("""
+            QMainWindow {
+                background: #0f172a;
+                color: #f8fafc;
+                font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif;
+            }
+            QPushButton.ctrlBtn {
+                background: #1e293b;
+                color: #f1f5f9;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton.ctrlBtn:hover {
+                background: #334155;
+                border-color: #0284c7;
+            }
+            QPushButton.ctrlBtn:pressed {
+                background: #0284c7;
+                color: #ffffff;
+            }
+        """)
+
+        central = QWidget()
+        self.setCentralWidget(central)
+        c_layout = QVBoxLayout(central)
+        c_layout.setContentsMargins(10, 10, 10, 10)
+        c_layout.setSpacing(8)
+
+        # Header bar
+        hdr = QHBoxLayout()
+        self.lbl_info = QLabel(f"<b>📱 {self.model_name}</b> <span style='color: #38bdf8;'>({self.host_ip}:{self.port})</span>")
+        self.lbl_info.setStyleSheet("color: #f8fafc; font-size: 12px;")
+        hdr.addWidget(self.lbl_info)
+        hdr.addStretch()
+
+        self.lbl_fps = QLabel("⚡ Connecting Wi-Fi...")
+        self.lbl_fps.setStyleSheet("color: #10b981; font-size: 11px; font-weight: bold;")
+        hdr.addWidget(self.lbl_fps)
+
+        btn_web = QPushButton("🌐 Web HUD")
+        btn_web.setProperty("class", "ctrlBtn")
+        btn_web.setToolTip("Open full web dashboard in browser")
+        btn_web.clicked.connect(self.action_open_web_hud)
+        hdr.addWidget(btn_web)
+
+        c_layout.addLayout(hdr)
+
+        # Interactive Screen View
+        self.screen_view = ScreenInteractiveLabel(self)
+        self.screen_view.sig_tap.connect(self.on_tap)
+        self.screen_view.sig_swipe.connect(self.on_swipe)
+        c_layout.addWidget(self.screen_view, 1)
+
+        # Hardware Navigation Bar
+        nav_row = QHBoxLayout()
+        nav_row.setSpacing(6)
+
+        btn_back = QPushButton("◀ Back")
+        btn_back.setProperty("class", "ctrlBtn")
+        btn_back.clicked.connect(lambda: self.send_action("back"))
+        nav_row.addWidget(btn_back)
+
+        btn_home = QPushButton("○ Home")
+        btn_home.setProperty("class", "ctrlBtn")
+        btn_home.clicked.connect(lambda: self.send_action("home"))
+        nav_row.addWidget(btn_home)
+
+        btn_recents = QPushButton("▢ Recents")
+        btn_recents.setProperty("class", "ctrlBtn")
+        btn_recents.clicked.connect(lambda: self.send_action("recents"))
+        nav_row.addWidget(btn_recents)
+
+        btn_wake = QPushButton("☀️ Wake")
+        btn_wake.setProperty("class", "ctrlBtn")
+        btn_wake.clicked.connect(lambda: self.send_action("wake"))
+        nav_row.addWidget(btn_wake)
+
+        btn_power = QPushButton("⏻ Power")
+        btn_power.setProperty("class", "ctrlBtn")
+        btn_power.clicked.connect(lambda: self.send_action("power"))
+        nav_row.addWidget(btn_power)
+
+        btn_vup = QPushButton("🔊 +")
+        btn_vup.setProperty("class", "ctrlBtn")
+        btn_vup.clicked.connect(lambda: self.send_action("volume_up"))
+        nav_row.addWidget(btn_vup)
+
+        btn_vdown = QPushButton("🔉 -")
+        btn_vdown.setProperty("class", "ctrlBtn")
+        btn_vdown.clicked.connect(lambda: self.send_action("volume_down"))
+        nav_row.addWidget(btn_vdown)
+
+        c_layout.addLayout(nav_row)
+
+    def on_frame_received(self, pixmap: QPixmap, latency_ms: int):
+        self.screen_view.update_frame(pixmap)
+        fps = min(60, max(15, int(1000 / max(15, latency_ms))))
+        self.lbl_fps.setText(f"⚡ {latency_ms} ms • ~{fps} FPS (Pure Wi-Fi)")
+
+    def on_tap(self, normX: float, normY: float):
+        payload = {"action": "tap", "normX": normX, "normY": normY, "x": normX, "y": normY}
+        threading.Thread(target=self._dispatch_http_action, args=(payload,), daemon=True).start()
+
+    def on_swipe(self, x1, y1, x2, y2, dur):
+        payload = {"action": "swipe", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "duration": dur}
+        threading.Thread(target=self._dispatch_http_action, args=(payload,), daemon=True).start()
+
+    def send_action(self, action_name: str):
+        payload = {"action": action_name}
+        threading.Thread(target=self._dispatch_http_action, args=(payload,), daemon=True).start()
+
+    def _dispatch_http_action(self, payload: dict):
+        import urllib.request, json
+        try:
+            url = f"http://{self.host_ip}:{self.port}/api/v1/control"
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                if resp.status == 200:
+                    return
+        except Exception:
+            pass
+
+        try:
+            act = payload.get("action", "")
+            if act == "tap":
+                nx = payload.get("normX", 0.5)
+                ny = payload.get("normY", 0.5)
+                url = f"http://{self.host_ip}:{self.port}/tap?x={nx}&y={ny}&action=TOUCH"
+                with urllib.request.urlopen(url, timeout=1.0):
+                    return
+            elif act in ("back", "home", "recents", "power", "wake"):
+                url = f"http://{self.host_ip}:{self.port}/command"
+                data = json.dumps({"command": f"KEY {act.upper()}"}).encode("utf-8")
+                req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=1.0):
+                    return
+        except Exception:
+            pass
+
+    def action_open_web_hud(self):
+        import webbrowser
+        webbrowser.open(f"http://{self.host_ip}:{self.port}/")
+
+    def keyPressEvent(self, evt):
+        if evt.key() == Qt.Key.Key_Backspace:
+            self.send_action("backspace")
+        elif evt.key() == Qt.Key.Key_Return:
+            self.send_action("enter")
+        elif evt.key() == Qt.Key.Key_Escape:
+            self.send_action("back")
+        else:
+            txt = evt.text()
+            if txt:
+                threading.Thread(target=self._dispatch_http_action, args=({"action": "key", "text": txt},), daemon=True).start()
+        super().keyPressEvent(evt)
+
+    def closeEvent(self, evt):
+        if hasattr(self, "stream_worker") and self.stream_worker:
+            self.stream_worker.stop()
+        if self.target_key in GNDroidWirelessMirrorWindow._active_windows:
+            del GNDroidWirelessMirrorWindow._active_windows[self.target_key]
+        super().closeEvent(evt)
+
+
+
+
 
 
 
@@ -2401,6 +2743,22 @@ class GNDroidAutoLockDialog(QDialog):
         row_btn = QHBoxLayout()
         row_btn.setSpacing(10)
 
+        self.btn_wifi_direct = QPushButton("🌐 Pure Wi-Fi Mirror (Zero Cable)")
+        self.btn_wifi_direct.setStyleSheet("""
+            QPushButton {
+                background: #0284c7;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 700;
+                font-size: 11px;
+            }
+            QPushButton:hover { background: #0369a1; }
+        """)
+        self.btn_wifi_direct.clicked.connect(self.action_mirror_wifi_direct)
+        row_btn.addWidget(self.btn_wifi_direct)
+
         self.btn_usb_mirror = QPushButton("🔌 Mirror via USB Directly")
         self.btn_usb_mirror.setStyleSheet("""
             QPushButton {
@@ -2490,6 +2848,22 @@ class GNDroidAutoLockDialog(QDialog):
         self.progress.setValue(100)
         self.progress.setStyleSheet("QProgressBar::chunk { background-color: #16a34a; }")
         QTimer.singleShot(700, self.accept)
+
+    def action_mirror_wifi_direct(self):
+        comp_port = 51888
+        for p in (51888, 51880):
+            try:
+                import socket
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.2)
+                    if s.connect_ex((self.target_ip, p)) == 0:
+                        comp_port = p
+                        break
+            except Exception:
+                pass
+        win = GNDroidWirelessMirrorWindow(host_ip=self.target_ip, port=comp_port, parent=self.parent())
+        win.show()
+        self.reject()
 
     def action_mirror_usb_direct(self):
         devs = SystemPaths.list_devices()
@@ -4054,8 +4428,31 @@ class GNDroidADBFixerDialog(QDialog):
         if not target:
             return
         host_ip = target.split(":")[0] if ":" in target else target
+        target_port = int(target.split(":")[-1]) if ":" in target else 5555
 
-        # Open Intelligent Auto-Lock Dialog
+        # Check if companion HTTP is active on 51888 or 51880
+        comp_port = None
+        if target_port in (51888, 51880):
+            comp_port = target_port
+        else:
+            for p in (51888, 51880):
+                try:
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(0.2)
+                        if s.connect_ex((host_ip, p)) == 0:
+                            comp_port = p
+                            break
+                except Exception:
+                    pass
+
+        # If Companion HTTP is active: DIRECT WIRELESS MIRROR (ZERO USB CABLE!)
+        if comp_port:
+            win = GNDroidWirelessMirrorWindow(host_ip=host_ip, port=comp_port, parent=self.parent() or self)
+            win.show()
+            self.accept()
+            return
+
+        # Otherwise, if it's an ADB device or needs auto-lock:
         auto_lock = GNDroidAutoLockDialog(target_ip=host_ip, target_serial=target, parent=self)
         if auto_lock.exec() == QDialog.DialogCode.Accepted:
             locked_target = auto_lock.locked_serial or f"{host_ip}:5555"
@@ -4072,6 +4469,42 @@ class GNDroidADBFixerDialog(QDialog):
         if not serial:
             QMessageBox.warning(self, "No Device", "Please connect a device via USB or Wi-Fi first.")
             return
+
+        host_ip = serial.split(":")[0] if ":" in serial else serial
+        adb = SystemPaths.get_adb()
+        adb_connected = False
+        try:
+            r = subprocess.run([adb, "-s", serial, "get-state"], capture_output=True, text=True, timeout=1.5, creationflags=0x08000000)
+            if r.returncode == 0 and "device" in r.stdout.lower():
+                adb_connected = True
+        except Exception:
+            pass
+
+        if not adb_connected:
+            comp_port = None
+            for p in (51888, 51880):
+                try:
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(0.2)
+                        if s.connect_ex((host_ip, p)) == 0:
+                            comp_port = p
+                            break
+                except Exception:
+                    pass
+
+            if comp_port:
+                QMessageBox.information(
+                    self,
+                    "GNDROiD Companion Active",
+                    f"📱 Device at {host_ip}:{comp_port} is connected wirelessly!\n\n"
+                    "⚡ Pure Wi-Fi Mirroring & Remote Controls are ALREADY ACTIVE (Zero USB Cable needed)!\n\n"
+                    "To enable Accessibility / Overlay directly from your phone screen:\n"
+                    "• Tap 'Accessibility Input Injection' on your phone to enable touch\n"
+                    "• Tap 'Floating Overlay Window'\n"
+                    "• Tap 'Doze Battery Exemption'\n\n"
+                    "👉 Tap each row in the companion app on your phone to toggle them in 1 tap!"
+                )
+                return
 
         ok, msg = NexusCompanionManager.grant_full_phone_permissions(serial)
         if ok:
