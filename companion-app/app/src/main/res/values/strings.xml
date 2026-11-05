@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GNDROiD Link</string>
+    <string name="app_subtitle">High-Performance LAN Mirror &amp; Remote Engine</string>
+    <string name="device_admin_description">Enables GNDROiD PC suite to securely lock and manage device display state over LAN.</string>
+    <string name="notification_channel_name">GNDROiD Companion Service</string>
+    <string name="notification_channel_desc">Maintains high-performance Wi-Fi lock and LAN communication bridge.</string>
+    <string name="status_listening">Listening on LAN port 51888</string>
+    <string name="status_connected">Connected to GNDROiD PC</string>
+    <string name="perm_accessibility">Accessibility Injection</string>
+    <string name="perm_overlay">System Overlay (HUD)</string>
+    <string name="perm_battery">Doze Battery Exemption</string>
+    <string name="perm_secure">Write Secure Settings</string>
+</resources>

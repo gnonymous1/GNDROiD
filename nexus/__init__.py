@@ -9,6 +9,11 @@ from .wireless_mirror import (
     WirelessPairingEngine,
     WirelessReconnectionWatchdog,
 )
+from .gndroid_companion_client import (
+    GNDroidCompanionClient,
+    GNDroidSubnetRadar,
+    GNDroidConnectionWatchdog,
+)
 from .display_and_vpn import (
     get_secondary_display_config,
     set_secondary_display_config,
@@ -36,5 +41,8 @@ __all__ = [
     "get_multi_display_emulator_args",
     "detect_installed_vpn_apps",
     "grant_vpn_permission",
-    "SanitizeResult"
+    "SanitizeResult",
+    "GNDroidCompanionClient",
+    "GNDroidSubnetRadar",
+    "GNDroidConnectionWatchdog",
 ]

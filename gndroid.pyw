@@ -1905,15 +1905,18 @@ class LanRadarWorker(QThread):
                                     found_adb.append(host_ip)
                     except Exception:
                         pass
-                    # Check Nexus Companion HTTP port 51880
-                    try:
-                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                            s.settimeout(0.25)
-                            if s.connect_ex((host_ip, 51880)) == 0:
-                                with found_lock:
-                                    found_nexus.append(host_ip)
-                    except Exception:
-                        pass
+                    # Check GNDROiD Link (51888) and Nexus Companion (51880) HTTP ports
+                    for p in (51888, 51880):
+                        try:
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                                s.settimeout(0.25)
+                                if s.connect_ex((host_ip, p)) == 0:
+                                    with found_lock:
+                                        if host_ip not in found_nexus:
+                                            found_nexus.append(host_ip)
+                                    break
+                        except Exception:
+                            pass
 
                 ips_to_check = [f"{prefix}{i}" for i in range(1, 255)]
                 # Feature 10: Capped at 16 concurrent workers to avoid thread churn
@@ -2120,6 +2123,11 @@ class NexusCompanionManager:
     def get_bundled_apk_path() -> str:
         base = get_base_dir()
         cands = [
+            os.path.join(base, "nexus", "GNDROiD_Companion.apk"),
+            os.path.join(base, "tools", "GNDROiD_Companion.apk"),
+            os.path.join(base, "dist", "gndroid", "nexus", "GNDROiD_Companion.apk"),
+            os.path.join(base, "dist", "gndroid", "tools", "GNDROiD_Companion.apk"),
+            os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "GNDROiD", "nexus", "GNDROiD_Companion.apk"),
             os.path.join(base, "nexus", "NexusAI_Mobile_Client.apk"),
             os.path.join(base, "dist", "gndroid", "nexus", "NexusAI_Mobile_Client.apk"),
             os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "GNDROiD", "nexus", "NexusAI_Mobile_Client.apk"),
@@ -2156,38 +2164,58 @@ class NexusCompanionManager:
         except Exception:
             pass
 
-        # 3. Grant NexusAI companion app permissions
-        pkg = "com.nexusai.mobile"
+        # 3. Grant GNDROiD Link & legacy Nexus permissions
+        packages = ["com.gndroid.companion", "com.nexusai.mobile"]
         permissions = [
             "android.permission.WRITE_SECURE_SETTINGS",
             "android.permission.RECORD_AUDIO",
             "android.permission.CAMERA",
             "android.permission.READ_EXTERNAL_STORAGE",
             "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.MANAGE_EXTERNAL_STORAGE",
             "android.permission.ACCESS_FINE_LOCATION",
+            "android.permission.ACCESS_COARSE_LOCATION",
+            "android.permission.POST_NOTIFICATIONS",
         ]
         appops = [
             "SYSTEM_ALERT_WINDOW",
-            "PROJECT_MEDIA"
+            "PROJECT_MEDIA",
+            "POST_NOTIFICATIONS",
+            "RUN_IN_BACKGROUND",
         ]
 
-        for p in permissions:
+        for pkg in packages:
+            for p in permissions:
+                try:
+                    subprocess.run(cmd_pfx + ["shell", "pm", "grant", pkg, p], timeout=2, capture_output=True, creationflags=0x08000000)
+                except Exception:
+                    pass
+
+            for op in appops:
+                try:
+                    subprocess.run(cmd_pfx + ["shell", "appops", "set", pkg, op, "allow"], timeout=2, capture_output=True, creationflags=0x08000000)
+                except Exception:
+                    pass
+
+            # Whitelist from Doze battery restrictions (zero drops)
             try:
-                subprocess.run(cmd_pfx + ["shell", "pm", "grant", pkg, p], timeout=2, capture_output=True, creationflags=0x08000000)
+                subprocess.run(cmd_pfx + ["shell", "dumpsys", "deviceidle", "whitelist", f"+{pkg}"], timeout=2, capture_output=True, creationflags=0x08000000)
             except Exception:
                 pass
 
-        for op in appops:
-            try:
-                subprocess.run(cmd_pfx + ["shell", "appops", "set", pkg, op, "allow"], timeout=2, capture_output=True, creationflags=0x08000000)
-            except Exception:
-                pass
-
-        # 4. Enable accessibility service
+        # 4. Enable accessibility service for both GNDROiD Link and Nexus
         try:
-            subprocess.run(cmd_pfx + ["shell", "settings", "put", "secure", "enabled_accessibility_services", f"{pkg}/.NexusAccessibilityService"], timeout=2, capture_output=True, creationflags=0x08000000)
+            a11y_services = "com.gndroid.companion/.GNDroidAccessibilityService:com.nexusai.mobile/.NexusAccessibilityService"
+            subprocess.run(cmd_pfx + ["shell", "settings", "put", "secure", "enabled_accessibility_services", a11y_services], timeout=2, capture_output=True, creationflags=0x08000000)
             subprocess.run(cmd_pfx + ["shell", "settings", "put", "secure", "accessibility_enabled", "1"], timeout=2, capture_output=True, creationflags=0x08000000)
             granted.append("Background Accessibility & Overlay Permissions Granted")
+        except Exception:
+            pass
+
+        # 5. Start persistent foreground service on device
+        try:
+            subprocess.run(cmd_pfx + ["shell", "am", "start-foreground-service", "-n", "com.gndroid.companion/.GNDroidCompanionService"], timeout=2, capture_output=True, creationflags=0x08000000)
+            granted.append("Persistent Background Service & High-Perf Wi-Fi Lock Activated")
         except Exception:
             pass
 
@@ -2198,7 +2226,7 @@ class NexusCompanionManager:
     def install_companion_apk(target_serial: str = "") -> tuple[bool, str]:
         apk_p = NexusCompanionManager.get_bundled_apk_path()
         if not apk_p:
-            return False, "Could not find Nexus companion client APK. Ensure NexusAI_Mobile_Client.apk is in the nexus/ directory."
+            return False, "Could not find GNDROiD companion client APK. Ensure GNDROiD_Companion.apk is in the nexus/ or tools/ directory."
 
         adb = SystemPaths.get_adb()
         cmd = [adb]
@@ -2213,9 +2241,12 @@ class NexusCompanionManager:
                 cmd_launch = [adb]
                 if target_serial:
                     cmd_launch.extend(["-s", target_serial])
-                cmd_launch.extend(["shell", "monkey", "-p", "com.nexusai.mobile", "-c", "android.intent.category.LAUNCHER", "1"])
-                subprocess.run(cmd_launch, timeout=3, capture_output=True, creationflags=0x08000000)
-                return True, "🎉 Nexus Companion APK installed successfully!\n\nAll permissions granted and service activated on device."
+                # Launch companion app and foreground service
+                subprocess.run(cmd_launch + ["shell", "am", "start", "-n", "com.gndroid.companion/.MainActivity"], timeout=3, capture_output=True, creationflags=0x08000000)
+                subprocess.run(cmd_launch + ["shell", "am", "start-foreground-service", "-n", "com.gndroid.companion/.GNDroidCompanionService"], timeout=3, capture_output=True, creationflags=0x08000000)
+                # Fallback launch for legacy package
+                subprocess.run(cmd_launch + ["shell", "monkey", "-p", "com.nexusai.mobile", "-c", "android.intent.category.LAUNCHER", "1"], timeout=2, capture_output=True, creationflags=0x08000000)
+                return True, "🎉 GNDROiD Companion APK installed successfully!\n\nAll permissions granted and persistent background service activated on device."
             return False, f"Installation output: {res.strip()}"
         except Exception as e:
             return False, str(e)
@@ -2249,6 +2280,7 @@ class NexusCompanionManager:
         pc_ip = cls._get_pc_lan_ip()
         return f"http://{pc_ip}:8088/{apk_name}"
 
+
     @staticmethod
     def _get_pc_lan_ip() -> str:
         try:
@@ -2259,6 +2291,12 @@ class NexusCompanionManager:
             return ip
         except Exception:
             return "127.0.0.1"
+
+
+GNDroidCompanionManager = NexusCompanionManager
+
+
+
 
 
 
@@ -3120,6 +3158,154 @@ class GNDroidADBFixerDialog(QDialog):
 
         cm_l.addLayout(row_ip)
         layout.addWidget(card_manual)
+
+        # -------------------------------------------------------------
+        # CARD 5: 🎮 LAN Remote Control & Navigation Toolbar
+        # -------------------------------------------------------------
+        card_remote = QFrame()
+        card_remote.setProperty("class", "cardBox")
+        cr_l = QVBoxLayout(card_remote)
+        cr_l.setContentsMargins(16, 14, 16, 14)
+        cr_l.setSpacing(10)
+
+        cr_title = QLabel("🎮 LAN Remote Control & Navigation Toolbar:")
+        cr_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        cr_title.setStyleSheet("color: #0f172a; font-weight: 600; font-size: 12px;")
+        cr_l.addWidget(cr_title)
+
+        cr_desc = QLabel("Direct Wi-Fi / ADB control over physical device hardware, system navigation, clipboard, and apps.")
+        cr_desc.setStyleSheet("color: #475569; font-size: 11px;")
+        cr_l.addWidget(cr_desc)
+
+        # Row 1: Power & Volume
+        row_hw = QHBoxLayout()
+        row_hw.setSpacing(8)
+
+        self.btn_rem_wake = QPushButton("⚡ Wake")
+        self.btn_rem_wake.setProperty("class", "btnAction")
+        self.btn_rem_wake.clicked.connect(lambda: self.action_remote_control("wake"))
+        row_hw.addWidget(self.btn_rem_wake)
+
+        self.btn_rem_lock = QPushButton("🔒 Lock")
+        self.btn_rem_lock.setProperty("class", "btnAction")
+        self.btn_rem_lock.clicked.connect(lambda: self.action_remote_control("lock"))
+        row_hw.addWidget(self.btn_rem_lock)
+
+        self.btn_rem_vol_up = QPushButton("🔊 Vol +")
+        self.btn_rem_vol_up.setProperty("class", "btnAction")
+        self.btn_rem_vol_up.clicked.connect(lambda: self.action_remote_control("volume_up"))
+        row_hw.addWidget(self.btn_rem_vol_up)
+
+        self.btn_rem_vol_down = QPushButton("🔉 Vol -")
+        self.btn_rem_vol_down.setProperty("class", "btnAction")
+        self.btn_rem_vol_down.clicked.connect(lambda: self.action_remote_control("volume_down"))
+        row_hw.addWidget(self.btn_rem_vol_down)
+
+        self.btn_rem_vol_mute = QPushButton("🔇 Mute")
+        self.btn_rem_vol_mute.setProperty("class", "btnAction")
+        self.btn_rem_vol_mute.clicked.connect(lambda: self.action_remote_control("volume_mute"))
+        row_hw.addWidget(self.btn_rem_vol_mute)
+
+        cr_l.addLayout(row_hw)
+
+        # Row 2: Navigation & System
+        row_nav = QHBoxLayout()
+        row_nav.setSpacing(8)
+
+        self.btn_rem_back = QPushButton("◀ Back")
+        self.btn_rem_back.setProperty("class", "btnAction")
+        self.btn_rem_back.clicked.connect(lambda: self.action_remote_control("back"))
+        row_nav.addWidget(self.btn_rem_back)
+
+        self.btn_rem_home = QPushButton("🏠 Home")
+        self.btn_rem_home.setProperty("class", "btnAction")
+        self.btn_rem_home.clicked.connect(lambda: self.action_remote_control("home"))
+        row_nav.addWidget(self.btn_rem_home)
+
+        self.btn_rem_recents = QPushButton("⏹ Recents")
+        self.btn_rem_recents.setProperty("class", "btnAction")
+        self.btn_rem_recents.clicked.connect(lambda: self.action_remote_control("recents"))
+        row_nav.addWidget(self.btn_rem_recents)
+
+        self.btn_rem_notif = QPushButton("🔔 Notifications")
+        self.btn_rem_notif.setProperty("class", "btnAction")
+        self.btn_rem_notif.clicked.connect(lambda: self.action_remote_control("notifications"))
+        row_nav.addWidget(self.btn_rem_notif)
+
+        self.btn_rem_qs = QPushButton("⚙️ Quick Settings")
+        self.btn_rem_qs.setProperty("class", "btnAction")
+        self.btn_rem_qs.clicked.connect(lambda: self.action_remote_control("quick_settings"))
+        row_nav.addWidget(self.btn_rem_qs)
+
+        cr_l.addLayout(row_nav)
+
+        # Row 3: Productivity (Clipboard Sync, Line-speed Push, App Launcher)
+        row_tools = QHBoxLayout()
+        row_tools.setSpacing(8)
+
+        self.btn_rem_clip = QPushButton("📋 Sync Clipboard")
+        self.btn_rem_clip.setProperty("class", "btnAction")
+        self.btn_rem_clip.clicked.connect(self.action_sync_clipboard)
+        row_tools.addWidget(self.btn_rem_clip)
+
+        self.btn_rem_push = QPushButton("📁 Push File / APK")
+        self.btn_rem_push.setProperty("class", "btnAction")
+        self.btn_rem_push.clicked.connect(self.action_push_file)
+        row_tools.addWidget(self.btn_rem_push)
+
+        self.btn_rem_apps = QPushButton("🚀 Remote App Launcher")
+        self.btn_rem_apps.setProperty("class", "btnHero")
+        self.btn_rem_apps.clicked.connect(self.action_remote_app_launcher)
+        row_tools.addWidget(self.btn_rem_apps)
+
+        cr_l.addLayout(row_tools)
+        layout.addWidget(card_remote)
+
+        # -------------------------------------------------------------
+        # CARD 6: ⚡ Advanced Video & Audio Stream Settings
+        # -------------------------------------------------------------
+        card_stream = QFrame()
+        card_stream.setProperty("class", "cardBox")
+        cs_l = QVBoxLayout(card_stream)
+        cs_l.setContentsMargins(16, 14, 16, 14)
+        cs_l.setSpacing(10)
+
+        cs_title = QLabel("⚡ Advanced Video & Audio Stream Settings:")
+        cs_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        cs_title.setStyleSheet("color: #0f172a; font-weight: 600; font-size: 12px;")
+        cs_l.addWidget(cs_title)
+
+        row_stream_opts = QHBoxLayout()
+        row_stream_opts.setSpacing(10)
+
+        l_codec = QLabel("Codec:")
+        l_codec.setStyleSheet("color: #475569; font-size: 11px;")
+        row_stream_opts.addWidget(l_codec)
+        self.combo_stream_codec = QComboBox()
+        self.combo_stream_codec.addItems(["H.264 (Universal)", "H.265 / HEVC (High Efficiency)", "AV1 (Next-Gen)"])
+        row_stream_opts.addWidget(self.combo_stream_codec)
+
+        l_fps = QLabel("Max FPS:")
+        l_fps.setStyleSheet("color: #475569; font-size: 11px;")
+        row_stream_opts.addWidget(l_fps)
+        self.combo_stream_fps = QComboBox()
+        self.combo_stream_fps.addItems(["60 FPS (Default)", "30 FPS (Power Save)", "90 FPS (High Refresh)", "120 FPS (Ultra Smooth)"])
+        row_stream_opts.addWidget(self.combo_stream_fps)
+
+        l_br = QLabel("Bitrate:")
+        l_br.setStyleSheet("color: #475569; font-size: 11px;")
+        row_stream_opts.addWidget(l_br)
+        self.combo_stream_bitrate = QComboBox()
+        self.combo_stream_bitrate.addItems(["16 Mbps (Balanced)", "8 Mbps (Low Bandwidth)", "24 Mbps (High Def)", "32 Mbps (Ultra)", "64 Mbps (Lossless Line)"])
+        row_stream_opts.addWidget(self.combo_stream_bitrate)
+
+        self.chk_stream_screen_off = QCheckBox("Dim / Screen-off on Phone")
+        self.chk_stream_screen_off.setToolTip("Keeps physical phone screen off during cast to save battery and reduce heat")
+        self.chk_stream_screen_off.setStyleSheet("color: #0f172a; font-size: 11px;")
+        row_stream_opts.addWidget(self.chk_stream_screen_off)
+
+        cs_l.addLayout(row_stream_opts)
+        layout.addWidget(card_stream)
 
         layout.addStretch()
 
@@ -3987,6 +4173,133 @@ class GNDroidADBFixerDialog(QDialog):
             dlg.resize(max(dlg.width(), 440), 490)
 
         dlg.exec()
+    def _get_active_target_ip(self) -> str:
+        ip = self.edit_ip.text().strip() if hasattr(self, "edit_ip") and self.edit_ip.text() else ""
+        if ip:
+            return ip.split(":")[0]
+        devs = SystemPaths.list_devices()
+        for d in devs:
+            ser = d.get("serial", "")
+            if ":" in ser:
+                return ser.split(":")[0]
+        return "127.0.0.1"
+
+
+
+    def action_remote_control(self, action: str):
+        target_ip = self._get_active_target_ip()
+        try:
+            from nexus.gndroid_companion_client import GNDroidCompanionClient
+            client = GNDroidCompanionClient(host=target_ip)
+            if client.ping(timeout=0.4):
+                if client.control(action):
+                    return
+        except Exception:
+            pass
+
+        adb = SystemPaths.get_adb()
+        key_map = {
+            "wake": ["shell", "input", "keyevent", "224"],
+            "lock": ["shell", "input", "keyevent", "26"],
+            "power": ["shell", "input", "keyevent", "26"],
+            "volume_up": ["shell", "input", "keyevent", "24"],
+            "volume_down": ["shell", "input", "keyevent", "25"],
+            "volume_mute": ["shell", "input", "keyevent", "164"],
+            "back": ["shell", "input", "keyevent", "4"],
+            "home": ["shell", "input", "keyevent", "3"],
+            "recents": ["shell", "input", "keyevent", "187"],
+            "notifications": ["shell", "cmd", "statusbar", "expand-notifications"],
+            "quick_settings": ["shell", "cmd", "statusbar", "expand-settings"],
+        }
+        cmd = key_map.get(action)
+        if cmd:
+            subprocess.run([adb] + cmd, timeout=2, capture_output=True, creationflags=0x08000000 if sys.platform == "win32" else 0)
+
+    def action_sync_clipboard(self):
+        target_ip = self._get_active_target_ip()
+        app_clip = QApplication.clipboard()
+        pc_text = app_clip.text() if app_clip else ""
+        try:
+            from nexus.gndroid_companion_client import GNDroidCompanionClient
+            client = GNDroidCompanionClient(host=target_ip)
+            if client.ping(timeout=0.5):
+                if pc_text:
+                    client.set_clipboard(pc_text)
+                    QMessageBox.information(self, "Clipboard Synced", f"Copied PC clipboard to phone:\n\n{pc_text[:120]}")
+                else:
+                    phone_text = client.get_clipboard()
+                    if phone_text and app_clip:
+                        app_clip.setText(phone_text)
+                        QMessageBox.information(self, "Clipboard Synced", f"Received phone clipboard to PC:\n\n{phone_text[:120]}")
+                    else:
+                        QMessageBox.information(self, "Clipboard Synced", "Clipboard synchronized.")
+                return
+        except Exception:
+            pass
+
+        adb = SystemPaths.get_adb()
+        if pc_text:
+            escaped = pc_text.replace(" ", "%s").replace('"', '\"')
+            subprocess.run([adb, "shell", "input", "text", escaped[:100]], timeout=2, capture_output=True, creationflags=0x08000000 if sys.platform == "win32" else 0)
+            QMessageBox.information(self, "Clipboard Synced", f"Injected clipboard text to phone via ADB:\n\n{pc_text[:120]}")
+        else:
+            QMessageBox.information(self, "Clipboard Sync", "Connect GNDROiD Link Companion on device for real-time bi-directional clipboard sync.")
+
+    def action_push_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select File or APK to Push to Device", "", "All Files (*.*);;Android APKs (*.apk)")
+        if not file_path:
+            return
+        target_ip = self._get_active_target_ip()
+        try:
+            from nexus.gndroid_companion_client import GNDroidCompanionClient
+            client = GNDroidCompanionClient(host=target_ip)
+            if client.ping(timeout=0.5):
+                ok, remote_path = client.upload_file(file_path)
+                if ok:
+                    QMessageBox.information(self, "File Pushed", f"🎉 High-speed Wi-Fi upload complete!\n\nSaved to device:\n{remote_path}")
+                    return
+        except Exception:
+            pass
+
+        adb = SystemPaths.get_adb()
+        res = subprocess.run([adb, "push", file_path, "/sdcard/Download/"], timeout=30, capture_output=True, text=True, creationflags=0x08000000 if sys.platform == "win32" else 0)
+        if res.returncode == 0:
+            QMessageBox.information(self, "File Pushed", f"File pushed to phone via ADB:\n/sdcard/Download/{os.path.basename(file_path)}")
+        else:
+            QMessageBox.warning(self, "Push Failed", f"Could not push file:\n{res.stderr}")
+
+    def action_remote_app_launcher(self):
+        target_ip = self._get_active_target_ip()
+        apps = []
+        try:
+            from nexus.gndroid_companion_client import GNDroidCompanionClient
+            client = GNDroidCompanionClient(host=target_ip)
+            if client.ping(timeout=0.5):
+                apps = client.list_apps()
+        except Exception:
+            pass
+
+        if not apps:
+            adb = SystemPaths.get_adb()
+            res = subprocess.run([adb, "shell", "pm", "list", "packages", "-3"], timeout=4, capture_output=True, text=True, creationflags=0x08000000 if sys.platform == "win32" else 0)
+            if res.returncode == 0:
+                for line in res.stdout.strip().splitlines():
+                    if line.startswith("package:"):
+                        pkg = line[8:].strip()
+                        apps.append({"name": pkg.split(".")[-1].capitalize(), "package": pkg})
+
+        if not apps:
+            QMessageBox.warning(self, "No Apps Found", "Could not query installed applications from device.")
+            return
+
+        items = [f"{a.get('name', 'App')} ({a.get('package')})" for a in apps]
+        item, ok = QInputDialog.getItem(self, "🚀 Remote App Launcher", "Select installed phone app to launch:", items, 0, False)
+        if ok and item:
+            selected_pkg = item.split("(")[-1].rstrip(")")
+            adb = SystemPaths.get_adb()
+            subprocess.run([adb, "shell", "monkey", "-p", selected_pkg, "-c", "android.intent.category.LAUNCHER", "1"], timeout=3, capture_output=True, creationflags=0x08000000 if sys.platform == "win32" else 0)
+            QMessageBox.information(self, "App Launched", f"Launched {selected_pkg} on phone!")
+
 
     def refresh_port_forwards(self):
         rules = SystemPaths.list_port_forwards()
