@@ -156,6 +156,24 @@ public class GNDroidRemoteServer {
                 return;
             }
 
+            if ("/".equals(uri) || "/index.html".equals(uri)) {
+                try {
+                    InputStream assetIn = mContext.getAssets().open("www/index.html");
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    byte[] b = new byte[4096];
+                    int r;
+                    while ((r = assetIn.read(b)) != -1) {
+                        baos.write(b, 0, r);
+                    }
+                    assetIn.close();
+                    sendResponse(out, 200, "text/html", baos.toString("UTF-8"));
+                    return;
+                } catch (Exception e) {
+                    sendResponse(out, 200, "text/html", "<h1>GNDROiD Link Web Console</h1><p>Active</p>");
+                    return;
+                }
+            }
+
             if (uri.startsWith("/ping")) {
                 JSONObject res = new JSONObject();
                 res.put("pong", true);

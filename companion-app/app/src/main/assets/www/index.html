@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNDROiD Link — Web Remote HUD</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 16px; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .title { font-size: 20px; font-weight: 700; color: #38bdf8; }
+        .badge { background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 12px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+        button { background: #334155; border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+        button:hover { background: #475569; }
+        button:active { transform: scale(0.97); }
+        button.btn-primary { background: var(--primary); border-color: var(--primary); }
+        button.btn-primary:hover { background: var(--primary-hover); }
+        input[type="text"] { background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 8px; font-size: 13px; width: 100%; }
+        .drop-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; cursor: pointer; }
+        .drop-zone.dragover { border-color: var(--primary); background: rgba(2, 132, 199, 0.1); }
+        .telemetry-row { display: flex; justify-content: space-between; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="title">⚡ GNDROiD Link</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Web Remote Control HUD</div>
+            </div>
+            <div id="statusBadge" class="badge">CONNECTING...</div>
+        </div>
+
+        <!-- Telemetry -->
+        <div class="card">
+            <div class="card-title">Device Telemetry</div>
+            <div class="telemetry-row">
+                <span style="color: var(--text-muted);">Device Model:</span>
+                <span id="deviceModel" style="font-weight: 600;">--</span>
+            </div>
+            <div class="telemetry-row">
+                <span style="color: var(--text-muted);">Battery Status:</span>
+                <span id="batteryStatus" style="font-weight: 600;">--%</span>
+            </div>
+            <div class="telemetry-row">
+                <span style="color: var(--text-muted);">Heartbeat Watchdog:</span>
+                <span id="pingStatus" style="color: var(--success); font-weight: 600;">0 ms (Active)</span>
+            </div>
+        </div>
+
+        <!-- Hardware & Volume -->
+        <div class="card">
+            <div class="card-title">Hardware &amp; Volume Controls</div>
+            <div class="grid-3">
+                <button onclick="sendAction('wake')">⚡ Wake</button>
+                <button onclick="sendAction('lock')">🔒 Lock</button>
+                <button onclick="sendAction('power')">⏻ Power</button>
+            </div>
+            <div class="grid-3">
+                <button onclick="sendAction('volume_up')">🔊 Vol +</button>
+                <button onclick="sendAction('volume_down')">🔉 Vol -</button>
+                <button onclick="sendAction('volume_mute')">🔇 Mute</button>
+            </div>
+        </div>
+
+        <!-- System Navigation -->
+        <div class="card">
+            <div class="card-title">System Navigation</div>
+            <div class="grid-3">
+                <button onclick="sendAction('back')">◀ Back</button>
+                <button onclick="sendAction('home')">🏠 Home</button>
+                <button onclick="sendAction('recents')">⏹ Recents</button>
+            </div>
+            <div class="grid-2">
+                <button onclick="sendAction('notifications')">🔔 Notifications</button>
+                <button onclick="sendAction('quick_settings')">⚙️ Quick Settings</button>
+            </div>
+        </div>
+
+        <!-- Clipboard -->
+        <div class="card">
+            <div class="card-title">Live Clipboard Sync</div>
+            <div style="display: flex; gap: 8px;">
+                <input id="clipInput" type="text" placeholder="Type or paste text to send to phone...">
+                <button class="btn-primary" onclick="pushClipboard()" style="white-space: nowrap;">Send</button>
+                <button onclick="fetchClipboard()" style="white-space: nowrap;">Fetch</button>
+            </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="card">
+            <div class="card-title">High-Speed Wi-Fi File Push</div>
+            <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                📁 Drag &amp; Drop APKs or Files here to Push to Phone
+                <input id="fileInput" type="file" style="display: none;" onchange="uploadSelected(this.files[0])">
+            </div>
+            <div id="uploadStatus" style="font-size: 11px; color: var(--text-muted); text-align: center;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function sendAction(action) {
+            try {
+                await fetch('/api/v1/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action })
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function updateTelemetry() {
+            try {
+                const t0 = performance.now();
+                const res = await fetch('/api/v1/status');
+                const t1 = performance.now();
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('deviceModel').innerText = data.device_name || data.model || 'Android Device';
+                    document.getElementById('batteryStatus').innerText = data.battery + '% ' + (data.charging ? '⚡' : '') + ' (' + (data.temp_c || 28) + '°C)';
+                    document.getElementById('statusBadge').innerText = 'ONLINE';
+                    document.getElementById('statusBadge').style.borderColor = '#10b981';
+                    document.getElementById('statusBadge').style.color = '#10b981';
+                    document.getElementById('pingStatus').innerText = Math.round(t1 - t0) + ' ms (Active)';
+                }
+            } catch (e) {
+                document.getElementById('statusBadge').innerText = 'OFFLINE';
+                document.getElementById('statusBadge').style.borderColor = '#ef4444';
+                document.getElementById('statusBadge').style.color = '#ef4444';
+            }
+        }
+
+        async function fetchClipboard() {
+            try {
+                const res = await fetch('/api/v1/clipboard');
+                const data = await res.json();
+                if (data.text) document.getElementById('clipInput').value = data.text;
+            } catch(e) {}
+        }
+
+        async function pushClipboard() {
+            const val = document.getElementById('clipInput').value;
+            try {
+                await fetch('/api/v1/clipboard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: val })
+                });
+            } catch(e) {}
+        }
+
+        async function uploadSelected(file) {
+            if (!file) return;
+            const status = document.getElementById('uploadStatus');
+            status.innerText = 'Uploading ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)...';
+            try {
+                const res = await fetch('/api/v1/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'X-Filename': file.name
+                    },
+                    body: file
+                });
+                if (res.ok) {
+                    status.innerText = '✓ Successfully pushed to /sdcard/Download/' + file.name;
+                    status.style.color = '#10b981';
+                } else {
+                    status.innerText = 'Upload failed';
+                    status.style.color = '#ef4444';
+                }
+            } catch (e) {
+                status.innerText = 'Error: ' + e;
+                status.style.color = '#ef4444';
+            }
+        }
+
+        // Drag and drop listeners
+        const dz = document.getElementById('dropZone');
+        dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
+        dz.ondragleave = () => { dz.classList.remove('dragover'); };
+        dz.ondrop = (e) => {
+            e.preventDefault();
+            dz.classList.remove('dragover');
+            if (e.dataTransfer.files.length) uploadSelected(e.dataTransfer.files[0]);
+        };
+
+        setInterval(updateTelemetry, 2000);
+        updateTelemetry();
+    </script>
+</body>
+</html>

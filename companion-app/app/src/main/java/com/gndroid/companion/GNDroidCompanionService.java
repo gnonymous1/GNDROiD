@@ -36,6 +36,8 @@ public class GNDroidCompanionService extends Service {
 
     private GNDroidRemoteServer mRemoteServer = null;
     private GNDroidBeacon mBeacon = null;
+    private GNDroidCastEngine mCastEngine = null;
+    private GNDroidAudioEngine mAudioEngine = null;
     private Thread mWatchdogThread = null;
     private volatile boolean mRunning = false;
 
@@ -56,6 +58,12 @@ public class GNDroidCompanionService extends Service {
 
         mBeacon = new GNDroidBeacon(this);
         mBeacon.start();
+
+        mCastEngine = new GNDroidCastEngine();
+        mCastEngine.start();
+
+        mAudioEngine = new GNDroidAudioEngine();
+        mAudioEngine.start();
 
         startWatchdog();
         mRunning = true;
@@ -91,6 +99,16 @@ public class GNDroidCompanionService extends Service {
         if (mRemoteServer != null) {
             mRemoteServer.stop();
             mRemoteServer = null;
+        }
+
+        if (mCastEngine != null) {
+            mCastEngine.stop();
+            mCastEngine = null;
+        }
+
+        if (mAudioEngine != null) {
+            mAudioEngine.stop();
+            mAudioEngine = null;
         }
 
         unregisterNetworkWatcher();

@@ -36,9 +36,11 @@ APKSIGNER_BAT = os.path.join(BUILD_TOOLS_DIR, "apksigner.bat")
 JAVA_HOME = r"C:\Program Files\Eclipse Adoptium\jdk-17.0.20.8-hotspot"
 JAVAC = os.path.join(JAVA_HOME, "bin", "javac.exe") if os.path.exists(os.path.join(JAVA_HOME, "bin", "javac.exe")) else "javac"
 KEYTOOL = os.path.join(JAVA_HOME, "bin", "keytool.exe") if os.path.exists(os.path.join(JAVA_HOME, "bin", "keytool.exe")) else "keytool"
+JARSIGNER = os.path.join(JAVA_HOME, "bin", "jarsigner.exe") if os.path.exists(os.path.join(JAVA_HOME, "bin", "jarsigner.exe")) else "jarsigner"
 
 BUILD_DIR = os.path.join(BASE_DIR, "build")
 RES_DIR = os.path.join(BASE_DIR, "app", "src", "main", "res")
+ASSETS_DIR = os.path.join(BASE_DIR, "app", "src", "main", "assets")
 MANIFEST = os.path.join(BASE_DIR, "app", "src", "main", "AndroidManifest.xml")
 JAVA_SRC_DIR = os.path.join(BASE_DIR, "app", "src", "main", "java")
 KEYSTORE = os.path.join(BASE_DIR, "gndroid.keystore")
@@ -98,15 +100,18 @@ def build():
 
     # 3. Link resources & generate R.java
     res_apk = os.path.join(BUILD_DIR, "res_linked.apk")
-    run_cmd([
+    link_cmd = [
         AAPT2, "link",
         "-I", PLATFORM_JAR,
         "--manifest", MANIFEST,
         "-o", res_apk,
         "--java", gen_dir,
         "--auto-add-overlay",
-        compiled_res
-    ], "AAPT2 Link Resources & Gen R.java")
+    ]
+    if os.path.exists(ASSETS_DIR):
+        link_cmd.extend(["-A", ASSETS_DIR])
+    link_cmd.append(compiled_res)
+    run_cmd(link_cmd, "AAPT2 Link Resources & Gen R.java")
 
     # 4. Gather all Java files
     java_files = []
@@ -157,17 +162,28 @@ def build():
         z.write(classes_dex, "classes.dex")
     print("[*] Merged classes.dex into unaligned.apk")
 
-    # 8. Zipalign
+    # 8. Jarsigner V1 JAR Signing
+    ensure_keystore()
+    jarsigner_cmd = [
+        JARSIGNER,
+        "-keystore", KEYSTORE,
+        "-storepass", KS_PASS,
+        "-keypass", KS_PASS,
+        unaligned_apk,
+        KEY_ALIAS
+    ]
+    run_cmd(jarsigner_cmd, "Jarsigner V1 JAR Signing")
+
+    # 9. Zipalign (must be executed after v1 signing and before v2/v3 signing)
     aligned_apk = os.path.join(BUILD_DIR, "aligned.apk")
     run_cmd([ZIPALIGN, "-f", "-p", "4", unaligned_apk, aligned_apk], "Zipalign 4-byte Alignment")
 
-    # 9. Sign APK
-    ensure_keystore()
+    # 10. Apksigner V2 + V3 Full-APK Signing
     final_apk = os.path.join(BUILD_DIR, "GNDROiD_Companion.apk")
-    sign_cmd = f'"{APKSIGNER_BAT}" sign --ks "{KEYSTORE}" --ks-pass pass:{KS_PASS} --ks-key-alias {KEY_ALIAS} --key-pass pass:{KS_PASS} --out "{final_apk}" "{aligned_apk}"'
-    run_cmd(sign_cmd, "Apksigner V1+V2+V3 Signing")
+    sign_cmd = f'"{APKSIGNER_BAT}" sign --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --ks "{KEYSTORE}" --ks-pass pass:{KS_PASS} --ks-key-alias {KEY_ALIAS} --key-pass pass:{KS_PASS} --out "{final_apk}" "{aligned_apk}"'
+    run_cmd(sign_cmd, "Apksigner V2+V3 Signing")
 
-    # 10. Verify signature
+    # 11. Verify signature
     verify_cmd = f'"{APKSIGNER_BAT}" verify --verbose "{final_apk}"'
     res_v = run_cmd(verify_cmd, "Apksigner Verification")
     print(res_v.stdout.strip())
