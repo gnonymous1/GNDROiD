@@ -12,6 +12,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -47,7 +48,24 @@ public class GNDroidCompanionService extends Service {
         Log.i(TAG, "GNDROiD Companion Service initializing...");
 
         createNotificationChannel();
-        startForeground(NOTIFICATION_ID, buildForegroundNotification("Active | Waiting for GNDROiD PC..."));
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                int fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    fgsType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
+                }
+                startForeground(NOTIFICATION_ID, buildForegroundNotification("Active | Waiting for GNDROiD PC..."), fgsType);
+            } else {
+                startForeground(NOTIFICATION_ID, buildForegroundNotification("Active | Waiting for GNDROiD PC..."));
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to start with typed foreground service, falling back to legacy", t);
+            try {
+                startForeground(NOTIFICATION_ID, buildForegroundNotification("Active | Waiting for GNDROiD PC..."));
+            } catch (Throwable t2) {
+                Log.e(TAG, "All startForeground attempts failed", t2);
+            }
+        }
 
         acquireLocks();
         registerNetworkWatcher();

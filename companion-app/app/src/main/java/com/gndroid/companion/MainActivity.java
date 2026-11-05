@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -71,6 +72,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Request notification permission on Android 13+ if needed
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
         // Ensure companion background service is running
         startCompanionService();
 
@@ -87,6 +95,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        startCompanionService();
         updateDashboard();
         if (mHandler != null && mRefreshRunnable != null) {
             mHandler.post(mRefreshRunnable);
@@ -109,7 +118,9 @@ public class MainActivity extends Activity {
             } else {
                 startService(serviceIntent);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.e("MainActivity", "Failed to start companion service", e);
+        }
     }
 
     private void updateDashboard() {

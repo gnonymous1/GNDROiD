@@ -71,8 +71,8 @@
         <!-- Unbreakable Persistent Foreground Service -->
         <service
             android:name="com.gndroid.companion.GNDroidCompanionService"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection|specialUse|dataSync">
+            android:exported="true"
+            android:foregroundServiceType="specialUse|dataSync">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="GNDROiD ultra-low-latency LAN mirror, heartbeat watchdog, and remote control server" />
