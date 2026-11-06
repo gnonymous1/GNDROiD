@@ -619,6 +619,22 @@ public class GNDroidRemoteServer {
                         return a11y.injectSwipe(x1, y1, x2, y2, dur);
                     }
                     return false;
+                case "key":
+                    if (a11y != null) {
+                        String text = params.optString("text", "");
+                        return a11y.injectText(text);
+                    }
+                    return false;
+                case "backspace":
+                    if (a11y != null) {
+                        return a11y.injectBackspace();
+                    }
+                    return false;
+                case "enter":
+                    if (a11y != null) {
+                        return a11y.injectText("\n");
+                    }
+                    return false;
                 default:
                     return false;
             }

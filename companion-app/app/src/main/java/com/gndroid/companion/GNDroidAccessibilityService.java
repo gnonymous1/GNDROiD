@@ -6,6 +6,8 @@ import android.graphics.Path;
 import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.os.Bundle;
 
 /**
  * GNDROiD Accessibility Service
@@ -103,4 +105,52 @@ public class GNDroidAccessibilityService extends AccessibilityService {
             return false;
         }
     }
+
+    public boolean injectText(String text) {
+        if (text == null || text.isEmpty()) return false;
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+            AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if (focus == null) {
+                focus = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+            }
+            if (focus != null) {
+                CharSequence existing = focus.getText();
+                String newText = (existing != null ? existing.toString() : "") + text;
+                Bundle args = new Bundle();
+                args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, newText);
+                boolean res = focus.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+                focus.recycle();
+                root.recycle();
+                return res;
+            }
+            root.recycle();
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean injectBackspace() {
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+            AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if (focus != null) {
+                CharSequence existing = focus.getText();
+                if (existing != null && existing.length() > 0) {
+                    String newText = existing.subSequence(0, existing.length() - 1).toString();
+                    Bundle args = new Bundle();
+                    args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, newText);
+                    boolean res = focus.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+                    focus.recycle();
+                    root.recycle();
+                    return res;
+                }
+                focus.recycle();
+            }
+            root.recycle();
+        } catch (Exception ignored) {}
+        return false;
+    }
+
 }
