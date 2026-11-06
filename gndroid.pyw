@@ -9167,6 +9167,28 @@ def start_mirror_with_fallback(target_serial: str = "", parent=None):
     phys = [d for d in devs if not d["is_emulator"] and d["state"] == "device"]
     emus = [d for d in devs if d["is_emulator"] and d["state"] == "device"]
 
+    # Check if target is a Companion device (Port 51880/51888 or direct LAN companion)
+    host_ip = (target_serial.split(":")[0] if ":" in target_serial else target_serial) if target_serial else ""
+    target_port = int(target_serial.split(":")[-1]) if ":" in (target_serial or "") and target_serial.split(":")[-1].isdigit() else None
+    comp_port = None
+    if target_port in (51880, 51888):
+        comp_port = target_port
+    elif host_ip and not host_ip.startswith("emulator-") and host_ip != "gndroid":
+        for p in (51880, 51888):
+            try:
+                import socket
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.18)
+                    if s.connect_ex((host_ip, p)) == 0:
+                        comp_port = p
+                        break
+            except Exception:
+                pass
+    if comp_port:
+        win = GNDroidWirelessMirrorWindow(host_ip=host_ip, port=comp_port, model_name="Infinix X690B", parent=parent)
+        win.show()
+        return win
+
     selected_serial = target_serial
     if not selected_serial or selected_serial == "gndroid":
         if phys:
@@ -10294,8 +10316,24 @@ class GNDroidApp(QMainWindow):
                 "type": "vm", "name": "gndroid", "running": False, "serial": "", "api": 36, "inst": None
             })
 
-        # 2. Add physical devices and any unmapped emulators
+        # 2. Add physical devices, companion handsets, and any unmapped emulators
         has_physical = False
+
+        # Add active Companion mobile handsets as first-class instances
+        for comp_ip in ["192.168.100.245"]:
+            for cp in (51880, 51888):
+                try:
+                    import socket
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s_comp:
+                        s_comp.settimeout(0.15)
+                        if s_comp.connect_ex((comp_ip, cp)) == 0:
+                            self.dev_combo.addItem(f"📱 [Mobile Instance] Infinix X690B ({comp_ip}:{cp} • Wireless Companion)", {
+                                "type": "companion", "host_ip": comp_ip, "port": cp, "name": "Infinix X690B"
+                            })
+                            has_physical = True
+                            break
+                except Exception:
+                    pass
         for d in devs:
             s = d.get("serial", "")
             if not d.get("is_emulator"):
@@ -10365,6 +10403,13 @@ class GNDroidApp(QMainWindow):
                 self.btn_mirror_usb.setStyleSheet("")
                 self.btn_mirror_usb.setToolTip("Mirror physical phone connected via USB or Wi-Fi")
                 self.status_bar.setText(f"Ready: {disp_name} (Android {api}). Click 'Launch' to open normal window.")
+        elif dtype == "companion":
+            name = data.get("name", "Infinix X690B")
+            host_ip = data.get("host_ip", "192.168.100.245")
+            port = data.get("port", 51888)
+            self.btn_launch_vm.setText(f"🚀 Launch {name} (Mobile Instance)")
+            self.btn_launch_vm.setToolTip(f"Open dedicated 60 FPS wireless mirror and controls for {name}")
+            self.status_bar.setText(f"🟢 Mobile Handset Ready: {name} at {host_ip}:{port}. Click Launch to start.")
         elif dtype == "phone":
             serial = data.get("serial", "")
             self.btn_launch_vm.setText(f"🔗 Mirror Phone ({serial})")
@@ -10431,7 +10476,16 @@ class GNDroidApp(QMainWindow):
         inst = None
 
         if isinstance(data, dict):
-            if data.get("type") in ["phone", "mode_usb"]:
+            if data.get("type") == "companion":
+                win = GNDroidWirelessMirrorWindow(
+                    host_ip=data.get("host_ip", "192.168.100.245"),
+                    port=data.get("port", 51888),
+                    model_name=data.get("name", "Infinix X690B"),
+                    parent=self
+                )
+                win.show()
+                return
+            elif data.get("type") in ["phone", "mode_usb"]:
                 self.mirror_physical_device()
                 return
             elif data.get("type") == "mode_lan":
@@ -10988,6 +11042,27 @@ def main():
         if sidebar:
             sys.exit(app.exec())
         sys.exit(0)
+
+    # Direct Mobile Instance Launcher: gndroid.exe --mobile [ip] or --companion [ip]
+    if "--mobile" in args or "--companion" in args or "mobile" in args:
+        m_ip = "192.168.100.245"
+        for idx, a in enumerate(args):
+            if a in ("--mobile", "--companion", "mobile") and idx + 1 < len(args) and not args[idx + 1].startswith("-"):
+                m_ip = args[idx + 1]
+        m_port = 51880
+        for p in (51880, 51888):
+            try:
+                import socket
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.25)
+                    if s.connect_ex((m_ip, p)) == 0:
+                        m_port = p
+                        break
+            except Exception:
+                pass
+        win = GNDroidWirelessMirrorWindow(host_ip=m_ip, port=m_port, model_name="Infinix X690B")
+        win.show()
+        sys.exit(app.exec())
 
     # 3. Direct Wireless LAN Mode: gndroid.exe --lan or --wireless
     if "--lan" in args or "--wireless" in args or "lan" in args:
