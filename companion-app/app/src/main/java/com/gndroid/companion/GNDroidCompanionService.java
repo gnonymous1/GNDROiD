@@ -61,6 +61,7 @@ public class GNDroidCompanionService extends Service {
     public static volatile long lastLiveScreenTimestamp = 0;
     public static volatile int screenCaptureWidth = 540;
     public static volatile int screenCaptureHeight = 960;
+    public static volatile GNDroidCompanionService activeInstance = null;
     private static HandlerThread sImageWorkerThread = null;
     private static Handler sImageWorkerHandler = null;
 
@@ -130,6 +131,7 @@ public class GNDroidCompanionService extends Service {
         try {
             Image.Plane[] planes = image.getPlanes();
             ByteBuffer buffer = planes[0].getBuffer();
+            buffer.rewind();
             int pixelStride = planes[0].getPixelStride();
             int rowStride = planes[0].getRowStride();
             int imgW = image.getWidth();
@@ -157,10 +159,11 @@ public class GNDroidCompanionService extends Service {
         super.onCreate();
         Log.i(TAG, "GNDROiD Companion Service initializing...");
 
+        activeInstance = this;
         createNotificationChannel();
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                int fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+                int fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC | ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     fgsType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
                 }
@@ -200,7 +203,19 @@ public class GNDroidCompanionService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Return START_STICKY to guarantee Android resurrects this service if killed
+        if (intent != null && "ACTION_START_MEDIA_PROJECTION".equals(intent.getAction())) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    int fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC | ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        fgsType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
+                    }
+                    startForeground(NOTIFICATION_ID, buildForegroundNotification("Screen Cast LIVE | Streaming on Port 51880"), fgsType);
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "MediaProjection foreground promotion failed", t);
+            }
+        }
         return START_STICKY;
     }
 

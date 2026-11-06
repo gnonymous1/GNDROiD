@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
@@ -89,6 +90,18 @@ public class MainActivity extends Activity {
         if (requestCode == SCREEN_CAPTURE_REQ_CODE) {
             if (resultCode == RESULT_OK && data != null) {
                 try {
+                    // 1. Ensure Foreground Service is elevated to MEDIA_PROJECTION type BEFORE getMediaProjection()
+                    Intent svcIntent = new Intent(this, GNDroidCompanionService.class);
+                    svcIntent.setAction("ACTION_START_MEDIA_PROJECTION");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(svcIntent);
+                    } else {
+                        startService(svcIntent);
+                    }
+
+                    // Brief yield to ensure FGS type is committed by Android system
+                    try { Thread.sleep(50); } catch (Exception ignored) {}
+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                         if (mpm != null) {
@@ -96,9 +109,10 @@ public class MainActivity extends Activity {
                             if (mp != null) {
                                 DisplayMetrics dm = getResources().getDisplayMetrics();
                                 GNDroidCompanionService.setMediaProjection(mp, dm.widthPixels, dm.heightPixels, dm.densityDpi);
-                                Toast.makeText(this, "✅ Pure Wi-Fi Mirroring Active! Open GNDROiD on PC.", Toast.LENGTH_LONG).show();
+                                Toast.makeText(this, "⚡ Pure Wi-Fi Mirroring Active! Open GNDROiD on PC.", Toast.LENGTH_LONG).show();
                                 if (mTvScreenStatus != null) {
                                     mTvScreenStatus.setText("Screen Cast: ✅ LIVE STREAMING (Port 51880)");
+                                    mTvScreenStatus.setTextColor(Color.rgb(16, 185, 129));
                                 }
                                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                                     @Override
@@ -106,11 +120,14 @@ public class MainActivity extends Activity {
                                         moveTaskToBack(true);
                                     }
                                 }, 1200);
+                            } else {
+                                Toast.makeText(this, "⚠️ MediaProjection handle was null. Please tap Start again.", Toast.LENGTH_SHORT).show();
                             }
                         }
                     }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error handling screen capture result", e);
+                } catch (Throwable t) {
+                    Log.e(TAG, "Error handling screen capture result", t);
+                    Toast.makeText(this, "Capture setup: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             } else {
                 Toast.makeText(this, "Screen capture was cancelled", Toast.LENGTH_SHORT).show();
