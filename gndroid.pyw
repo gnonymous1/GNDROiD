@@ -1910,7 +1910,7 @@ class LanRadarWorker(QThread):
                     except Exception:
                         pass
                     # Check GNDROiD Link (51888) and Nexus Companion (51880) HTTP ports
-                    for p in (51888, 51880):
+                    for p in (51880, 51888):
                         try:
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 s.settimeout(0.25)
@@ -1941,8 +1941,8 @@ class LanRadarWorker(QThread):
                         }
 
                 for ip in found_nexus:
-                    cport = 51888
-                    for p in (51888, 51880):
+                    cport = 51880
+                    for p in (51880, 51888):
                         try:
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 s.settimeout(0.2)
@@ -2850,8 +2850,8 @@ class GNDroidAutoLockDialog(QDialog):
         QTimer.singleShot(700, self.accept)
 
     def action_mirror_wifi_direct(self):
-        comp_port = 51888
-        for p in (51888, 51880):
+        comp_port = 51880
+        for p in (51880, 51888):
             try:
                 import socket
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -4432,10 +4432,10 @@ class GNDroidADBFixerDialog(QDialog):
 
         # Check if companion HTTP is active on 51888 or 51880
         comp_port = None
-        if target_port in (51888, 51880):
+        if target_port in (51880, 51888):
             comp_port = target_port
         else:
-            for p in (51888, 51880):
+            for p in (51880, 51888):
                 try:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(0.2)
@@ -4482,7 +4482,7 @@ class GNDroidADBFixerDialog(QDialog):
 
         if not adb_connected:
             comp_port = None
-            for p in (51888, 51880):
+            for p in (51880, 51888):
                 try:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(0.2)

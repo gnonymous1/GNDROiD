@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
         <!-- Header -->
         <LinearLayout
@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="14dp">
 
             <ImageView
                 android:layout_width="48dp"
@@ -58,7 +58,7 @@
                 android:paddingTop="6dp"
                 android:paddingEnd="12dp"
                 android:paddingBottom="6dp"
-                android:text="ACTIVE"
+                android:text="ONLINE"
                 android:textColor="@color/primary"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -70,8 +70,8 @@
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -85,7 +85,7 @@
                 android:id="@+id/tv_ip_address"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:text="IP: Initializing..."
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
@@ -96,82 +96,227 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Remote Port: 51888 | Radar Beacon: 51880"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:text="Remote Server &amp; Radar Beacon: Port 51880 Active"
+                android:textColor="@color/success"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_network_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Network: Wi-Fi High-Performance Lock Active"
-                android:textColor="@color/success"
+                android:text="Network: Wi-Fi High-Performance WakeLock Active"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- CARD 2: Permission Matrix -->
+        <!-- CARD 2: Wireless Screen Mirroring Master Control -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚡ 1-TAP PERMISSION &amp; PERSISTENCE MATRIX"
+                android:text="⚡ PURE WIRELESS SCREEN MIRROR (ZERO USB CABLE)"
                 android:textColor="@color/primary_dark"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tv_perm_accessibility"
+                android:id="@+id/tv_screen_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="10dp"
+                android:text="Screen Cast: Standby (Tap button below to start)"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btn_start_mirror"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:backgroundTint="@color/primary"
+                android:text="⚡ Start Pure Wireless Mirror (Port 51880)"
+                android:textColor="#ffffff"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- CARD 3: 1-Tap Permission Center -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔐 PERMISSION &amp; PERSISTENCE SETUP"
+                android:textColor="@color/primary_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btn_grant_all"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
                 android:layout_marginTop="8dp"
-                android:text="• Accessibility Input Injection: Checking..."
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:layout_marginBottom="12dp"
+                android:backgroundTint="#059669"
+                android:text="🚀 1-Tap Enable All Permissions"
+                android:textColor="#ffffff"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tv_perm_overlay"
-                android:layout_width="wrap_content"
+            <!-- Row 1: Accessibility -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Floating Overlay Window: Checking..."
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
 
-            <TextView
-                android:id="@+id/tv_perm_doze"
-                android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_perm_accessibility"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Accessibility Input Injection"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Required for PC mouse clicks and touch"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_fix_a11y"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:backgroundTint="@color/primary"
+                    android:text="Enable"
+                    android:textColor="#ffffff"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Row 2: Overlay -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Doze Battery Exemption (Background): Checking..."
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_perm_overlay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Floating Overlay Window"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Required for seamless foreground mirroring"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_fix_overlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:backgroundTint="@color/primary"
+                    android:text="Allow"
+                    android:textColor="#ffffff"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Row 3: Doze Battery -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_perm_doze"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Doze Battery Exemption"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Keeps connection alive 24/7 with screen off"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_fix_doze"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:backgroundTint="@color/primary"
+                    android:text="Exempt"
+                    android:textColor="#ffffff"
+                    android:textSize="11sp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tv_perm_secure"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="• Secure System Settings: Checking..."
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:text="• Secure System Settings: ✅ ACTIVE"
+                android:textColor="@color/success"
+                android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- CARD 3: Diagnostics & Stats -->
+        <!-- CARD 4: Diagnostics & Stats -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -185,7 +330,7 @@
                 android:id="@+id/tv_battery_stats"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:text="Battery: --% | Charging: --"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
@@ -195,20 +340,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Watchdog: Sub-second heartbeat active (0 drops)"
+                android:text="Watchdog: Sub-second heartbeat active (Port 51880)"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>
-
-                    <Button
-                android:id="@+id/btn_start_mirror"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:backgroundTint="@color/primary"
-                android:text="⚡ Start Pure Wireless Mirror (Zero Cable)"
-                android:textColor="#ffffff"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
 
         <!-- Action Buttons -->
         <LinearLayout
@@ -216,12 +351,13 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp">
 
             <Button
                 android:id="@+id/btn_restart_service"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="44dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/primary"
                 android:text="🔄 Restart Bridge"
@@ -231,7 +367,7 @@
             <Button
                 android:id="@+id/btn_minimize"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="44dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/text_secondary"
                 android:text="🔻 Background"
