@@ -364,8 +364,9 @@ def get_instance_network_config(instance_name: str, avd_dir: Optional[str] = Non
 
     cfg_file = os.path.join(avd_dir, f"{instance_name}.avd", "config.ini")
     config: Dict[str, Any] = {
-        "mode": "lan_bridge",  # lan_bridge | hardware_bridged | nat
+        "mode": "hardware_bridged",  # Default: hardware_bridged (real router DHCP IP) | lan_bridge | nat
         "adapter_name": "",
+        "mac_address": "",
         "replicate_state": True,
         "bluetooth_enabled": True,
         "bluetooth_mode": "netsimd",  # netsimd | passthrough
@@ -388,6 +389,7 @@ def get_instance_network_config(instance_name: str, avd_dir: Optional[str] = Non
                         k, v = k.strip(), v.strip()
                         if k == "gndroid.net.mode": config["mode"] = v
                         elif k == "gndroid.net.adapter": config["adapter_name"] = v
+                        elif k == "gndroid.net.mac": config["mac_address"] = v
                         elif k == "gndroid.net.replicate_state": config["replicate_state"] = (v.lower() in ["yes", "true", "1"])
                         elif k == "gndroid.net.bluetooth.enabled": config["bluetooth_enabled"] = (v.lower() in ["yes", "true", "1"])
                         elif k == "gndroid.net.bluetooth.mode": config["bluetooth_mode"] = v
@@ -421,8 +423,9 @@ def save_instance_network_config(instance_name: str, net_cfg: Dict[str, Any], av
         return False
 
     keys_to_write = {
-        "gndroid.net.mode": str(net_cfg.get("mode", "lan_bridge")),
+        "gndroid.net.mode": str(net_cfg.get("mode", "hardware_bridged")),
         "gndroid.net.adapter": str(net_cfg.get("adapter_name", "")),
+        "gndroid.net.mac": str(net_cfg.get("mac_address", "")),
         "gndroid.net.replicate_state": "yes" if net_cfg.get("replicate_state", True) else "no",
         "gndroid.net.bluetooth.enabled": "yes" if net_cfg.get("bluetooth_enabled", True) else "no",
         "gndroid.net.bluetooth.mode": str(net_cfg.get("bluetooth_mode", "netsimd")),
@@ -474,9 +477,12 @@ def get_emulator_network_args(instance_name: str) -> List[str]:
     # Mode 2: Hardware Bridged Adapter (TAP / Hyper-V Switch)
     if mode == "hardware_bridged":
         adapter = cfg.get("adapter_name", "")
+        mac = cfg.get("mac_address", "")
+        if not mac:
+            mac = generate_instance_mac(instance_name)
         args.extend([
             "-qemu",
-            "-net", "nic,model=virtio",
+            "-net", f"nic,model=virtio,macaddr={mac}",
             "-net", f"tap,ifname={adapter or 'OpenVPN TAP-Windows6'}"
         ])
 
@@ -570,3 +576,70 @@ def apply_live_network_ip_and_dns(
 
     summary = f"Applied live to {target_serial}:\n\n• " + "\n• ".join(applied_notes)
     return True, summary
+
+
+def generate_instance_mac(name: str, index: int = 1) -> str:
+    """Generates a distinct, deterministic virtual MAC address for each instance."""
+    import hashlib
+    h = hashlib.md5(name.encode("utf-8")).hexdigest()
+    b3 = h[0:2]
+    b4 = h[2:4]
+    b5 = f"{index % 250 + 1:02x}"
+    return f"52:54:00:{b3}:{b4}:{b5}".lower()
+
+
+def get_next_available_static_ip(avd_dir: Optional[str] = None) -> str:
+    """Calculates the next available static IP for multi-instance provisioning."""
+    if avd_dir is None:
+        avd_dir = os.path.join(os.path.expanduser("~"), ".android", "avd")
+
+    used_octets = set()
+    pri = get_primary_physical_adapter()
+    pri_ip = pri["primary_ip"] if pri else "192.168.100.5"
+    p_parts = pri_ip.split(".")
+    base_subnet = f"{p_parts[0]}.{p_parts[1]}.{p_parts[2]}" if len(p_parts) == 4 else "192.168.100"
+
+    if os.path.exists(avd_dir):
+        for entry in os.listdir(avd_dir):
+            if entry.endswith(".avd"):
+                cfg = os.path.join(avd_dir, entry, "config.ini")
+                if os.path.isfile(cfg):
+                    try:
+                        with open(cfg, "r", encoding="utf-8", errors="ignore") as f:
+                            for line in f:
+                                if "gndroid.net.static_ip" in line and "=" in line:
+                                    ip_val = line.split("=", 1)[1].strip()
+                                    parts = ip_val.split(".")
+                                    if len(parts) == 4:
+                                        try:
+                                            used_octets.add(int(parts[3]))
+                                        except Exception:
+                                            pass
+                    except Exception:
+                        pass
+
+    for octet in range(151, 245):
+        if octet not in used_octets:
+            return f"{base_subnet}.{octet}"
+    return f"{base_subnet}.151"
+
+
+def get_instance_live_ip(target_serial: str, fallback_ip: str = "") -> str:
+    """Queries live IP from active Android guest via ADB."""
+    if not target_serial: return fallback_ip
+    adb_path = "adb"
+    for cand in ["tools/adb.exe", "adb.exe", "dist/gndroid/tools/adb.exe"]:
+        if os.path.exists(cand):
+            adb_path = cand
+            break
+    try:
+        res = subprocess.run([adb_path, "-s", target_serial, "shell", "ip -4 addr show"], capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            for line in res.stdout.splitlines():
+                line = line.strip()
+                if line.startswith("inet ") and not "127.0.0.1" in line:
+                    ip_part = line.split()[1].split("/")[0]
+                    return ip_part
+    except Exception:
+        pass
+    return fallback_ip

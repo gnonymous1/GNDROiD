@@ -7302,9 +7302,10 @@ class GNDroidInstanceCreatorDialog(QDialog):
         grid.addWidget(QLabel("Network Mode:"), 4, 0)
         self.combo_net_mode = QComboBox()
         self.style_combo(self.combo_net_mode)
+        self.combo_net_mode.addItem("🌐 Hardware Bridged (Real DHCP 192.168.100.x from Router) [Default]", "hardware_bridged")
         self.combo_net_mode.addItem("⚡ High-Speed LAN Bridge (Host IP 192.168.100.5 • Zero-Driver)", "lan_bridge")
-        self.combo_net_mode.addItem("🌐 Hardware Bridged (DHCP 192.168.100.x via TAP/NDIS)", "hardware_bridged")
         self.combo_net_mode.addItem("🔒 Standard Isolated NAT (Private 10.0.2.15)", "nat")
+        self.combo_net_mode.setCurrentIndex(0)
         grid.addWidget(self.combo_net_mode, 4, 1)
 
         grid.addWidget(QLabel("Bridged Adapter:"), 5, 0)
@@ -7411,16 +7412,25 @@ class GNDroidInstanceCreatorDialog(QDialog):
                 gpu=gpu,
                 root_enabled=root_on
             )
-            # Save chosen Network & Hardware Bridging configuration for new instance
+            # Save chosen Network & Hardware Bridging configuration with unique MAC & IP for new instance
             try:
-                from nexus.network_bridge import save_instance_network_config
+                from nexus.network_bridge import save_instance_network_config, generate_instance_mac, get_next_available_static_ip
+                assigned_mac = generate_instance_mac(name)
+                assigned_ip = get_next_available_static_ip()
                 save_instance_network_config(name, {
-                    "mode": self.combo_net_mode.currentData(),
+                    "mode": self.combo_net_mode.currentData() or "hardware_bridged",
                     "adapter_name": self.combo_adapter.currentText(),
+                    "mac_address": assigned_mac,
                     "replicate_state": True,
                     "bluetooth_enabled": True,
                     "bluetooth_mode": "netsimd",
-                    "exposed_ports": "51888, 51880, 5555, 8080, 8088"
+                    "exposed_ports": "51888, 51880, 5555, 8080, 8088",
+                    "ip_mode": "dhcp",
+                    "static_ip": assigned_ip,
+                    "netmask": "255.255.255.0",
+                    "gateway": "192.168.100.1",
+                    "dns1": "8.8.8.8",
+                    "dns2": "1.1.1.1"
                 })
             except Exception:
                 pass
@@ -8236,15 +8246,29 @@ class GNDroidMultiInstanceManager(QDialog):
                 st_lbl = QLabel(f"● Running (Port {port_str})")
                 st_lbl.setStyleSheet("color: #16a34a; font-weight: 600; font-size: 11px;")
                 sb_layout.addWidget(st_lbl)
-                sub_st = QLabel(f"serial: {inst['serial']}")
-                sub_st.setStyleSheet("color: #64748b; font-size: 10px; font-family: monospace;")
+                try:
+                    from nexus.network_bridge import get_instance_network_config, get_instance_live_ip
+                    n_cfg = get_instance_network_config(inst["name"])
+                    live_ip = get_instance_live_ip(inst["serial"], fallback_ip=n_cfg.get("static_ip", "192.168.100.x"))
+                    ip_label_text = f"IP: {live_ip} (Bridged)" if n_cfg.get("mode") == "hardware_bridged" else f"Bridge: 192.168.100.5:{51888 + (row * 10)}"
+                except Exception:
+                    ip_label_text = f"serial: {inst['serial']}"
+                sub_st = QLabel(ip_label_text)
+                sub_st.setStyleSheet("color: #0369a1; font-size: 10px; font-weight: 600;")
                 sb_layout.addWidget(sub_st)
             else:
                 st_lbl = QLabel("○ Stopped")
                 st_lbl.setStyleSheet("color: #64748b; font-weight: 500; font-size: 11px;")
                 sb_layout.addWidget(st_lbl)
-                sub_st = QLabel("QuickBoot Ready")
-                sub_st.setStyleSheet("color: #94a3b8; font-size: 10px;")
+                try:
+                    from nexus.network_bridge import get_instance_network_config
+                    n_cfg = get_instance_network_config(inst["name"])
+                    st_ip = n_cfg.get("static_ip", "")
+                    sub_text = f"Bridged IP: {st_ip}" if st_ip else "Bridged (DHCP Ready)"
+                except Exception:
+                    sub_text = "Bridged (DHCP Ready)"
+                sub_st = QLabel(sub_text)
+                sub_st.setStyleSheet("color: #64748b; font-size: 10px;")
                 sb_layout.addWidget(sub_st)
             self.table.setCellWidget(row, 2, status_box)
 
