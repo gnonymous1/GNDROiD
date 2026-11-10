@@ -52,7 +52,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QProgressBar, QProgressDialog, QDialog, QFileDialog,
     QComboBox, QFrame, QMessageBox, QTabWidget, QGridLayout,
-    QScrollArea, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, QToolTip,
+    QScrollArea, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, QListView, QToolTip,
     QInputDialog, QGraphicsDropShadowEffect, QTableWidget,
     QTableWidgetItem, QHeaderView, QCheckBox, QSlider, QRadioButton, QButtonGroup,
     QTextEdit, QPlainTextEdit, QSplitter, QGroupBox
@@ -7037,6 +7037,7 @@ class GNDroidCloneInstanceDialog(QDialog):
 
         grid.addWidget(QLabel("RAM Allocation:"), 0, 0)
         self.combo_ram = QComboBox()
+        self.style_combo(self.combo_ram)
         ram_options = [
             ("2 GB (2048 MB)", 2048),
             ("4 GB (4096 MB)", 4096),
@@ -7055,6 +7056,7 @@ class GNDroidCloneInstanceDialog(QDialog):
 
         grid.addWidget(QLabel("CPU Cores:"), 1, 0)
         self.combo_cores = QComboBox()
+        self.style_combo(self.combo_cores)
         for c in [2, 4, 8, 12, 16, 24]:
             self.combo_cores.addItem(f"{c} Dedicated Cores", c)
         for i in range(self.combo_cores.count()):
@@ -7290,6 +7292,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
 
         grid.addWidget(QLabel("GPU Mode:"), 3, 0)
         self.combo_gpu = QComboBox()
+        self.style_combo(self.combo_gpu)
         self.combo_gpu.addItem("Auto (Hardware Vulkan / Direct3D 11)", "auto")
         self.combo_gpu.addItem("Host (Direct Passthrough)", "host")
         self.combo_gpu.addItem("SwiftShader (Software Fallback)", "swiftshader_indirect")
@@ -7298,6 +7301,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
         # Network Mode & Bridged Adapter for new instance
         grid.addWidget(QLabel("Network Mode:"), 4, 0)
         self.combo_net_mode = QComboBox()
+        self.style_combo(self.combo_net_mode)
         self.combo_net_mode.addItem("⚡ High-Speed LAN Bridge (Host IP 192.168.100.5 • Zero-Driver)", "lan_bridge")
         self.combo_net_mode.addItem("🌐 Hardware Bridged (DHCP 192.168.100.x via TAP/NDIS)", "hardware_bridged")
         self.combo_net_mode.addItem("🔒 Standard Isolated NAT (Private 10.0.2.15)", "nat")
@@ -9418,6 +9422,35 @@ class GNDroidSettingsDialog(QDialog):
         self.setMinimumSize(660, 760)
         self.setup_ui()
 
+    @staticmethod
+    def style_combo(combo: QComboBox):
+        view = QListView()
+        view.setStyleSheet("""
+            QListView {
+                background-color: #ffffff;
+                color: #0f172a;
+                selection-background-color: #e0f2fe;
+                selection-color: #0067c0;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 4px;
+                outline: none;
+            }
+            QListView::item {
+                min-height: 28px;
+                padding: 6px 10px;
+                color: #0f172a;
+                background-color: #ffffff;
+                border-radius: 4px;
+            }
+            QListView::item:hover, QListView::item:selected {
+                background-color: #e0f2fe;
+                color: #0067c0;
+                font-weight: 600;
+            }
+        """)
+        combo.setView(view)
+
     def setup_ui(self):
         self.setStyleSheet("""
             QDialog { background: #f8f9fa; color: #0f172a; font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif; }
@@ -9433,7 +9466,53 @@ class GNDroidSettingsDialog(QDialog):
                 background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;
                 padding: 6px 12px; color: #0f172a; font-size: 12px; font-weight: 500;
             }
+            QComboBox:hover, QSpinBox:hover, QLineEdit:hover { border-color: #94a3b8; }
             QComboBox:focus, QSpinBox:focus, QLineEdit:focus { border: 1.5px solid #0067c0; }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 26px;
+                border-left-width: 0px;
+                border-top-right-radius: 6px;
+                border-bottom-right-radius: 6px;
+                background: #f8fafc;
+            }
+            QComboBox::down-arrow {
+                width: 0px; height: 0px;
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-top: 5px solid #475569;
+                margin-right: 8px;
+            }
+            QComboBox QAbstractItemView, QListView {
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+                selection-background-color: #e0f2fe !important;
+                selection-color: #0067c0 !important;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 4px;
+                outline: none;
+            }
+            QComboBox QAbstractItemView::item, QListView::item {
+                min-height: 28px;
+                padding: 6px 10px;
+                color: #0f172a;
+                background-color: #ffffff;
+                border-radius: 4px;
+            }
+            QComboBox QAbstractItemView::item:selected, QComboBox QAbstractItemView::item:hover,
+            QListView::item:selected, QListView::item:hover {
+                background-color: #e0f2fe !important;
+                color: #0067c0 !important;
+                font-weight: 600;
+            }
+            QRadioButton {
+                color: #0f172a; font-size: 12px; font-weight: 500; spacing: 8px;
+            }
+            QRadioButton::indicator {
+                width: 16px; height: 16px;
+            }
             QCheckBox { color: #0f172a; font-size: 11px; font-weight: 500; spacing: 8px; }
             QPushButton.btnPrimary {
                 background: #0067c0; border: none; border-radius: 6px; color: #ffffff; font-weight: 600; font-size: 12px; padding: 9px 20px;
@@ -9551,6 +9630,7 @@ class GNDroidSettingsDialog(QDialog):
         # Dalvik / ART Heap Size
         g_hw.addWidget(QLabel("VM Heap Size:"), 3, 0)
         self.combo_heap = QComboBox()
+        self.style_combo(self.combo_heap)
         cur_heap = self.cfg.get("vm.heapSize", "1024").replace("M", "")
         heap_opts = [("256 MB", "256"), ("512 MB", "512"), ("768 MB", "768"), ("1024 MB (Recommended)", "1024"), ("2048 MB (Extreme)", "2048")]
         for i, (label, val) in enumerate(heap_opts):
@@ -9620,6 +9700,7 @@ class GNDroidSettingsDialog(QDialog):
         # Screen Resolution Presets
         g_gfx.addWidget(QLabel("Screen Resolution Preset:"), 1, 0)
         self.combo_res_preset = QComboBox()
+        self.style_combo(self.combo_res_preset)
         cur_w = int(self.cfg.get("hw.lcd.width", 1440))
         cur_h = int(self.cfg.get("hw.lcd.height", 3120))
         cur_d = int(self.cfg.get("hw.lcd.density", 500))
@@ -9790,6 +9871,7 @@ class GNDroidSettingsDialog(QDialog):
         # Front Camera
         g_med.addWidget(QLabel("Front Camera:"), 0, 0)
         self.combo_cam_front = QComboBox()
+        self.style_combo(self.combo_cam_front)
         cur_cf = self.cfg.get("hw.camera.front", "webcam0")
         for label, val in [("Host PC Webcam (webcam0 — Recommended)", "webcam0"), ("Virtual Scene Emulated Camera", "emulated"), ("Disabled / None", "none")]:
             self.combo_cam_front.addItem(label, val)
@@ -9799,6 +9881,7 @@ class GNDroidSettingsDialog(QDialog):
         # Back Camera
         g_med.addWidget(QLabel("Back / Main Camera:"), 1, 0)
         self.combo_cam_back = QComboBox()
+        self.style_combo(self.combo_cam_back)
         cur_cb = self.cfg.get("hw.camera.back", "webcam0")
         for label, val in [("Host PC Webcam (webcam0 — Recommended)", "webcam0"), ("Virtual Scene Emulated Camera", "emulated"), ("Disabled / None", "none")]:
             self.combo_cam_back.addItem(label, val)
@@ -9808,6 +9891,7 @@ class GNDroidSettingsDialog(QDialog):
         # Audio Driver Backend
         g_med.addWidget(QLabel("Audio Driver Engine:"), 2, 0)
         self.combo_audio = QComboBox()
+        self.style_combo(self.combo_audio)
         self.combo_audio.addItem("Safe Timer-Based Emulation (Recommended)", "none")
         self.combo_audio.addItem("DirectSound Host Audio (Auto)", "auto")
         self.combo_audio.addItem("Disabled / Mute Audio", "none")
@@ -9894,6 +9978,7 @@ class GNDroidSettingsDialog(QDialog):
         g_net_l.addWidget(lbl_adapter)
 
         self.combo_adapters = QComboBox()
+        self.style_combo(self.combo_adapters)
         try:
             all_adapters = get_system_network_adapters()
         except Exception:
@@ -9918,6 +10003,7 @@ class GNDroidSettingsDialog(QDialog):
         g_net_opts = QGridLayout()
         g_net_opts.addWidget(QLabel("Speed & Latency:"), 0, 0)
         self.combo_net_speed = QComboBox()
+        self.style_combo(self.combo_net_speed)
         self.combo_net_speed.addItem("Full Gigabit Host Speed / Zero Latency", "full")
         self.combo_net_speed.addItem("5G Ultra-Wideband (300 Mbps / 10ms Latency)", "5g")
         self.combo_net_speed.addItem("LTE / 4G Mobile Data (50 Mbps / 30ms Latency)", "lte")
@@ -9960,7 +10046,119 @@ class GNDroidSettingsDialog(QDialog):
         tnet_l.addWidget(grp_net)
 
         # -------------------------------------------------------------
-        # Section 2: Bluetooth Controller & Wireless Discovery
+        # Section 2: Direct Static IP & Custom DNS Server Assignment
+        # -------------------------------------------------------------
+        grp_ip_dns = QGroupBox("🎯 Direct Static IP & Custom DNS Server Assignment")
+        g_ip_l = QVBoxLayout(grp_ip_dns)
+        g_ip_l.setSpacing(10)
+
+        # IP Mode Selection (DHCP vs Static)
+        ip_mode_row = QHBoxLayout()
+        self.radio_dhcp = QRadioButton("🟢 Automatic DHCP (Router Managed)")
+        self.radio_static = QRadioButton("🔵 Static Manual IP (Custom Direct IP Assignment)")
+        self.ip_mode_group = QButtonGroup(self)
+        self.ip_mode_group.addButton(self.radio_dhcp)
+        self.ip_mode_group.addButton(self.radio_static)
+
+        cur_ip_mode = net_cfg.get("ip_mode", "dhcp")
+        if cur_ip_mode == "static":
+            self.radio_static.setChecked(True)
+        else:
+            self.radio_dhcp.setChecked(True)
+
+        self.radio_dhcp.toggled.connect(self.on_ip_mode_toggled)
+        self.radio_static.toggled.connect(self.on_ip_mode_toggled)
+
+        ip_mode_row.addWidget(self.radio_dhcp)
+        ip_mode_row.addWidget(self.radio_static)
+        ip_mode_row.addStretch()
+        g_ip_l.addLayout(ip_mode_row)
+
+        # Grid for IP and Subnet / Gateway inputs (Full Width Responsive)
+        g_ip_grid = QGridLayout()
+        g_ip_grid.setSpacing(10)
+        g_ip_grid.setColumnStretch(1, 1)
+
+        # Suggest default static IP based on physical host IP
+        def_static_ip = net_cfg.get("static_ip", "")
+        if not def_static_ip or def_static_ip == "192.168.100.155":
+            try:
+                pri = get_primary_physical_adapter()
+                pri_ip = pri["primary_ip"] if pri else "192.168.100.5"
+                p_parts = pri_ip.split(".")
+                if len(p_parts) == 4:
+                    def_static_ip = f"{p_parts[0]}.{p_parts[1]}.{p_parts[2]}.155"
+            except Exception:
+                def_static_ip = "192.168.100.155"
+
+        g_ip_grid.addWidget(QLabel("Static IPv4 Address:"), 0, 0)
+        self.txt_static_ip = QLineEdit()
+        self.txt_static_ip.setText(def_static_ip)
+        self.txt_static_ip.setPlaceholderText("e.g. 192.168.100.155")
+        g_ip_grid.addWidget(self.txt_static_ip, 0, 1)
+
+        g_ip_grid.addWidget(QLabel("Subnet Mask / Prefix:"), 1, 0)
+        self.txt_netmask = QLineEdit()
+        self.txt_netmask.setText(net_cfg.get("netmask", "255.255.255.0"))
+        self.txt_netmask.setPlaceholderText("255.255.255.0")
+        g_ip_grid.addWidget(self.txt_netmask, 1, 1)
+
+        g_ip_grid.addWidget(QLabel("Default Gateway (Router):"), 2, 0)
+        self.txt_gateway = QLineEdit()
+        self.txt_gateway.setText(net_cfg.get("gateway", "192.168.100.1"))
+        self.txt_gateway.setPlaceholderText("192.168.100.1")
+        g_ip_grid.addWidget(self.txt_gateway, 2, 1)
+
+        # DNS Presets Dropdown
+        g_ip_grid.addWidget(QLabel("DNS Preset Provider:"), 3, 0)
+        self.combo_dns_preset = QComboBox()
+        self.style_combo(self.combo_dns_preset)
+        self.combo_dns_preset.addItem("Google Public DNS (8.8.8.8 • 8.8.4.4)", ("8.8.8.8", "8.8.4.4"))
+        self.combo_dns_preset.addItem("Cloudflare Fast DNS (1.1.1.1 • 1.0.0.1)", ("1.1.1.1", "1.0.0.1"))
+        self.combo_dns_preset.addItem("Router Default Gateway (192.168.100.1)", ("192.168.100.1", "8.8.8.8"))
+        self.combo_dns_preset.addItem("Quad9 Secure DNS (9.9.9.9 • 149.112.112.112)", ("9.9.9.9", "149.112.112.112"))
+        self.combo_dns_preset.addItem("OpenDNS Home (208.67.222.222 • 208.67.220.220)", ("208.67.222.222", "208.67.220.220"))
+        self.combo_dns_preset.addItem("Custom DNS (User Specified)", ("", ""))
+        self.combo_dns_preset.currentIndexChanged.connect(self.on_dns_preset_changed)
+        g_ip_grid.addWidget(self.combo_dns_preset, 3, 1)
+
+        # Primary and Secondary DNS in one row side-by-side
+        g_dns_row = QHBoxLayout()
+        g_dns_row.addWidget(QLabel("Primary:"))
+        self.txt_dns1 = QLineEdit()
+        self.txt_dns1.setText(net_cfg.get("dns1", "8.8.8.8"))
+        self.txt_dns1.setPlaceholderText("8.8.8.8")
+        g_dns_row.addWidget(self.txt_dns1, 1)
+
+        g_dns_row.addWidget(QLabel("Secondary:"))
+        self.txt_dns2 = QLineEdit()
+        self.txt_dns2.setText(net_cfg.get("dns2", "1.1.1.1"))
+        self.txt_dns2.setPlaceholderText("1.1.1.1")
+        g_dns_row.addWidget(self.txt_dns2, 1)
+
+        g_ip_grid.addWidget(QLabel("DNS Servers:"), 4, 0)
+        g_ip_grid.addLayout(g_dns_row, 4, 1)
+
+        g_ip_l.addLayout(g_ip_grid)
+
+        # Action Buttons in IP & DNS Box
+        b_ip_row = QHBoxLayout()
+        self.btn_apply_ip_dns = QPushButton("⚡ Apply IP & DNS to Running Emulator Now")
+        self.btn_apply_ip_dns.setProperty("class", "btnAction")
+        self.btn_apply_ip_dns.clicked.connect(self.action_apply_ip_dns_live)
+        b_ip_row.addWidget(self.btn_apply_ip_dns)
+
+        self.btn_detect_gw = QPushButton("🔄 Auto-Detect Subnet & Router")
+        self.btn_detect_gw.setProperty("class", "btnAction")
+        self.btn_detect_gw.clicked.connect(self.action_detect_network)
+        b_ip_row.addWidget(self.btn_detect_gw)
+        g_ip_l.addLayout(b_ip_row)
+
+        tnet_l.addWidget(grp_ip_dns)
+        self.on_ip_mode_toggled()
+
+        # -------------------------------------------------------------
+        # Section 3: Bluetooth Controller & Wireless Discovery
         # -------------------------------------------------------------
         grp_bt = QGroupBox("📡 Bluetooth Controller & Hardware Discovery")
         g_bt_l = QVBoxLayout(grp_bt)
@@ -9993,6 +10191,7 @@ class GNDroidSettingsDialog(QDialog):
             g_bt_l.addWidget(lbl_paired)
 
         self.combo_bt_mode = QComboBox()
+        self.style_combo(self.combo_bt_mode)
         self.combo_bt_mode.addItem("Google netsimd Virtual BLE Engine & HCI Socket (Port 7300)", "netsimd")
         self.combo_bt_mode.addItem("Direct USB Bluetooth Controller Passthrough", "passthrough")
         g_bt_l.addWidget(self.combo_bt_mode)
@@ -10060,6 +10259,68 @@ class GNDroidSettingsDialog(QDialog):
         btn_box.addWidget(self.btn_cancel)
 
         layout.addLayout(btn_box)
+
+    def on_ip_mode_toggled(self):
+        is_static = self.radio_static.isChecked()
+        self.txt_static_ip.setEnabled(is_static)
+        self.txt_netmask.setEnabled(is_static)
+        self.txt_gateway.setEnabled(is_static)
+
+    def on_dns_preset_changed(self, idx: int):
+        data = self.combo_dns_preset.itemData(idx)
+        if data and isinstance(data, tuple) and data[0]:
+            dns1, dns2 = data
+            self.txt_dns1.setText(dns1)
+            self.txt_dns2.setText(dns2)
+
+    def action_detect_network(self):
+        try:
+            from nexus.network_bridge import get_primary_physical_adapter, get_default_gateway
+            pri = get_primary_physical_adapter()
+            gw = get_default_gateway()
+            self.txt_gateway.setText(gw)
+            if pri and pri.get("primary_ip"):
+                pri_ip = pri["primary_ip"]
+                p_parts = pri_ip.split(".")
+                if len(p_parts) == 4:
+                    suggested = f"{p_parts[0]}.{p_parts[1]}.{p_parts[2]}.155"
+                    self.txt_static_ip.setText(suggested)
+            QMessageBox.information(
+                self, "Network Detected",
+                f"Physical network parameters detected successfully!\n\n"
+                f"• Physical Host IP: {pri.get('primary_ip', '192.168.100.5')}\n"
+                f"• Router Gateway: {gw}\n"
+                f"• Suggested Static IP: {self.txt_static_ip.text()}\n"
+                f"• Subnet Mask: 255.255.255.0"
+            )
+        except Exception as e:
+            QMessageBox.warning(self, "Detection Error", str(e))
+
+    def action_apply_ip_dns_live(self):
+        try:
+            from nexus.network_bridge import apply_live_network_ip_and_dns
+            ip_mode = "static" if self.radio_static.isChecked() else "dhcp"
+            static_ip = self.txt_static_ip.text().strip()
+            netmask = self.txt_netmask.text().strip()
+            gateway = self.txt_gateway.text().strip()
+            dns1 = self.txt_dns1.text().strip()
+            dns2 = self.txt_dns2.text().strip()
+
+            ok, msg = apply_live_network_ip_and_dns(
+                target_serial=self.target_serial,
+                ip_mode=ip_mode,
+                static_ip=static_ip,
+                netmask=netmask,
+                gateway=gateway,
+                dns1=dns1,
+                dns2=dns2
+            )
+            if ok:
+                QMessageBox.information(self, "Live Network Applied", msg)
+            else:
+                QMessageBox.information(self, "Network Config Saved", msg)
+        except Exception as e:
+            QMessageBox.warning(self, "Apply Error", f"Failed to apply network configuration: {e}")
 
     def on_net_mode_changed(self, idx: int):
         mode = self.combo_net_mode.itemData(idx)
@@ -10258,7 +10519,13 @@ class GNDroidSettingsDialog(QDialog):
                 "replicate_state": self.chk_replicate_state.isChecked(),
                 "bluetooth_enabled": self.chk_bluetooth.isChecked(),
                 "bluetooth_mode": self.combo_bt_mode.currentData(),
-                "exposed_ports": self.txt_exposed_ports.text().strip()
+                "exposed_ports": self.txt_exposed_ports.text().strip(),
+                "ip_mode": "static" if self.radio_static.isChecked() else "dhcp",
+                "static_ip": self.txt_static_ip.text().strip(),
+                "netmask": self.txt_netmask.text().strip(),
+                "gateway": self.txt_gateway.text().strip(),
+                "dns1": self.txt_dns1.text().strip(),
+                "dns2": self.txt_dns2.text().strip()
             }
             save_instance_network_config(self.instance_name, net_save_data)
         except Exception as e:

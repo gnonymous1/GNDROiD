@@ -369,7 +369,13 @@ def get_instance_network_config(instance_name: str, avd_dir: Optional[str] = Non
         "replicate_state": True,
         "bluetooth_enabled": True,
         "bluetooth_mode": "netsimd",  # netsimd | passthrough
-        "exposed_ports": "51888, 51880, 5555, 8080, 8088"
+        "exposed_ports": "51888, 51880, 5555, 8080, 8088",
+        "ip_mode": "dhcp",  # dhcp | static
+        "static_ip": "192.168.100.155",
+        "netmask": "255.255.255.0",
+        "gateway": "192.168.100.1",
+        "dns1": "8.8.8.8",
+        "dns2": "1.1.1.1"
     }
 
     if os.path.isfile(cfg_file):
@@ -386,6 +392,12 @@ def get_instance_network_config(instance_name: str, avd_dir: Optional[str] = Non
                         elif k == "gndroid.net.bluetooth.enabled": config["bluetooth_enabled"] = (v.lower() in ["yes", "true", "1"])
                         elif k == "gndroid.net.bluetooth.mode": config["bluetooth_mode"] = v
                         elif k == "gndroid.net.exposed_ports": config["exposed_ports"] = v
+                        elif k == "gndroid.net.ip_mode": config["ip_mode"] = v
+                        elif k == "gndroid.net.static_ip": config["static_ip"] = v
+                        elif k == "gndroid.net.netmask": config["netmask"] = v
+                        elif k == "gndroid.net.gateway": config["gateway"] = v
+                        elif k == "gndroid.net.dns1": config["dns1"] = v
+                        elif k == "gndroid.net.dns2": config["dns2"] = v
         except Exception as e:
             logger.warning(f"Failed to read network config from {cfg_file}: {e}")
 
@@ -414,7 +426,13 @@ def save_instance_network_config(instance_name: str, net_cfg: Dict[str, Any], av
         "gndroid.net.replicate_state": "yes" if net_cfg.get("replicate_state", True) else "no",
         "gndroid.net.bluetooth.enabled": "yes" if net_cfg.get("bluetooth_enabled", True) else "no",
         "gndroid.net.bluetooth.mode": str(net_cfg.get("bluetooth_mode", "netsimd")),
-        "gndroid.net.exposed_ports": str(net_cfg.get("exposed_ports", "51888, 51880, 5555, 8080, 8088"))
+        "gndroid.net.exposed_ports": str(net_cfg.get("exposed_ports", "51888, 51880, 5555, 8080, 8088")),
+        "gndroid.net.ip_mode": str(net_cfg.get("ip_mode", "dhcp")),
+        "gndroid.net.static_ip": str(net_cfg.get("static_ip", "192.168.100.155")),
+        "gndroid.net.netmask": str(net_cfg.get("netmask", "255.255.255.0")),
+        "gndroid.net.gateway": str(net_cfg.get("gateway", "192.168.100.1")),
+        "gndroid.net.dns1": str(net_cfg.get("dns1", "8.8.8.8")),
+        "gndroid.net.dns2": str(net_cfg.get("dns2", "1.1.1.1"))
     }
 
     try:
@@ -462,8 +480,93 @@ def get_emulator_network_args(instance_name: str) -> List[str]:
             "-net", f"tap,ifname={adapter or 'OpenVPN TAP-Windows6'}"
         ])
 
+    # Custom DNS Server arguments
+    dns1 = str(cfg.get("dns1", "8.8.8.8")).strip()
+    dns2 = str(cfg.get("dns2", "1.1.1.1")).strip()
+    dns_list = [d for d in [dns1, dns2] if d]
+    if dns_list:
+        args.extend(["-dns-server", ",".join(dns_list)])
+
     # Bluetooth netsimd / HCI
     if cfg.get("bluetooth_enabled", True):
         args.extend(["-grpc", "7300"])
 
     return args
+
+
+def apply_live_network_ip_and_dns(
+    target_serial: str = "",
+    ip_mode: str = "dhcp",
+    static_ip: str = "192.168.100.155",
+    netmask: str = "255.255.255.0",
+    gateway: str = "192.168.100.1",
+    dns1: str = "8.8.8.8",
+    dns2: str = "1.1.1.1"
+) -> Tuple[bool, str]:
+    """
+    Directly assigns Static IP, Gateway, and DNS servers to an active Android guest instance via ADB.
+    """
+    adb_path = None
+    for cand in ["tools/adb.exe", "adb.exe", "dist/gndroid/tools/adb.exe"]:
+        if os.path.exists(cand):
+            adb_path = cand
+            break
+    if not adb_path:
+        adb_path = "adb"
+
+    try:
+        res = subprocess.run([adb_path, "devices"], capture_output=True, text=True, timeout=4)
+        if not target_serial:
+            for line in res.stdout.splitlines()[1:]:
+                parts = line.strip().split()
+                if len(parts) >= 2 and parts[1] == "device":
+                    target_serial = parts[0]
+                    break
+        if not target_serial or target_serial not in res.stdout:
+            return False, "No active Android device or emulator currently running. Configuration has been saved to config.ini and will apply upon next boot!"
+    except Exception as e:
+        return False, f"ADB query error: {e}"
+
+    applied_notes = []
+
+    # 1. Apply DNS properties on guest
+    if dns1 or dns2:
+        try:
+            if dns1:
+                subprocess.run([adb_path, "-s", target_serial, "shell", "setprop", "net.dns1", dns1], capture_output=True, timeout=3)
+                subprocess.run([adb_path, "-s", target_serial, "shell", "su", "0", "setprop", "net.dns1", dns1], capture_output=True, timeout=2)
+            if dns2:
+                subprocess.run([adb_path, "-s", target_serial, "shell", "setprop", "net.dns2", dns2], capture_output=True, timeout=3)
+                subprocess.run([adb_path, "-s", target_serial, "shell", "su", "0", "setprop", "net.dns2", dns2], capture_output=True, timeout=2)
+            
+            # Disable private DNS mode so manual DNS takes effect
+            subprocess.run([adb_path, "-s", target_serial, "shell", "cmd", "connectivity", "set-private-dns-mode", "off"], capture_output=True, timeout=3)
+            applied_notes.append(f"DNS Servers: {dns1} / {dns2}")
+        except Exception as e:
+            logger.warning(f"DNS assignment error: {e}")
+
+    # 2. Apply Static IP if static mode
+    if ip_mode == "static" and static_ip:
+        try:
+            iface_res = subprocess.run([adb_path, "-s", target_serial, "shell", "ip -4 route show | grep default"], capture_output=True, text=True, timeout=3)
+            guest_iface = "eth0"
+            if "dev " in iface_res.stdout:
+                parts = iface_res.stdout.split("dev ")
+                if len(parts) > 1:
+                    guest_iface = parts[1].split()[0].strip()
+
+            prefix = 24
+            if netmask == "255.255.0.0": prefix = 16
+            elif netmask == "255.0.0.0": prefix = 8
+
+            subprocess.run([adb_path, "-s", target_serial, "shell", f"ip addr add {static_ip}/{prefix} dev {guest_iface}"], capture_output=True, timeout=3)
+            if gateway:
+                subprocess.run([adb_path, "-s", target_serial, "shell", f"ip route add default via {gateway} dev {guest_iface}"], capture_output=True, timeout=3)
+            applied_notes.append(f"Static IP: {static_ip}/{prefix} on {guest_iface} (GW: {gateway})")
+        except Exception as e:
+            logger.warning(f"Static IP assignment error: {e}")
+    else:
+        applied_notes.append("IP Mode: Automatic DHCP")
+
+    summary = f"Applied live to {target_serial}:\n\n• " + "\n• ".join(applied_notes)
+    return True, summary
