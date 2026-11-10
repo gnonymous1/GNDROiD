@@ -7295,6 +7295,24 @@ class GNDroidInstanceCreatorDialog(QDialog):
         self.combo_gpu.addItem("SwiftShader (Software Fallback)", "swiftshader_indirect")
         grid.addWidget(self.combo_gpu, 3, 1)
 
+        # Network Mode & Bridged Adapter for new instance
+        grid.addWidget(QLabel("Network Mode:"), 4, 0)
+        self.combo_net_mode = QComboBox()
+        self.combo_net_mode.addItem("⚡ High-Speed LAN Bridge (Host IP 192.168.100.5 • Zero-Driver)", "lan_bridge")
+        self.combo_net_mode.addItem("🌐 Hardware Bridged (DHCP 192.168.100.x via TAP/NDIS)", "hardware_bridged")
+        self.combo_net_mode.addItem("🔒 Standard Isolated NAT (Private 10.0.2.15)", "nat")
+        grid.addWidget(self.combo_net_mode, 4, 1)
+
+        grid.addWidget(QLabel("Bridged Adapter:"), 5, 0)
+        self.combo_adapter = QComboBox()
+        try:
+            from nexus.network_bridge import get_system_network_adapters
+            for ad in get_system_network_adapters():
+                self.combo_adapter.addItem(ad["display_label"], ad["name"])
+        except Exception:
+            self.combo_adapter.addItem("[Physical Wi-Fi] Realtek RTL8852BE WiFi 6 (192.168.100.5)", "Wi-Fi")
+        grid.addWidget(self.combo_adapter, 5, 1)
+
         c_layout.addLayout(grid)
 
         self.chk_root = QCheckBox("🔓 Enable Root Access (Writable System Partition && Permissive SELinux)")
@@ -7389,6 +7407,20 @@ class GNDroidInstanceCreatorDialog(QDialog):
                 gpu=gpu,
                 root_enabled=root_on
             )
+            # Save chosen Network & Hardware Bridging configuration for new instance
+            try:
+                from nexus.network_bridge import save_instance_network_config
+                save_instance_network_config(name, {
+                    "mode": self.combo_net_mode.currentData(),
+                    "adapter_name": self.combo_adapter.currentText(),
+                    "replicate_state": True,
+                    "bluetooth_enabled": True,
+                    "bluetooth_mode": "netsimd",
+                    "exposed_ports": "51888, 51880, 5555, 8080, 8088"
+                })
+            except Exception:
+                pass
+
             self.created_name = name
             self.launch_after = launch_now
             self.accept()
@@ -8382,8 +8414,8 @@ class GNDroidMultiInstanceManager(QDialog):
             QMessageBox.critical(self, "Clone Error", str(e))
 
     def action_edit_instance(self, inst: Dict[str, Any]):
-        dlg = GNDroidInstanceSettingsDialog(inst, self)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
+        dlg = GNDroidSettingsDialog(instance_name=inst["name"], parent=self)
+        if dlg.exec():
             self.refresh_table()
 
     def action_start_instance(self, name: str):
