@@ -10586,7 +10586,7 @@ class GNDroidSettingsDialog(QDialog):
 # ----------------------------------------------------------------------
 # Master Application: gndroid (Ghulam Nabi Kalhoro)
 # ----------------------------------------------------------------------
-VERSION = "2.2.2"
+VERSION = "2.5.0"
 
 class GNDroidApp(QMainWindow):
     def __init__(self):
