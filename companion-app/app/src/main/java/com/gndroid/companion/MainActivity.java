@@ -373,7 +373,14 @@ public class MainActivity extends Activity {
         // 1. IP Address
         String ip = getLocalIpAddress();
         if (mTvIpAddress != null) {
-            mTvIpAddress.setText("Device IP: " + ip);
+            if (ip.startsWith("10.0.2.")) {
+                mTvIpAddress.setText("Device IP: " + ip + " (VM Guest)\nHost LAN: 192.168.100.5 (Port 51888)");
+            } else {
+                mTvIpAddress.setText("Device IP: " + ip);
+            }
+        }
+        if (mTvServerPorts != null && ip.startsWith("10.0.2.")) {
+            mTvServerPorts.setText("⚡ Emulator Bridged to Host LAN 192.168.100.5:51888");
         }
 
         // 2. Permission matrix state
