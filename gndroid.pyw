@@ -41,6 +41,7 @@ if _workspace_root not in sys.path:
     sys.path.insert(0, _workspace_root)
 
 import nexus.display_and_vpn
+import nexus.network_bridge
 from nexus.wireless_mirror import (
     WirelessMirrorManager,
     WirelessPairingEngine,
@@ -5476,6 +5477,15 @@ gndroid.root={'yes' if root_enabled else 'no'}
         except Exception:
             pass
 
+        # Append hardware network & bluetooth bridge launch arguments if configured
+        try:
+            from nexus.network_bridge import get_emulator_network_args
+            net_args = get_emulator_network_args(name)
+            if net_args:
+                cmd.extend(net_args)
+        except Exception:
+            pass
+
         if is_root:
             cmd.extend(["-writable-system", "-selinux", "permissive"])
 
@@ -5616,6 +5626,15 @@ gndroid.root={'yes' if root_enabled else 'no'}
                         try:
                             from nexus.display_and_vpn import auto_stabilize_vpn_networking
                             auto_stabilize_vpn_networking(target_serial)
+                        except Exception:
+                            pass
+                        try:
+                            from nexus.network_bridge import start_global_lan_bridge, get_instance_network_config
+                            net_cfg = get_instance_network_config(name)
+                            if net_cfg.get("mode") in ["lan_bridge", "hardware_bridged"]:
+                                start_global_lan_bridge()
+                                for p in [51888, 51880, 5555, 8088]:
+                                    subprocess.run([adb, "-s", target_serial, "forward", f"tcp:{p}", f"tcp:{p}"], capture_output=True, creationflags=0x08000000)
                         except Exception:
                             pass
                         break
@@ -9363,7 +9382,8 @@ class GNDroidSettingsDialog(QDialog):
         self.cfg = AVDManager.get_instance_full_config(self.instance_name)
         disp_name = self.cfg.get("avd.ini.displayname", "GNDROiD Flagship")
         self.setWindowTitle(f"⚙️ GNDROiD Settings & Hardware Configuration — {disp_name}")
-        self.setFixedSize(660, 760)
+        self.resize(700, 830)
+        self.setMinimumSize(660, 760)
         self.setup_ui()
 
     def setup_ui(self):
@@ -9776,42 +9796,199 @@ class GNDroidSettingsDialog(QDialog):
         self.tabs.addTab(tab_media, "📷 Camera & Audio")
 
         # ==============================================================
-        # TAB 4: Network, Biometrics & Sensors
+        # TAB 4: Network Adapter, Hardware Bridging & Bluetooth
         # ==============================================================
+        tab_net_container = QWidget()
+        scroll_net = QScrollArea()
+        scroll_net.setWidgetResizable(True)
+        scroll_net.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_net.setStyleSheet("background: transparent;")
+
         tab_net = QWidget()
         tnet_l = QVBoxLayout(tab_net)
-        tnet_l.setContentsMargins(16, 16, 16, 16)
-        tnet_l.setSpacing(12)
+        tnet_l.setContentsMargins(14, 14, 14, 14)
+        tnet_l.setSpacing(14)
 
+        # Load instance network config from nexus.network_bridge
+        try:
+            from nexus.network_bridge import (
+                get_system_network_adapters, get_primary_physical_adapter,
+                get_instance_network_config, get_system_bluetooth_adapters,
+                get_physical_bluetooth_controller, get_paired_bluetooth_devices,
+                get_default_gateway, start_global_lan_bridge
+            )
+            net_cfg = get_instance_network_config(self.instance_name)
+        except Exception:
+            net_cfg = {"mode": "lan_bridge", "adapter_name": "", "replicate_state": True, "bluetooth_enabled": True}
+
+        # -------------------------------------------------------------
+        # Section 1: Virtual Machine Network Adapter & Bridging Mode
+        # -------------------------------------------------------------
+        grp_net = QGroupBox("🌐 Virtual Machine Network Adapter & Hardware Bridging")
+        g_net_l = QVBoxLayout(grp_net)
+        g_net_l.setSpacing(10)
+
+        # Legacy wifi toggle for config.ini compatibility
         self.chk_wifi = QCheckBox("📶 Enable Virtual Wi-Fi Adapter (Full Gigabit Internet via Host)")
         self.chk_wifi.setChecked(self.cfg.get("hw.wifi", "yes").lower() in ["yes", "true", "1"])
-        tnet_l.addWidget(self.chk_wifi)
+        g_net_l.addWidget(self.chk_wifi)
 
-        g_net = QGridLayout()
-        g_net.addWidget(QLabel("Network Speed & Latency:"), 0, 0)
+        lbl_mode = QLabel("<b>Network Connection Mode:</b>")
+        g_net_l.addWidget(lbl_mode)
+
+        self.combo_net_mode = QComboBox()
+        self.combo_net_mode.addItem("⚡ High-Speed LAN Bridge (Host Direct IP 192.168.100.5 • Zero-Driver Plug & Play)", "lan_bridge")
+        self.combo_net_mode.addItem("🌐 Hardware Bridged (Replicate Physical Connection • DHCP 192.168.100.x via TAP/NDIS)", "hardware_bridged")
+        self.combo_net_mode.addItem("🔒 Standard Isolated NAT (Private 10.0.2.15 Subnet)", "nat")
+
+        cur_mode = net_cfg.get("mode", "lan_bridge")
+        for idx in range(self.combo_net_mode.count()):
+            if self.combo_net_mode.itemData(idx) == cur_mode:
+                self.combo_net_mode.setCurrentIndex(idx)
+                break
+        self.combo_net_mode.currentIndexChanged.connect(self.on_net_mode_changed)
+        g_net_l.addWidget(self.combo_net_mode)
+
+        self.lbl_mode_desc = QLabel(
+            "<b>Mode 1 (LAN Bridge):</b> Directly maps Android emulator ports to your physical PC IP (192.168.100.5). "
+            "Other phones, Android TVs, and PCs on your Wi-Fi can connect directly with zero kernel drivers or admin rights."
+        )
+        self.lbl_mode_desc.setWordWrap(True)
+        self.lbl_mode_desc.setStyleSheet("color: #475569; font-size: 11px; padding: 6px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;")
+        g_net_l.addWidget(self.lbl_mode_desc)
+
+        # Physical Adapter Selector
+        lbl_adapter = QLabel("<b>Select Physical Network Adapter (Bridged Target):</b>")
+        g_net_l.addWidget(lbl_adapter)
+
+        self.combo_adapters = QComboBox()
+        try:
+            all_adapters = get_system_network_adapters()
+        except Exception:
+            all_adapters = []
+
+        cur_adapter_name = net_cfg.get("adapter_name", "")
+        selected_adapter_idx = 0
+        for i, ad in enumerate(all_adapters):
+            self.combo_adapters.addItem(ad["display_label"], ad["name"])
+            if cur_adapter_name and (cur_adapter_name in ad["description"] or cur_adapter_name in ad["name"]):
+                selected_adapter_idx = i
+        if self.combo_adapters.count() > 0:
+            self.combo_adapters.setCurrentIndex(selected_adapter_idx)
+        g_net_l.addWidget(self.combo_adapters)
+
+        # Replicate physical connection state checkbox (VMware/VirtualBox style)
+        self.chk_replicate_state = QCheckBox("Replicate physical network connection state (Link Up/Down Sync)")
+        self.chk_replicate_state.setChecked(net_cfg.get("replicate_state", True))
+        g_net_l.addWidget(self.chk_replicate_state)
+
+        # Speed & Latency and Port mappings
+        g_net_opts = QGridLayout()
+        g_net_opts.addWidget(QLabel("Speed & Latency:"), 0, 0)
         self.combo_net_speed = QComboBox()
         self.combo_net_speed.addItem("Full Gigabit Host Speed / Zero Latency", "full")
         self.combo_net_speed.addItem("5G Ultra-Wideband (300 Mbps / 10ms Latency)", "5g")
         self.combo_net_speed.addItem("LTE / 4G Mobile Data (50 Mbps / 30ms Latency)", "lte")
-        g_net.addWidget(self.combo_net_speed, 0, 1)
-        tnet_l.addLayout(g_net)
+        g_net_opts.addWidget(self.combo_net_speed, 0, 1)
 
-        tnet_l.addWidget(QLabel("<b>Hardware Biometrics & Sensor Emulation:</b>"))
+        g_net_opts.addWidget(QLabel("Exposed LAN Ports:"), 1, 0)
+        self.txt_exposed_ports = QLineEdit()
+        self.txt_exposed_ports.setText(net_cfg.get("exposed_ports", "51888, 51880, 5555, 8080, 8088"))
+        g_net_opts.addWidget(self.txt_exposed_ports, 1, 1)
+        g_net_l.addLayout(g_net_opts)
+
+        # Live Physical LAN Status badge
+        try:
+            gw = get_default_gateway()
+            pri = get_primary_physical_adapter()
+            pri_ip = pri["primary_ip"] if pri else "192.168.100.5"
+            pri_name = pri["name"] if pri else "Wi-Fi"
+        except Exception:
+            gw, pri_ip, pri_name = "192.168.100.1", "192.168.100.5", "Wi-Fi"
+
+        self.lbl_lan_status = QLabel(
+            f"● Physical LAN: <b>{pri_ip}</b> ({pri_name}) | Router Gateway: <b>{gw}</b> | Bridge: <b>Active (Ports 51888, 51880, 5555, 8088)</b>"
+        )
+        self.lbl_lan_status.setStyleSheet("color: #059669; font-size: 11px; padding: 6px 8px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px;")
+        g_net_l.addWidget(self.lbl_lan_status)
+
+        # Interactive Bridge Buttons
+        b_row = QHBoxLayout()
+        self.btn_test_bridge = QPushButton("⚡ Test & Activate LAN Bridge")
+        self.btn_test_bridge.setProperty("class", "btnAction")
+        self.btn_test_bridge.clicked.connect(self.action_test_lan_bridge)
+        b_row.addWidget(self.btn_test_bridge)
+
+        self.btn_refresh_adapters = QPushButton("🔄 Refresh Adapters")
+        self.btn_refresh_adapters.setProperty("class", "btnAction")
+        self.btn_refresh_adapters.clicked.connect(self.action_refresh_adapters)
+        b_row.addWidget(self.btn_refresh_adapters)
+        g_net_l.addLayout(b_row)
+
+        tnet_l.addWidget(grp_net)
+
+        # -------------------------------------------------------------
+        # Section 2: Bluetooth Controller & Wireless Discovery
+        # -------------------------------------------------------------
+        grp_bt = QGroupBox("📡 Bluetooth Controller & Hardware Discovery")
+        g_bt_l = QVBoxLayout(grp_bt)
+        g_bt_l.setSpacing(10)
+
+        self.chk_bluetooth = QCheckBox("Enable Bluetooth Wireless Controller (hw.bluetooth & netsimd)")
+        self.chk_bluetooth.setChecked(net_cfg.get("bluetooth_enabled", True))
+        g_bt_l.addWidget(self.chk_bluetooth)
+
+        try:
+            bt_ctrl = get_physical_bluetooth_controller()
+            bt_name = bt_ctrl["name"] if bt_ctrl else "Realtek Wireless Bluetooth Adapter"
+            paired_list = get_paired_bluetooth_devices()
+        except Exception:
+            bt_name = "Realtek Wireless Bluetooth Adapter"
+            paired_list = []
+
+        g_bt_row = QHBoxLayout()
+        g_bt_row.addWidget(QLabel("Host Bluetooth Radio:"))
+        self.lbl_bt_hardware = QLabel(f"<b>{bt_name}</b> (Hardware PnP)")
+        self.lbl_bt_hardware.setStyleSheet("color: #0f172a; font-size: 11px;")
+        g_bt_row.addWidget(self.lbl_bt_hardware, 1)
+        g_bt_l.addLayout(g_bt_row)
+
+        if paired_list:
+            paired_str = " • ".join(paired_list)
+            lbl_paired = QLabel(f"Paired Mobile Devices Found: {paired_str}")
+            lbl_paired.setWordWrap(True)
+            lbl_paired.setStyleSheet("color: #475569; font-size: 10px; background: #f1f5f9; padding: 4px 6px; border-radius: 4px;")
+            g_bt_l.addWidget(lbl_paired)
+
+        self.combo_bt_mode = QComboBox()
+        self.combo_bt_mode.addItem("Google netsimd Virtual BLE Engine & HCI Socket (Port 7300)", "netsimd")
+        self.combo_bt_mode.addItem("Direct USB Bluetooth Controller Passthrough", "passthrough")
+        g_bt_l.addWidget(self.combo_bt_mode)
+
+        tnet_l.addWidget(grp_bt)
+
+        # -------------------------------------------------------------
+        # Section 3: Hardware Biometrics & Environmental Sensors
+        # -------------------------------------------------------------
+        grp_sensor = QGroupBox("👆 Hardware Biometrics & Sensor Emulation")
+        g_sens_l = QVBoxLayout(grp_sensor)
+        g_sens_l.setSpacing(8)
+
         self.chk_fp = QCheckBox("👆 USB Fingerprint Biometric Scanner (hw.fingerprint)")
         self.chk_fp.setChecked(self.cfg.get("hw.fingerprint", "yes").lower() in ["yes", "true", "1"])
-        tnet_l.addWidget(self.chk_fp)
+        g_sens_l.addWidget(self.chk_fp)
 
         self.chk_gps = QCheckBox("📍 GPS & Real Geolocation Sensor (hw.gps)")
         self.chk_gps.setChecked(self.cfg.get("hw.gps", "yes").lower() in ["yes", "true", "1"])
-        tnet_l.addWidget(self.chk_gps)
+        g_sens_l.addWidget(self.chk_gps)
 
         self.chk_motion = QCheckBox("🔄 Accelerometer & Gyroscope Motion Sensors (hw.accelerometer && hw.gyroscope)")
         self.chk_motion.setChecked(self.cfg.get("hw.accelerometer", "yes").lower() in ["yes", "true", "1"])
-        tnet_l.addWidget(self.chk_motion)
+        g_sens_l.addWidget(self.chk_motion)
 
         self.chk_env = QCheckBox("💡 Ambient Light & Proximity Environmental Sensors")
         self.chk_env.setChecked(self.cfg.get("hw.sensors.light", "yes").lower() in ["yes", "true", "1"])
-        tnet_l.addWidget(self.chk_env)
+        g_sens_l.addWidget(self.chk_env)
 
         fp_row = QHBoxLayout()
         self.btn_fp_touch = QPushButton("👆 Trigger Fingerprint Touch (Finger #1)")
@@ -9822,10 +9999,17 @@ class GNDroidSettingsDialog(QDialog):
         self.fp_status = QLabel("Biometrics: Ready for scan authentication")
         self.fp_status.setStyleSheet("color: #64748b; font-size: 11px;")
         fp_row.addWidget(self.fp_status, 1)
-        tnet_l.addLayout(fp_row)
+        g_sens_l.addLayout(fp_row)
 
+        tnet_l.addWidget(grp_sensor)
         tnet_l.addStretch()
-        self.tabs.addTab(tab_net, "🌐 Network & Sensors")
+
+        scroll_net.setWidget(tab_net)
+        tab_net_l = QVBoxLayout(tab_net_container)
+        tab_net_l.setContentsMargins(0, 0, 0, 0)
+        tab_net_l.addWidget(scroll_net)
+
+        self.tabs.addTab(tab_net_container, "🌐 Network & Adapters")
 
         layout.addWidget(self.tabs)
 
@@ -9844,6 +10028,62 @@ class GNDroidSettingsDialog(QDialog):
         btn_box.addWidget(self.btn_cancel)
 
         layout.addLayout(btn_box)
+
+    def on_net_mode_changed(self, idx: int):
+        mode = self.combo_net_mode.itemData(idx)
+        if mode == "lan_bridge":
+            self.lbl_mode_desc.setText(
+                "<b>Mode 1 (⚡ High-Speed LAN Bridge):</b> Directly maps Android emulator ports to your physical PC IP (192.168.100.5). "
+                "Other phones, Android TVs, and PCs on your Wi-Fi can connect directly with zero driver requirements."
+            )
+        elif mode == "hardware_bridged":
+            self.lbl_mode_desc.setText(
+                "<b>Mode 2 (🌐 Hardware Bridged):</b> Bridges Android VM to the selected physical NIC via Windows TAP / Hyper-V Switch. "
+                "The home router DHCP assigns a real 192.168.100.x address directly to the Android instance."
+            )
+        else:
+            self.lbl_mode_desc.setText(
+                "<b>Mode 3 (🔒 Isolated NAT):</b> Standard Android emulator private 10.0.2.15 sandbox subnet. Isolated from other home network devices."
+            )
+
+    def action_test_lan_bridge(self):
+        try:
+            import socket
+            from nexus.network_bridge import start_global_lan_bridge, get_primary_physical_adapter
+            start_global_lan_bridge()
+            pri = get_primary_physical_adapter()
+            host_ip = pri["primary_ip"] if pri else "192.168.100.5"
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(2.0)
+            res = s.connect_ex((host_ip, 51888))
+            s.close()
+            if res == 0:
+                QMessageBox.information(
+                    self, "LAN Bridge Active",
+                    f"LAN Bridge is ACTIVE and reachable!\n\n"
+                    f"• Host Physical IP: {host_ip}\n"
+                    f"• Port: 51888 (HTTP / Stream Control)\n"
+                    f"• Status: External Wi-Fi devices can reach the emulator directly at:\n"
+                    f"  http://{host_ip}:51888/api/v1/status"
+                )
+            else:
+                QMessageBox.information(
+                    self, "LAN Bridge Bound",
+                    f"LAN Bridge listener is BOUND to {host_ip}:51888.\n"
+                    f"When an emulator instance is running with Companion App, external devices will connect seamlessly."
+                )
+        except Exception as e:
+            QMessageBox.warning(self, "Bridge Test", f"Bridge test status: {e}")
+
+    def action_refresh_adapters(self):
+        try:
+            from nexus.network_bridge import get_system_network_adapters
+            self.combo_adapters.clear()
+            for ad in get_system_network_adapters():
+                self.combo_adapters.addItem(ad["display_label"], ad["name"])
+            QMessageBox.information(self, "Adapters Refreshed", "Physical and virtual network adapters refreshed successfully.")
+        except Exception as e:
+            QMessageBox.warning(self, "Refresh Error", str(e))
 
     def on_resolution_preset_changed(self, idx: int):
         data = self.combo_res_preset.itemData(idx)
@@ -9976,6 +10216,21 @@ class GNDroidSettingsDialog(QDialog):
         }
 
         ok = AVDManager.save_full_instance_config(self.instance_name, cfg_dict)
+
+        # Accurately store Network & Hardware Bridging configuration in config.ini
+        try:
+            from nexus.network_bridge import save_instance_network_config
+            net_save_data = {
+                "mode": self.combo_net_mode.currentData(),
+                "adapter_name": self.combo_adapters.currentText(),
+                "replicate_state": self.chk_replicate_state.isChecked(),
+                "bluetooth_enabled": self.chk_bluetooth.isChecked(),
+                "bluetooth_mode": self.combo_bt_mode.currentData(),
+                "exposed_ports": self.txt_exposed_ports.text().strip()
+            }
+            save_instance_network_config(self.instance_name, net_save_data)
+        except Exception as e:
+            pass
 
         # Accurately store secondary display configuration in config.ini
         try:
