@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fl_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0f172a"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <!-- 1. FULLSCREEN STREAM VIEWPORT (Active when connected) -->
+    <FrameLayout
+        android:id="@+id/fl_viewport"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/iv_remote_screen"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:contentDescription="Remote Android Screen" />
+
+        <!-- Floating HUD / Navigation Toolbar (Auto-hides or toggles) -->
+        <LinearLayout
+            android:id="@+id/ll_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="#cc0f172a"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_stream_stats"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⚡ LIVE | 192.168.100.245 | 60 FPS"
+                android:textColor="#38bdf8"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingStart="8dp" />
+
+            <Button
+                android:id="@+id/btn_hud_back"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="◀ Back"
+                android:textSize="11sp"
+                android:textColor="#ffffff"
+                android:backgroundTint="#334155"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/btn_hud_home"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="⭕ Home"
+                android:textSize="11sp"
+                android:textColor="#ffffff"
+                android:backgroundTint="#334155"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/btn_hud_recents"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="⏹ Recents"
+                android:textSize="11sp"
+                android:textColor="#ffffff"
+                android:backgroundTint="#334155"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/btn_hud_text"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="⌨ Type"
+                android:textSize="11sp"
+                android:textColor="#ffffff"
+                android:backgroundTint="#0284c7"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/btn_hud_disconnect"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="✕ Exit"
+                android:textSize="11sp"
+                android:textColor="#ffffff"
+                android:backgroundTint="#dc2626" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- 2. DEVICE DISCOVERY & CONNECTION PANEL (Active when idle) -->
+    <ScrollView
+        android:id="@+id/sv_discovery"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📺 GNDROiD TV &amp; Remote Display"
+                android:textColor="#ffffff"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:id="@+id/tv_discovery_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scanning local Wi-Fi for active devices..."
+                android:textColor="#94a3b8"
+                android:textSize="13sp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Manual IP Connect Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxWidth="480dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DIRECT IP CONNECTION"
+                    android:textColor="@color/primary_dark"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <EditText
+                        android:id="@+id/et_target_ip"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:hint="e.g. 192.168.100.245"
+                        android:textColor="#0f172a"
+                        android:textColorHint="#94a3b8"
+                        android:inputType="textUri"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:background="#f1f5f9"
+                        android:layout_marginEnd="10dp" />
+
+                    <Button
+                        android:id="@+id/btn_direct_connect"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:text="⚡ Connect"
+                        android:textColor="#ffffff"
+                        android:backgroundTint="@color/primary"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Discovered Devices Container -->
+            <LinearLayout
+                android:id="@+id/ll_discovered_devices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxWidth="480dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DISCOVERED ON LOCAL WI-FI (LIVE RADAR)"
+                    android:textColor="#94a3b8"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+
+                <!-- Discovered Device Card Placeholder (Filled dynamically) -->
+                <LinearLayout
+                    android:id="@+id/ll_radar_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_refresh_radar"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="🔄 Refresh Subnet Radar"
+                android:textColor="#cbd5e1"
+                android:backgroundTint="#1e293b"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp" />
+
+            <Button
+                android:id="@+id/btn_return_dashboard"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="◀ Return to Broadcaster Mode"
+                android:textColor="#94a3b8"
+                android:backgroundTint="#0f172a"
+                android:textSize="12sp"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</FrameLayout>

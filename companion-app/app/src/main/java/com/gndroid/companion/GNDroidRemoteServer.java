@@ -202,7 +202,7 @@ public class GNDroidRemoteServer {
             if (uri.startsWith("/ping") || uri.startsWith("/version")) {
                 JSONObject res = new JSONObject();
                 res.put("pong", true);
-                res.put("version", "2.4.0");
+                res.put("version", "2.5.0");
                 res.put("apkInstalled", true);
                 res.put("timestamp", System.currentTimeMillis());
                 sendResponse(out, 200, "application/json", res.toString());
@@ -256,10 +256,12 @@ public class GNDroidRemoteServer {
                         lastSent = frame;
                         lastTime = now;
                     }
-                    try {
-                        Thread.sleep(30);
-                    } catch (InterruptedException ie) {
-                        break;
+                    synchronized (GNDroidCompanionService.frameSignalLock) {
+                        try {
+                            GNDroidCompanionService.frameSignalLock.wait(15);
+                        } catch (InterruptedException ie) {
+                            break;
+                        }
                     }
                 }
                 return;
@@ -374,6 +376,18 @@ public class GNDroidRemoteServer {
                 res.put("success", ok);
                 res.put("action", action);
                 sendResponse(out, 200, "application/json", res.toString());
+                return;
+            }
+
+            // 10.5 Dump Screen UI Elements
+            if (uri.startsWith("/api/v1/dump_screen")) {
+                GNDroidAccessibilityService a11y = GNDroidAccessibilityService.getInstance();
+                JSONArray arr = new JSONArray();
+                if (a11y != null) {
+                    List<JSONObject> nodes = a11y.dumpNodes();
+                    for (JSONObject n : nodes) arr.put(n);
+                }
+                sendResponse(out, 200, "application/json", arr.toString());
                 return;
             }
 
@@ -630,6 +644,30 @@ public class GNDroidRemoteServer {
                         return a11y.injectBackspace();
                     }
                     return false;
+                case "open_developer_options":
+                    try {
+                        Intent devIntent = new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+                        devIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        mContext.startActivity(devIntent);
+                        return true;
+                    } catch (Exception ex) {
+                        return false;
+                    }
+                case "enable_adb_tcp":
+                    try {
+                        android.provider.Settings.Global.putInt(mContext.getContentResolver(), "adb_port", 5555);
+                        android.provider.Settings.Global.putInt(mContext.getContentResolver(), "adb_wifi_enabled", 1);
+                        android.provider.Settings.Global.putInt(mContext.getContentResolver(), "adb_enabled", 1);
+                        return true;
+                    } catch (Exception ex) {
+                        return false;
+                    }
+                case "click_text":
+                    if (a11y != null) {
+                        String t = params.optString("text", "");
+                        return a11y.clickByText(t);
+                    }
+                    return false;
                 case "enter":
                     if (a11y != null) {
                         return a11y.injectText("\n");
@@ -726,7 +764,7 @@ public class GNDroidRemoteServer {
         JSONObject obj = new JSONObject();
         try {
             obj.put("status", "online");
-            obj.put("version", "2.4.0");
+            obj.put("version", "2.5.0");
             obj.put("device_name", Build.MANUFACTURER + " " + Build.MODEL);
             obj.put("model", Build.MODEL);
             obj.put("hostname", Build.MODEL);

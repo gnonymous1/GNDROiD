@@ -138,6 +138,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Auto-detect Android TV device and launch directly into TV Receiver Mode
+        android.app.UiModeManager uiModeManager = (android.app.UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
+        if (uiModeManager != null && uiModeManager.getCurrentModeType() == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION) {
+            startActivity(new Intent(this, ReceiverActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_main);
 
         mTvIpAddress = findViewById(R.id.tv_ip_address);
@@ -174,6 +183,16 @@ public class MainActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     moveTaskToBack(true);
+                }
+            });
+        }
+
+        Button btnOpenReceiver = findViewById(R.id.btn_open_receiver);
+        if (btnOpenReceiver != null) {
+            btnOpenReceiver.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(MainActivity.this, ReceiverActivity.class));
                 }
             });
         }

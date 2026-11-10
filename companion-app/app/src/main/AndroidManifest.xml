@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gndroid.companion"
-    android:versionCode="20300"
-    android:versionName="2.3.0">
+    android:versionCode="20500"
+    android:versionName="2.5.0">
 
     <uses-sdk
         android:minSdkVersion="24"
         android:targetSdkVersion="34" />
+
+    <!-- Android TV & Leanback Feature Compatibility -->
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <!-- Network & Wi-Fi Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -65,6 +69,19 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Android TV & Secondary Mobile Receiver / Display Activity -->
+        <activity
+            android:name="com.gndroid.companion.ReceiverActivity"
+            android:exported="true"
+            android:label="GNDROiD TV &amp; Remote Display"
+            android:theme="@style/AppTheme"
+            android:configChanges="orientation|screenSize|keyboardHidden|navigation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 

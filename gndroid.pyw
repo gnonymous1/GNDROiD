@@ -2364,31 +2364,47 @@ class WirelessStreamWorker(QThread):
             f"http://{self.host_ip}:{self.port}/screen/raw"
         ]
 
+        mjpeg_url = f"http://{self.host_ip}:{self.port}/stream.mjpeg"
         while self._running:
-            t0 = time.time()
-            frame_data = None
-            for ep in endpoints:
-                try:
-                    req = urllib.request.Request(ep, headers={"User-Agent": "GNDROiD-WirelessMirror"})
-                    with urllib.request.urlopen(req, timeout=1.2) as resp:
-                        if resp.status == 200:
-                            frame_data = resp.read()
-                            if frame_data and len(frame_data) > 80:
-                                break
-                except Exception:
-                    continue
-
-            latency = int((time.time() - t0) * 1000)
-            if frame_data:
-                pix = QPixmap()
-                if pix.loadFromData(frame_data):
-                    self.sig_frame.emit(pix, latency)
-            else:
-                time.sleep(0.15)
-
-            elapsed = time.time() - t0
-            to_sleep = max(0.015, 0.033 - elapsed)
-            time.sleep(to_sleep)
+            try:
+                req = urllib.request.Request(mjpeg_url, headers={"User-Agent": "GNDROiD-WirelessMirror"})
+                with urllib.request.urlopen(req, timeout=3.0) as resp:
+                    buf = bytearray()
+                    while self._running:
+                        t0 = time.time()
+                        chunk = resp.read(16384)
+                        if not chunk:
+                            break
+                        buf.extend(chunk)
+                        a = buf.find(b"\xff\xd8")
+                        b = buf.find(b"\xff\xd9", a + 2) if a != -1 else -1
+                        if a != -1 and b != -1:
+                            jpg_bytes = bytes(buf[a:b+2])
+                            del buf[:b+2]
+                            pix = QPixmap()
+                            if pix.loadFromData(jpg_bytes):
+                                latency = max(10, int((time.time() - t0) * 1000))
+                                self.sig_frame.emit(pix, latency)
+            except Exception:
+                # Fast fallback polling if persistent stream disconnects
+                t0 = time.time()
+                frame_data = None
+                for ep in endpoints:
+                    try:
+                        r_req = urllib.request.Request(ep, headers={"User-Agent": "GNDROiD-WirelessMirror"})
+                        with urllib.request.urlopen(r_req, timeout=0.8) as r_resp:
+                            if r_resp.status == 200:
+                                frame_data = r_resp.read()
+                                if frame_data and len(frame_data) > 80:
+                                    break
+                    except Exception:
+                        continue
+                latency = int((time.time() - t0) * 1000)
+                if frame_data:
+                    pix = QPixmap()
+                    if pix.loadFromData(frame_data):
+                        self.sig_frame.emit(pix, latency)
+                time.sleep(0.03)
 
 
 class ScreenInteractiveLabel(QLabel):

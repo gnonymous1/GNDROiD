@@ -62,6 +62,7 @@ public class GNDroidCompanionService extends Service {
     public static volatile int screenCaptureWidth = 540;
     public static volatile int screenCaptureHeight = 960;
     public static volatile GNDroidCompanionService activeInstance = null;
+    public static final Object frameSignalLock = new Object();
     private static HandlerThread sImageWorkerThread = null;
     private static Handler sImageWorkerHandler = null;
 
@@ -103,6 +104,9 @@ public class GNDroidCompanionService extends Service {
                             if (jpeg != null && jpeg.length > 50) {
                                 lastLiveScreenJpeg = jpeg;
                                 lastLiveScreenTimestamp = System.currentTimeMillis();
+                                synchronized (frameSignalLock) {
+                                    frameSignalLock.notifyAll();
+                                }
                             }
                         }
                     } catch (Throwable ignored) {
@@ -122,6 +126,16 @@ public class GNDroidCompanionService extends Service {
                 null, sImageWorkerHandler
             );
             Log.i(TAG, "Direct Wireless Screen Cast active at " + targetW + "x" + targetH);
+            if (activeInstance != null && activeInstance.mCastEngine != null) {
+                try {
+                    activeInstance.mCastEngine.configure(targetW, targetH, 4000000, 60, false);
+                    activeInstance.mCastEngine.setMediaProjection(mp);
+                    activeInstance.mCastEngine.start();
+                    Log.i(TAG, "Hardware H.264 CastEngine linked and active on port " + GNDroidCastEngine.VIDEO_PORT);
+                } catch (Exception ex) {
+                    Log.w(TAG, "Could not start secondary H.264 engine: " + ex.getMessage());
+                }
+            }
         } catch (Exception e) {
             Log.e(TAG, "Failed to create Direct Screen Cast VirtualDisplay", e);
         }

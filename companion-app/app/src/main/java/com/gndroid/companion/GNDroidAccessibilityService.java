@@ -1,4 +1,7 @@
 package com.gndroid.companion;
+import java.util.ArrayList;
+import java.util.List;
+import org.json.JSONObject;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
@@ -147,6 +150,73 @@ public class GNDroidAccessibilityService extends AccessibilityService {
                     return res;
                 }
                 focus.recycle();
+            }
+            root.recycle();
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+
+    public List<JSONObject> dumpNodes() {
+        List<JSONObject> list = new ArrayList<>();
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root != null) {
+                dumpRecursive(root, list);
+                root.recycle();
+            }
+        } catch (Exception ignored) {}
+        return list;
+    }
+
+    private void dumpRecursive(AccessibilityNodeInfo node, List<JSONObject> list) {
+        if (node == null) return;
+        try {
+            CharSequence txt = node.getText();
+            CharSequence desc = node.getContentDescription();
+            if (txt != null || desc != null) {
+                JSONObject obj = new JSONObject();
+                obj.put("text", txt != null ? txt.toString() : "");
+                obj.put("desc", desc != null ? desc.toString() : "");
+                obj.put("id", node.getViewIdResourceName() != null ? node.getViewIdResourceName() : "");
+                obj.put("clickable", node.isClickable());
+                obj.put("checkable", node.isCheckable());
+                obj.put("checked", node.isChecked());
+                list.add(obj);
+            }
+            int childCount = node.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                AccessibilityNodeInfo child = node.getChild(i);
+                if (child != null) {
+                    dumpRecursive(child, list);
+                    child.recycle();
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public boolean clickByText(String targetText) {
+        if (targetText == null || targetText.isEmpty()) return false;
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(targetText);
+            if (nodes != null && !nodes.isEmpty()) {
+                for (AccessibilityNodeInfo n : nodes) {
+                    if (n.isClickable() && n.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                        root.recycle();
+                        return true;
+                    }
+                    AccessibilityNodeInfo parent = n.getParent();
+                    if (parent != null) {
+                        if (parent.isClickable() && parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                            parent.recycle();
+                            root.recycle();
+                            return true;
+                        }
+                        parent.recycle();
+                    }
+                }
             }
             root.recycle();
         } catch (Exception ignored) {}
