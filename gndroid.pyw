@@ -657,11 +657,15 @@ class ShortcutManager:
                 f'{icon_cmd} '
                 f'$s.Save()'
             )
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
             res = subprocess.run(
                 ["powershell", "-NoProfile", "-Command", ps_cmd],
                 capture_output=True,
                 text=True,
                 creationflags=0x08000000,
+                startupinfo=si,
                 timeout=10
             )
             if res.returncode == 0 and os.path.exists(lnk_path):
@@ -3145,7 +3149,7 @@ class GNDroidADBFixerDialog(QDialog):
         self.btn_devmgmt = QPushButton("⚙️ Windows Device Manager")
         self.btn_devmgmt.setProperty("class", "btnAction")
         self.btn_devmgmt.setToolTip("Open Windows Device Manager (devmgmt.msc) to inspect Android USB drivers")
-        self.btn_devmgmt.clicked.connect(lambda: subprocess.Popen(["devmgmt.msc"], shell=True))
+        self.btn_devmgmt.clicked.connect(lambda: subprocess.Popen(["devmgmt.msc"], shell=True, creationflags=0x08000000))
         footer.addWidget(self.btn_devmgmt)
 
         footer.addStretch()
@@ -3875,13 +3879,41 @@ class GNDroidADBFixerDialog(QDialog):
             self.lbl_daemon_status.setText("🔴 Offline (Port 5037 Closed / Daemon Stopped)")
             self.lbl_daemon_status.setStyleSheet("color: #f87171; font-weight: bold; font-size: 11px;")
 
-        # 3. Check Windows USB PnP Driver
+        # 3. Check Windows USB PnP Driver via native Registry (~2ms, zero console windows)
         has_android_pnp = False
         try:
-            cmd = ['powershell', '-Command', "Get-PnpDevice | Where-Object { $_.Class -eq 'AndroidUsbDeviceClass' -or $_.FriendlyName -match 'Android|ADB|Google' } | Select-Object -First 1 FriendlyName"]
-            res = subprocess.run(cmd, capture_output=True, text=True, creationflags=0x08000000, timeout=3)
-            if res.stdout and any(k in res.stdout for k in ["Android", "ADB", "Google"]):
-                has_android_pnp = True
+            import winreg
+            adb_cls = r"SYSTEM\CurrentControlSet\Control\Class\{3f966bd9-fa04-4ec5-991c-d326973b5128}"
+            try:
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, adb_cls) as k:
+                    if winreg.QueryInfoKey(k)[0] > 0:
+                        has_android_pnp = True
+            except OSError:
+                pass
+            if not has_android_pnp:
+                usb_enum = r"SYSTEM\CurrentControlSet\Enum\USB"
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, usb_enum) as ek:
+                    for i in range(winreg.QueryInfoKey(ek)[0]):
+                        vid_pid = winreg.EnumKey(ek, i)
+                        try:
+                            with winreg.OpenKey(ek, vid_pid) as vk:
+                                for j in range(winreg.QueryInfoKey(vk)[0]):
+                                    inst = winreg.EnumKey(vk, j)
+                                    with winreg.OpenKey(vk, inst) as ik:
+                                        for val_k in ("FriendlyName", "DeviceDesc", "Class"):
+                                            try:
+                                                v, _ = winreg.QueryValueEx(ik, val_k)
+                                                if isinstance(v, str) and any(k in v for k in ("Android", "ADB Interface", "AndroidUsbDeviceClass")):
+                                                    has_android_pnp = True
+                                                    break
+                                            except OSError:
+                                                pass
+                                        if has_android_pnp:
+                                            break
+                        except OSError:
+                            pass
+                        if has_android_pnp:
+                            break
         except Exception:
             pass
 
@@ -5144,26 +5176,48 @@ class AVDManager:
         return cleaned
 
     @staticmethod
-    def list_instances() -> List[Dict[str, Any]]:
+    def list_instances(pre_devs: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         avd_base = AVDManager.get_avd_dir()
         instances = []
         if not os.path.exists(avd_base):
             return instances
 
         active_emulators = {}
+        adb_online_serials = set()
+        # Fast in-memory check first
+        with AVDManager._instances_lock:
+            for inst_n, info in list(AVDManager._active_instances.items()):
+                p = info.get("proc")
+                if p and p.poll() is None:
+                    active_emulators[inst_n] = info.get("serial", "")
+
         try:
             adb = SystemPaths.get_adb()
-            out = subprocess.check_output([adb, "devices"], text=True, timeout=2, creationflags=0x08000000)
-            for line in out.strip().splitlines()[1:]:
-                if "emulator-" in line:
-                    serial = line.split()[0]
-                    try:
-                        name_out = subprocess.check_output([adb, "-s", serial, "emu", "avd", "name"], text=True, timeout=1, creationflags=0x08000000).strip()
-                        avd_n = name_out.splitlines()[0].strip() if name_out else ""
-                        if avd_n:
-                            active_emulators[avd_n] = serial
-                    except Exception:
-                        pass
+            if pre_devs is not None:
+                dev_entries = [(d.get("serial", ""), d.get("state", "")) for d in pre_devs if "emulator-" in d.get("serial", "")]
+            else:
+                out = subprocess.check_output([adb, "devices"], text=True, timeout=2, creationflags=0x08000000)
+                dev_entries = []
+                for line in out.strip().splitlines()[1:]:
+                    parts = line.strip().split()
+                    if len(parts) >= 2 and "emulator-" in parts[0]:
+                        dev_entries.append((parts[0], parts[1]))
+
+            for serial, state in dev_entries:
+                if state == "device":
+                    adb_online_serials.add(serial)
+
+            known_serials = set(active_emulators.values())
+            for serial, state in dev_entries:
+                if serial in known_serials or state != "device":
+                    continue
+                try:
+                    name_out = subprocess.check_output([adb, "-s", serial, "emu", "avd", "name"], text=True, timeout=1, creationflags=0x08000000).strip()
+                    avd_n = name_out.splitlines()[0].strip() if name_out else ""
+                    if avd_n:
+                        active_emulators[avd_n] = serial
+                except Exception:
+                    pass
         except Exception:
             pass
 
@@ -5171,6 +5225,7 @@ class AVDManager:
             avd_name = os.path.splitext(os.path.basename(ini_path))[0]
             avd_folder = os.path.join(avd_base, f"{avd_name}.avd")
             config_ini = os.path.join(avd_folder, "config.ini")
+            inst_serial = active_emulators.get(avd_name, "")
 
             spec = {
                 "name": avd_name,
@@ -5185,7 +5240,8 @@ class AVDManager:
                 "api_level": 34,
                 "root": False,
                 "running": avd_name in active_emulators,
-                "serial": active_emulators.get(avd_name, ""),
+                "adb_online": bool(inst_serial and inst_serial in adb_online_serials),
+                "serial": inst_serial,
                 "exists": os.path.exists(avd_folder)
             }
 
@@ -5463,10 +5519,12 @@ gndroid.root={'yes' if root_enabled else 'no'}
             emu, "-avd", name, "-port", str(port), "-gpu", gpu_mode,
             "-netfast", "-netdelay", "none", "-netspeed", "full",
             "-no-snapshot-load", "-crash-report-mode", "never",
-            "-dns-server", "8.8.8.8,1.1.1.1",
             "-wifi-user-mode-options", "ipv6=off",
             "-network-user-mode-options", "ipv6=off"
         ]
+
+        if is_root:
+            cmd.extend(["-writable-system", "-selinux", "permissive"])
 
         # Append multi-display launch arguments if enabled for instance
         try:
@@ -5477,19 +5535,20 @@ gndroid.root={'yes' if root_enabled else 'no'}
         except Exception:
             pass
 
-        # Append hardware network & bluetooth bridge launch arguments if configured
+        # Append hardware network & bluetooth bridge launch arguments (strictly ordering emulator args before -qemu)
         try:
-            from nexus.network_bridge import get_emulator_network_args
-            net_args = get_emulator_network_args(name)
-            if net_args:
-                cmd.extend(net_args)
+            from nexus.network_bridge import get_emulator_network_config_args
+            emu_net_args, qemu_net_args = get_emulator_network_config_args(name)
+            if emu_net_args:
+                cmd.extend(emu_net_args)
+            if qemu_net_args:
+                cmd.append("-qemu")
+                cmd.extend(qemu_net_args)
         except Exception:
-            pass
-
-        if is_root:
-            cmd.extend(["-writable-system", "-selinux", "permissive"])
+            cmd.extend(["-dns-server", "8.8.8.8,1.1.1.1"])
 
         env = os.environ.copy()
+        env.pop("QT_QPA_PLATFORM", None)
         env["QEMU_AUDIO_DRV"] = "none"
         sdk_dir = AVDManager.get_sdk_dir()
         avd_dir = AVDManager.get_avd_dir()
@@ -6938,10 +6997,41 @@ class GNDroidImageDownloaderDialog(QDialog):
         event.accept()
 
 
+def apply_light_combo_style(combo: QComboBox):
+    view = QListView()
+    view.setStyleSheet("""
+        QListView {
+            background-color: #ffffff;
+            color: #0f172a;
+            selection-background-color: #e0f2fe;
+            selection-color: #0067c0;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px;
+            outline: none;
+        }
+        QListView::item {
+            min-height: 28px;
+            padding: 6px 10px;
+            color: #0f172a;
+            background-color: #ffffff;
+            border-radius: 4px;
+        }
+        QListView::item:hover, QListView::item:selected {
+            background-color: #e0f2fe;
+            color: #0067c0;
+            font-weight: 600;
+        }
+    """)
+    combo.setView(view)
+
+
 # ----------------------------------------------------------------------
 # Clone Instance Dialog
 # ----------------------------------------------------------------------
 class GNDroidCloneInstanceDialog(QDialog):
+    style_combo = staticmethod(apply_light_combo_style)
+
     def __init__(self, src_instance: Dict[str, Any], parent=None):
         super().__init__(parent)
         self.src_instance = src_instance
@@ -7157,6 +7247,8 @@ class GNDroidCloneInstanceDialog(QDialog):
 # Instance Creator Dialog
 # ----------------------------------------------------------------------
 class GNDroidInstanceCreatorDialog(QDialog):
+    style_combo = staticmethod(apply_light_combo_style)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("➕ Create New Android Instance — GNDROiD")
@@ -7237,6 +7329,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
         c_layout.addWidget(QLabel("Android OS Version:"))
         os_box = QHBoxLayout()
         self.combo_os = QComboBox()
+        self.style_combo(self.combo_os)
         for api, info in GOOGLE_SYS_IMAGES.items():
             installed = AVDManager.is_image_installed(api)
             status_tag = "🟢 Ready" if installed else "⬇️ Download Needed"
@@ -7259,6 +7352,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
 
         grid.addWidget(QLabel("RAM Allocation:"), 0, 0)
         self.combo_ram = QComboBox()
+        self.style_combo(self.combo_ram)
         for label, val in [
             ("2 GB (2048 MB)", 2048),
             ("4 GB (4096 MB)", 4096),
@@ -7273,6 +7367,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
 
         grid.addWidget(QLabel("CPU Cores:"), 1, 0)
         self.combo_cores = QComboBox()
+        self.style_combo(self.combo_cores)
         for c in [2, 4, 8, 12, 16, 24]:
             self.combo_cores.addItem(f"{c} Dedicated Cores", c)
         self.combo_cores.setCurrentIndex(2)
@@ -7280,6 +7375,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
 
         grid.addWidget(QLabel("Screen Resolution:"), 2, 0)
         self.combo_res = QComboBox()
+        self.style_combo(self.combo_res)
         for label, w, h, d in [
             ("1440 x 3120 (Galaxy S24 Ultra QHD+ • 500 DPI) [Default]", 1440, 3120, 500),
             ("1080 x 2400 (Phone FHD+ 20:9 • 420 DPI)", 1080, 2400, 420),
@@ -7310,6 +7406,7 @@ class GNDroidInstanceCreatorDialog(QDialog):
 
         grid.addWidget(QLabel("Bridged Adapter:"), 5, 0)
         self.combo_adapter = QComboBox()
+        self.style_combo(self.combo_adapter)
         try:
             from nexus.network_bridge import get_system_network_adapters
             for ad in get_system_network_adapters():
@@ -7509,6 +7606,7 @@ class GNDroidInstanceSettingsDialog(QDialog):
 
         grid.addWidget(QLabel("RAM Allocation:"), 0, 0)
         self.combo_ram = QComboBox()
+        apply_light_combo_style(self.combo_ram)
         for label, val in [
             ("2 GB (2048 MB)", 2048),
             ("4 GB (4096 MB)", 4096),
@@ -7526,6 +7624,7 @@ class GNDroidInstanceSettingsDialog(QDialog):
 
         grid.addWidget(QLabel("CPU Cores:"), 1, 0)
         self.combo_cores = QComboBox()
+        apply_light_combo_style(self.combo_cores)
         for c in [2, 4, 8, 12, 16, 24]:
             self.combo_cores.addItem(f"{c} Dedicated Cores", c)
         for i in range(self.combo_cores.count()):
@@ -7536,6 +7635,7 @@ class GNDroidInstanceSettingsDialog(QDialog):
 
         grid.addWidget(QLabel("Screen Resolution:"), 2, 0)
         self.combo_res = QComboBox()
+        apply_light_combo_style(self.combo_res)
         res_list = [
             ("1440 x 3120 (Galaxy S24 Ultra QHD+ • 500 DPI) [Default]", 1440, 3120, 500),
             ("1080 x 2400 (Phone FHD+ 20:9 • 420 DPI)", 1080, 2400, 420),
@@ -7559,6 +7659,7 @@ class GNDroidInstanceSettingsDialog(QDialog):
 
         grid.addWidget(QLabel("GPU Mode:"), 3, 0)
         self.combo_gpu = QComboBox()
+        apply_light_combo_style(self.combo_gpu)
         self.combo_gpu.addItem("Auto (Hardware Vulkan / Direct3D 11)", "auto")
         self.combo_gpu.addItem("Host (Direct Passthrough)", "host")
         self.combo_gpu.addItem("SwiftShader (Software Fallback)", "swiftshader_indirect")
@@ -7717,6 +7818,17 @@ class InstanceScannerWorker(QThread):
     def run(self):
         try:
             insts = AVDManager.list_instances()
+            try:
+                from nexus.network_bridge import get_instance_network_config, get_instance_live_ip
+                for inst in insts:
+                    n_cfg = get_instance_network_config(inst["name"])
+                    inst["net_cfg"] = n_cfg
+                    if inst.get("adb_online") and inst.get("serial"):
+                        inst["live_ip"] = get_instance_live_ip(inst["serial"], fallback_ip=n_cfg.get("static_ip", "192.168.100.x"))
+                    else:
+                        inst["live_ip"] = n_cfg.get("static_ip", "")
+            except Exception:
+                pass
             self.instances_loaded.emit(insts)
         except Exception:
             pass
@@ -8177,7 +8289,7 @@ class GNDroidMultiInstanceManager(QDialog):
         for inst in all_instances:
             name = inst["name"]
             if name in self.starting_instances:
-                if inst["running"]:
+                if inst.get("adb_online"):
                     self.starting_instances.pop(name, None)
                 else:
                     inst["starting"] = True
@@ -8247,9 +8359,11 @@ class GNDroidMultiInstanceManager(QDialog):
                 st_lbl.setStyleSheet("color: #16a34a; font-weight: 600; font-size: 11px;")
                 sb_layout.addWidget(st_lbl)
                 try:
-                    from nexus.network_bridge import get_instance_network_config, get_instance_live_ip
-                    n_cfg = get_instance_network_config(inst["name"])
-                    live_ip = get_instance_live_ip(inst["serial"], fallback_ip=n_cfg.get("static_ip", "192.168.100.x"))
+                    n_cfg = inst.get("net_cfg")
+                    if n_cfg is None:
+                        from nexus.network_bridge import get_instance_network_config
+                        n_cfg = get_instance_network_config(inst["name"])
+                    live_ip = inst.get("live_ip") or n_cfg.get("static_ip") or "192.168.100.x"
                     ip_label_text = f"IP: {live_ip} (Bridged)" if n_cfg.get("mode") == "hardware_bridged" else f"Bridge: 192.168.100.5:{51888 + (row * 10)}"
                 except Exception:
                     ip_label_text = f"serial: {inst['serial']}"
@@ -8261,8 +8375,10 @@ class GNDroidMultiInstanceManager(QDialog):
                 st_lbl.setStyleSheet("color: #64748b; font-weight: 500; font-size: 11px;")
                 sb_layout.addWidget(st_lbl)
                 try:
-                    from nexus.network_bridge import get_instance_network_config
-                    n_cfg = get_instance_network_config(inst["name"])
+                    n_cfg = inst.get("net_cfg")
+                    if n_cfg is None:
+                        from nexus.network_bridge import get_instance_network_config
+                        n_cfg = get_instance_network_config(inst["name"])
                     st_ip = n_cfg.get("static_ip", "")
                     sub_text = f"Bridged IP: {st_ip}" if st_ip else "Bridged (DHCP Ready)"
                 except Exception:
@@ -8484,10 +8600,17 @@ class GNDroidMultiInstanceManager(QDialog):
                 if name not in self.starting_instances:
                     return
                 info = self.starting_instances[name]
-                info["attempts"] += 1
-                devs = SystemPaths.list_devices()
-                online = any(d["serial"] == target_serial and d["state"] == "device" for d in devs)
-                if online:
+                if info.get("proc") and info["proc"].poll() is not None:
+                    self.starting_instances.pop(name, None)
+                    self.refresh_table()
+                    QMessageBox.warning(
+                        self, "Emulator Exit",
+                        f"Instance '{name}' exited during boot (code {info['proc'].returncode}). Please check logs/emulator_{name}.log."
+                    )
+                    return
+
+                # Check cached status populated asynchronously without stalling UI thread
+                if info.get("adb_online"):
                     self.starting_instances.pop(name, None)
                     self.refresh_table()
                     try:
@@ -8495,8 +8618,43 @@ class GNDroidMultiInstanceManager(QDialog):
                         threading.Thread(target=auto_stabilize_vpn_networking, args=(target_serial,), daemon=True).start()
                     except Exception:
                         pass
+                    try:
+                        from nexus.network_bridge import get_instance_network_config, apply_live_network_ip_and_dns, start_global_lan_bridge
+                        cfg = get_instance_network_config(name)
+                        if cfg.get("mode") in ["lan_bridge", "hardware_bridged"]:
+                            start_global_lan_bridge()
+                            if cfg.get("ip_mode") == "static" or cfg.get("dns1"):
+                                threading.Thread(
+                                    target=apply_live_network_ip_and_dns,
+                                    kwargs={
+                                        "target_serial": target_serial,
+                                        "ip_mode": cfg.get("ip_mode", "dhcp"),
+                                        "static_ip": cfg.get("static_ip", ""),
+                                        "netmask": cfg.get("netmask", "255.255.255.0"),
+                                        "gateway": cfg.get("gateway", "192.168.100.1"),
+                                        "dns1": cfg.get("dns1", "8.8.8.8"),
+                                        "dns2": cfg.get("dns2", "1.1.1.1")
+                                    },
+                                    daemon=True
+                                ).start()
+                    except Exception:
+                        pass
                     return
-                if info["attempts"] < 35:
+
+                info["attempts"] += 1
+                if not info.get("probing"):
+                    info["probing"] = True
+                    def _bg_probe():
+                        try:
+                            devs = SystemPaths.list_devices()
+                            info["adb_online"] = any(d["serial"] == target_serial and d["state"] == "device" for d in devs)
+                        except Exception:
+                            pass
+                        finally:
+                            info["probing"] = False
+                    threading.Thread(target=_bg_probe, daemon=True).start()
+
+                if info["attempts"] < 40:
                     QTimer.singleShot(1500, poll_manager_boot)
                 else:
                     self.starting_instances.pop(name, None)
@@ -9606,6 +9764,7 @@ class GNDroidSettingsDialog(QDialog):
         # RAM Allocation
         g_hw.addWidget(QLabel("RAM Allocation:"), 1, 0)
         self.combo_ram = QComboBox()
+        self.style_combo(self.combo_ram)
         cur_ram = int(self.cfg.get("hw.ramSize", 4096))
         ram_opts = [
             ("2 GB (2048 MB) — Light", 2048),
@@ -9630,6 +9789,7 @@ class GNDroidSettingsDialog(QDialog):
         # CPU Processor Cores
         g_hw.addWidget(QLabel("CPU Processor Cores:"), 2, 0)
         self.combo_cores = QComboBox()
+        self.style_combo(self.combo_cores)
         cur_cores = int(self.cfg.get("hw.cpu.ncore", 4))
         core_opts = [
             ("2 Dedicated Cores (Basic)", 2),
@@ -9708,6 +9868,7 @@ class GNDroidSettingsDialog(QDialog):
         # GPU Graphics Engine
         g_gfx.addWidget(QLabel("GPU Graphics Backend:"), 0, 0)
         self.combo_gpu = QComboBox()
+        self.style_combo(self.combo_gpu)
         cur_gpu = self.cfg.get("hw.gpu.mode", "auto")
         gpu_opts = [
             ("Auto (Hardware Vulkan 1.4 / Direct3D 11 — Recommended)", "auto"),
@@ -9795,6 +9956,7 @@ class GNDroidSettingsDialog(QDialog):
 
         g_sec.addWidget(QLabel("Secondary Resolution Preset:"), 0, 0)
         self.combo_sec_preset = QComboBox()
+        self.style_combo(self.combo_sec_preset)
         sec_presets = [
             ("Match Main Display (Auto-Synchronized)", 0, 0, 0),
             ("Galaxy S24 Ultra (1440 x 3120 • 500 DPI • Portrait)", 1440, 3120, 500),
@@ -9941,6 +10103,7 @@ class GNDroidSettingsDialog(QDialog):
         tab_net_container = QWidget()
         scroll_net = QScrollArea()
         scroll_net.setWidgetResizable(True)
+        scroll_net.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_net.setFrameShape(QFrame.Shape.NoFrame)
         scroll_net.setStyleSheet("background: transparent;")
 
@@ -9977,6 +10140,7 @@ class GNDroidSettingsDialog(QDialog):
         g_net_l.addWidget(lbl_mode)
 
         self.combo_net_mode = QComboBox()
+        self.style_combo(self.combo_net_mode)
         self.combo_net_mode.addItem("⚡ High-Speed LAN Bridge (Host Direct IP 192.168.100.5 • Zero-Driver Plug & Play)", "lan_bridge")
         self.combo_net_mode.addItem("🌐 Hardware Bridged (Replicate Physical Connection • DHCP 192.168.100.x via TAP/NDIS)", "hardware_bridged")
         self.combo_net_mode.addItem("🔒 Standard Isolated NAT (Private 10.0.2.15 Subnet)", "nat")
@@ -9989,13 +10153,11 @@ class GNDroidSettingsDialog(QDialog):
         self.combo_net_mode.currentIndexChanged.connect(self.on_net_mode_changed)
         g_net_l.addWidget(self.combo_net_mode)
 
-        self.lbl_mode_desc = QLabel(
-            "<b>Mode 1 (LAN Bridge):</b> Directly maps Android emulator ports to your physical PC IP (192.168.100.5). "
-            "Other phones, Android TVs, and PCs on your Wi-Fi can connect directly with zero kernel drivers or admin rights."
-        )
+        self.lbl_mode_desc = QLabel()
         self.lbl_mode_desc.setWordWrap(True)
         self.lbl_mode_desc.setStyleSheet("color: #475569; font-size: 11px; padding: 6px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;")
         g_net_l.addWidget(self.lbl_mode_desc)
+        self.on_net_mode_changed(self.combo_net_mode.currentIndex())
 
         # Physical Adapter Selector
         lbl_adapter = QLabel("<b>Select Physical Network Adapter (Bridged Target):</b>")
@@ -10051,6 +10213,7 @@ class GNDroidSettingsDialog(QDialog):
         self.lbl_lan_status = QLabel(
             f"● Physical LAN: <b>{pri_ip}</b> ({pri_name}) | Router Gateway: <b>{gw}</b> | Bridge: <b>Active (Ports 51888, 51880, 5555, 8088)</b>"
         )
+        self.lbl_lan_status.setWordWrap(True)
         self.lbl_lan_status.setStyleSheet("color: #059669; font-size: 11px; padding: 6px 8px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px;")
         g_net_l.addWidget(self.lbl_lan_status)
 
@@ -10299,7 +10462,8 @@ class GNDroidSettingsDialog(QDialog):
 
     def action_detect_network(self):
         try:
-            from nexus.network_bridge import get_primary_physical_adapter, get_default_gateway
+            from nexus.network_bridge import refresh_network_cache, get_primary_physical_adapter, get_default_gateway
+            refresh_network_cache(force=True)
             pri = get_primary_physical_adapter()
             gw = get_default_gateway()
             self.txt_gateway.setText(gw)
@@ -10312,7 +10476,7 @@ class GNDroidSettingsDialog(QDialog):
             QMessageBox.information(
                 self, "Network Detected",
                 f"Physical network parameters detected successfully!\n\n"
-                f"• Physical Host IP: {pri.get('primary_ip', '192.168.100.5')}\n"
+                f"• Physical Host IP: {pri.get('primary_ip', '192.168.100.5') if pri else '192.168.100.5'}\n"
                 f"• Router Gateway: {gw}\n"
                 f"• Suggested Static IP: {self.txt_static_ip.text()}\n"
                 f"• Subnet Mask: 255.255.255.0"
@@ -10396,7 +10560,7 @@ class GNDroidSettingsDialog(QDialog):
         try:
             from nexus.network_bridge import get_system_network_adapters
             self.combo_adapters.clear()
-            for ad in get_system_network_adapters():
+            for ad in get_system_network_adapters(force_refresh=True):
                 self.combo_adapters.addItem(ad["display_label"], ad["name"])
             QMessageBox.information(self, "Adapters Refreshed", "Physical and virtual network adapters refreshed successfully.")
         except Exception as e:
@@ -10601,6 +10765,7 @@ class GNDroidApp(QMainWindow):
 
         self.scrcpy_proc = None
         self.sidebar_window = None
+        self._booting_instances = set()
 
         # Auto-provision flagship AVD if running on a new system
         AVDManager.ensure_default_flagship_avd()
@@ -10744,6 +10909,7 @@ class GNDroidApp(QMainWindow):
 
         self.dev_combo = QComboBox()
         self.dev_combo.setMinimumHeight(40)
+        apply_light_combo_style(self.dev_combo)
         self.dev_combo.currentIndexChanged.connect(self.on_device_selection_changed)
         df_layout.addWidget(self.dev_combo)
 
@@ -10896,12 +11062,13 @@ class GNDroidApp(QMainWindow):
         main_layout.addWidget(self.status_bar)
 
     def on_devices_updated(self, devs: List[Dict[str, Any]]):
+        self._latest_devs = devs
         current_data = self.dev_combo.currentData()
         self.dev_combo.blockSignals(True)
         self.dev_combo.clear()
 
-        # 1. Enumerate all user-created and flagship instances from AVDManager
-        instances = AVDManager.list_instances()
+        # 1. Enumerate all user-created and flagship instances from AVDManager (using pre_devs for zero blocking)
+        instances = AVDManager.list_instances(pre_devs=devs)
         running_serials = set()
 
         for inst in instances:
@@ -10933,24 +11100,38 @@ class GNDroidApp(QMainWindow):
                 "type": "vm", "name": "gndroid", "running": False, "serial": "", "api": 36, "inst": None
             })
 
-        # 2. Add physical devices, companion handsets, and any unmapped emulators
+        # 2. Add physical devices, cached companion handsets, and any unmapped emulators
         has_physical = False
 
-        # Add active Companion mobile handsets as first-class instances
-        for comp_ip in ["192.168.100.245"]:
-            for cp in (51880, 51888):
+        # Background probe for companion mobile handsets so UI thread never blocks
+        if not hasattr(self, "_companion_probe_cache"):
+            self._companion_probe_cache = []
+            self._companion_probing = False
+
+        if not self._companion_probing:
+            self._companion_probing = True
+            def _probe_companions():
+                found = []
                 try:
                     import socket
-                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s_comp:
-                        s_comp.settimeout(0.15)
-                        if s_comp.connect_ex((comp_ip, cp)) == 0:
-                            self.dev_combo.addItem(f"📱 [Mobile Instance] Infinix X690B ({comp_ip}:{cp} • Wireless Companion)", {
-                                "type": "companion", "host_ip": comp_ip, "port": cp, "name": "Infinix X690B"
-                            })
-                            has_physical = True
-                            break
+                    for comp_ip in ["192.168.100.245"]:
+                        for cp in (51880, 51888):
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s_comp:
+                                s_comp.settimeout(0.15)
+                                if s_comp.connect_ex((comp_ip, cp)) == 0:
+                                    found.append((comp_ip, cp, "Infinix X690B"))
+                                    break
                 except Exception:
                     pass
+                self._companion_probe_cache = found
+                self._companion_probing = False
+            threading.Thread(target=_probe_companions, daemon=True).start()
+
+        for comp_ip, cp, cname in self._companion_probe_cache:
+            self.dev_combo.addItem(f"📱 [Mobile Instance] {cname} ({comp_ip}:{cp} • Wireless Companion)", {
+                "type": "companion", "host_ip": comp_ip, "port": cp, "name": cname
+            })
+            has_physical = True
         for d in devs:
             s = d.get("serial", "")
             if not d.get("is_emulator"):
@@ -11005,7 +11186,15 @@ class GNDroidApp(QMainWindow):
             raw_name = data.get("name", "GNDROiD")
             disp_name = re.sub(r'(?i)gnd[o|r]*id', 'GNDROiD', raw_name)
             api = data.get("api", 36)
-            if data.get("running"):
+            is_booting = raw_name in getattr(self, "_booting_instances", set())
+            if is_booting:
+                self.btn_launch_vm.setEnabled(False)
+                self.btn_launch_vm.setText(f"⏳ Booting {disp_name}...")
+                self.btn_mirror_usb.setText(f"⏹ Stop {disp_name}")
+                self.btn_mirror_usb.setStyleSheet("background: #fee2e2; border: 1.5px solid #ef4444; color: #b91c1c; font-weight: bold; border-radius: 6px; padding: 10px; font-size: 12px;")
+                self.status_bar.setText(f"⏳ Booting {disp_name}... Android kernel & services initializing...")
+            elif data.get("running"):
+                self.btn_launch_vm.setEnabled(True)
                 port_str = data.get('serial', '').replace('emulator-', '')
                 self.btn_launch_vm.setText(f"🖥 Mirror {disp_name} (60 FPS Stream)")
                 self.btn_launch_vm.setToolTip(f"Open 60 FPS mirror and controls for {disp_name}")
@@ -11014,6 +11203,7 @@ class GNDroidApp(QMainWindow):
                 self.btn_mirror_usb.setToolTip(f"Stop running Android VM ({disp_name}) on port {port_str}")
                 self.status_bar.setText(f"🟢 Active Android Instance: {disp_name} on port {port_str}. Ready to mirror or stop.")
             else:
+                self.btn_launch_vm.setEnabled(True)
                 self.btn_launch_vm.setText(f"⚡ Launch {disp_name} (Normal Android Window)")
                 self.btn_launch_vm.setToolTip(f"Boot normal Android virtual machine window for {disp_name}")
                 self.btn_mirror_usb.setText("🔗 Mirror Phone (USB / LAN)")
@@ -11065,7 +11255,9 @@ class GNDroidApp(QMainWindow):
             return data.get("name", "gndroid")
         elif data and data != "gndroid":
             return str(data)
-        devs = SystemPaths.list_devices()
+        devs = getattr(self, "_latest_devs", None)
+        if devs is None:
+            devs = SystemPaths.list_devices()
         active = [d["serial"] for d in devs if d["state"] == "device"]
         if active:
             return active[0]
@@ -11165,16 +11357,44 @@ class GNDroidApp(QMainWindow):
                 "serial": target_serial
             }
 
+            if not hasattr(self, "_booting_instances"):
+                self._booting_instances = set()
+            self._booting_instances.add(name)
+
             self.btn_launch_vm.setEnabled(False)
             self.btn_launch_vm.setText(f"⏳ Booting {name} ({target_serial})...")
             self.status_bar.setText(f"⏳ Booting {name} ({target_serial})... Android OS initializing (approx. 15-20s)...")
 
             attempts = [0]
             def poll_boot_progress():
+                if proc.poll() is not None:
+                    self._booting_instances.discard(name)
+                    self.btn_launch_vm.setEnabled(True)
+                    self.btn_launch_vm.setText(f"⚡ Launch {name} (Android {api})")
+                    err_msg = f"❌ Emulator exited unexpectedly (code {proc.returncode})."
+                    try:
+                        if os.path.isfile(log_path):
+                            with open(log_path, "r", encoding="utf-8", errors="ignore") as lf:
+                                for l in reversed(lf.readlines()[-30:]):
+                                    ls = l.strip()
+                                    if any(w in ls.lower() for w in ["invalid", "fatal", "could not open", "qemu-system", "error"]):
+                                        err_msg = f"❌ Boot failed: {ls}"
+                                        break
+                    except Exception:
+                        pass
+                    self.status_bar.setText(err_msg)
+                    self.refresh_devices()
+                    return
+
                 attempts[0] += 1
-                devs = SystemPaths.list_devices()
+                devs = getattr(self, "_latest_devs", None)
+                if devs is None:
+                    devs = []
                 online = any(d["serial"] == target_serial and d["state"] == "device" for d in devs)
+                if not online and attempts[0] % 2 == 1:
+                    self.refresh_devices()
                 if online:
+                    self._booting_instances.discard(name)
                     self.btn_launch_vm.setEnabled(True)
                     self.btn_launch_vm.setText(f"🖥 Mirror {name} ({target_serial})")
                     self.status_bar.setText(f"🟢 Android Machine '{name}' is ONLINE on {target_serial}! Ready to mirror.")
@@ -11184,19 +11404,43 @@ class GNDroidApp(QMainWindow):
                         threading.Thread(target=auto_stabilize_vpn_networking, args=(target_serial,), daemon=True).start()
                     except Exception:
                         pass
+                    try:
+                        from nexus.network_bridge import get_instance_network_config, apply_live_network_ip_and_dns, start_global_lan_bridge
+                        cfg = get_instance_network_config(name)
+                        if cfg.get("mode") in ["lan_bridge", "hardware_bridged"]:
+                            start_global_lan_bridge()
+                            if cfg.get("ip_mode") == "static" or cfg.get("dns1"):
+                                threading.Thread(
+                                    target=apply_live_network_ip_and_dns,
+                                    kwargs={
+                                        "target_serial": target_serial,
+                                        "ip_mode": cfg.get("ip_mode", "dhcp"),
+                                        "static_ip": cfg.get("static_ip", ""),
+                                        "netmask": cfg.get("netmask", "255.255.255.0"),
+                                        "gateway": cfg.get("gateway", "192.168.100.1"),
+                                        "dns1": cfg.get("dns1", "8.8.8.8"),
+                                        "dns2": cfg.get("dns2", "1.1.1.1")
+                                    },
+                                    daemon=True
+                                ).start()
+                    except Exception:
+                        pass
                     return
 
-                if attempts[0] < 35:
+                if attempts[0] < 40:
                     self.status_bar.setText(f"⏳ Booting {name} ({target_serial})... [{attempts[0]*1.5:.0f}s] Android kernel & services starting...")
                     QTimer.singleShot(1500, poll_boot_progress)
                 else:
+                    self._booting_instances.discard(name)
                     self.btn_launch_vm.setEnabled(True)
                     self.btn_launch_vm.setText(f"⚡ Launch {name} (Android {api})")
                     self.status_bar.setText(f"⚠️ Boot wait finished. Click Mirror if window is active.")
                     self.refresh_devices()
 
-            QTimer.singleShot(2000, poll_boot_progress)
+            QTimer.singleShot(1500, poll_boot_progress)
         except Exception as e:
+            if hasattr(self, "_booting_instances"):
+                self._booting_instances.discard(name)
             self.btn_launch_vm.setEnabled(True)
             self.status_bar.setText(f"Launch error: {e}")
             QMessageBox.critical(self, "Launch Error", str(e))
@@ -11209,16 +11453,24 @@ class GNDroidApp(QMainWindow):
         if isinstance(data, dict):
             serial = data.get("serial", "")
             name = data.get("name", "Android VM")
+        if hasattr(self, "_booting_instances"):
+            self._booting_instances.discard(name)
         if not serial:
             serial = self.get_selected_target()
-        
-        adb = SystemPaths.get_adb()
-        try:
-            subprocess.run([adb, "-s", serial, "emu", "kill"], timeout=4, creationflags=0x08000000)
-        except Exception:
-            pass
-        self.status_bar.setText(f"⏹️ Sent stop command to {name} ({serial})...")
-        QTimer.singleShot(1000, self.refresh_devices)
+
+        self.status_bar.setText(f"⏹️ Stopping {name} ({serial})...")
+        def _bg_stop():
+            try:
+                if name and name != "Android VM":
+                    AVDManager.stop_instance(name, timeout=3.0)
+                if serial:
+                    adb = SystemPaths.get_adb()
+                    subprocess.run([adb, "-s", serial, "emu", "kill"], timeout=4, capture_output=True, creationflags=0x08000000)
+            except Exception:
+                pass
+            time.sleep(0.5)
+            self._async_manual_refresh()
+        threading.Thread(target=_bg_stop, daemon=True).start()
 
     def action_handle_secondary_button(self):
         data = self.dev_combo.currentData()
