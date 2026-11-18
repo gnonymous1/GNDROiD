@@ -8,7 +8,7 @@ GNDROiD is architected and maintained by **Ghulam Nabi Kalhoro** ([@gnkalhoro](h
 
 ## 🧭 Code of Conduct
 
-By participating in this project, you agree to abide by our [Code of Conduct](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/CODE_OF_CONDUCT.md). We are committed to fostering a welcoming, respectful, and harassment-free community.
+By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md). We are committed to fostering a welcoming, respectful, and harassment-free community.
 
 ---
 
@@ -97,10 +97,10 @@ python gndroid.pyw --fix           # ADB Doctor
 1. **Never Commit Secrets or Private Keys:**
    - Keystores (`*.keystore`, `*.jks`, `*.p12`), signing keys, `.env` files, and personal device credentials must **never** be committed.
    - Check `.gitignore` before staging files. Run `git status` carefully.
-   - Review our [Security Policy](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/SECURITY.md) for vulnerability disclosure procedures.
+   - Review our [Security Policy](SECURITY.md) for vulnerability disclosure procedures.
 
 2. **Licensing & Copyright:**
-   - All contributions become part of GNDROiD under the terms of the [Apache License 2.0](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/LICENSE) with trademark reservations for the **GNDROiD** name and branding by Ghulam Nabi Kalhoro.
+   - All contributions become part of GNDROiD under the terms of the [Apache License 2.0](LICENSE) with trademark reservations for the **GNDROiD** name and branding by Ghulam Nabi Kalhoro.
    - Ensure that code you submit does not infringe third-party patents or proprietary licenses.
 
 ---
@@ -138,7 +138,7 @@ git commit -m "feat(network): support custom subnet gateway configuration in bri
 ### Step 5: Open a Pull Request
 1. Push your branch: `git push origin feat/my-awesome-feature`
 2. Open a Pull Request on GitHub against `origin/master`.
-3. Complete the [Pull Request Template](file:///c:/Users/Reader-Branch/Desktop/Android%20Emulator/.github/PULL_REQUEST_TEMPLATE.md).
+3. Complete the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
 4. Maintainers will review your PR, provide constructive feedback, and merge upon validation.
 
 ---
