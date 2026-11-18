@@ -225,37 +225,31 @@ python scripts/test_milestone_2_process_safety.py
 
 ---
 
-## Repository Structure
+## Repository Structure & Public Assets
 
 ```
-c:\Users\Reader-Branch\Desktop\Android Emulator\
-├── gndroid.pyw                 # Master GUI Application (PyQt6 Fluent Light Controller)
-├── gndroid.exe                 # Compiled Native Rust Orchestration Executable
+GNDROiD/
+├── INSTALL_AND_USER_GUIDE.md   # Master 12-Section Installation & Operational Guide
+├── README.md                   # System Architecture & Public Release Overview
 ├── setup.ps1                   # Modern Turnkey PowerShell Deployer
-├── PROJECT.md                  # System Architecture, 22-Feature Inventory, Milestone Tracker
-├── TEST_READY.md               # Master Test Verification Matrix & Test Counts
-├── TEST_INFRA.md               # 4-Tier Verification Methodology Specification
-├── ARCHITECTURE_3MODES_...md   # Next-Gen Tri-Mode Micro-VM & Hardware Passthrough Spec
-├── docs/                       # Technical Research & Audit Reports
-│   ├── GNDROID_COMPREHENSIVE_AUDIT_AND_REMEDIATION_REPORT.md  # Definitive Engineering Audit
-│   ├── VPN_NETWORKING_ARCHITECTURE_ROOT_CAUSE.md              # VPN Routing Root Cause Analysis
-│   └── WIRELESS_DEBUGGING_RESEARCH_REPORT.md                  # Wireless Pairing Research
-├── nexus/                      # Python Core Engine Modules
-│   ├── app_cloner_and_window.py# Multi-user sandboxing, floating windows, Win32 Job Manager
-│   ├── display_and_vpn.py      # QEMU multi-display flags, Netd MTU clamping, VPN stabilization
-│   └── wireless_mirror.py      # Scrcpy mirror manager, async pipe draining, mDNS watchdog
-├── gndroid-cli/                # Native Rust CLI Source Code
-│   └── src/main.rs             # CLI argument parser & Windows process dispatcher
-├── scripts/                    # Multi-Tier Verification Test Suites
-│   ├── run_e2e_verification.py # Master E2E 4-Tier Test Runner (160 tests)
-│   ├── mock_adb.py             # Stateful Mock ADB & Scrcpy Engine
-│   └── test_*.py               # Subsystem and milestone regression test suites
-├── installer/                  # InnoSetup & PowerShell Installer Resources
-│   ├── gndroid_installer.iss   # Professional Inno Setup 6 Script
-│   └── install_system.ps1      # Automated PowerShell System Installer
-├── dist/gndroid/               # Bundled runtime binaries (Scrcpy, ADB, mirror scripts)
-└── hypervisor/                 # Rust crosvm and hypervisor snapshot bindings
+├── LICENSE                     # Apache 2.0 License w/ Trademark Reservation
+├── NOTICE                      # Copyright & Attribution Notice (Ghulam Nabi Kalhoro)
+├── SECURITY.md                 # Vulnerability Disclosure & Secret Policy
+├── CONTRIBUTING.md              # Contributor Guidelines & Development Tracks
+├── CODE_OF_CONDUCT.md          # Contributor Covenant v2.1
+├── .env.example                # Configuration & Secret Template
+├── .github/                    # Community Issue & Pull Request Templates
+├── companion-app/              # Android Companion & Universal Receiver
+│   ├── GNDROiD_Companion.apk   # Direct Android Companion APK (Wireless Mirror & TV Receiver)
+│   └── README.md               # Companion App Setup & Wireless Mirroring Manual
+└── installer/                  # Windows Setup & Installer Automation
+    ├── install_system.ps1      # Native PowerShell System Installer & PATH Configurator
+    ├── uninstall_system.ps1    # Clean Registry & Shortcut Uninstaller
+    ├── gndroid_installer.iss   # Professional Inno Setup 6 Wizard Script
+    └── GNDROiD_User_Guide.txt  # Plain-Text User Manual (Packaged with Installer)
 ```
+
+> **📦 Download Full Portable Suite:** The compiled 64-bit Windows binary package (including ADB, Scrcpy, FFmpeg/SDL3 DLLs, and GUI launcher) is available via **[GitHub Releases](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)** (`GNDROiD-v2.5.0-Early-Access-Windows-x64.zip`).
 
 ---
 
