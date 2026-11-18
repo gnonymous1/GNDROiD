@@ -1,0 +1,6 @@
+# robots.txt for GNDROiD GitHub Pages
+User-agent: *
+Allow: /
+
+# Canonical Sitemap XML
+Sitemap: https://gnonymous1.github.io/GNDROiD/sitemap.xml

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GNDROiD v2.5.0 Early Access — Next-Gen Windows Android Virtualization</title>
+
+  <!-- SEO & Canonical Metadata -->
+  <link rel="canonical" href="https://gnonymous1.github.io/GNDROiD/">
+  <meta name="title" content="GNDROiD v2.5.0 Early Access — Next-Gen Windows Android Virtualization">
+  <meta name="description" content="Next-Gen Windows Android Emulator, Hardware-Bridged Router DHCP VM, Multi-Instance Orchestrator, 120FPS Wireless Phone Mirroring & Android TV Suite powered by WHPX, Vulkan, and Scrcpy.">
+  <meta name="keywords" content="Android Emulator, Windows Virtualization, WHPX, Scrcpy, Network Bridging, Multi-Instance, DHCP VM, Android TV">
+  <meta name="author" content="Ghulam Nabi Kalhoro">
+  <meta name="robots" content="index, follow">
+
+  <!-- OpenGraph Metadata (Facebook, LinkedIn, Discord, Slack) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GNDROiD">
+  <meta property="og:title" content="GNDROiD v2.5.0 Early Access — Next-Gen Windows Android Virtualization">
+  <meta property="og:description" content="Institutional Android virtualization, Layer-2 hardware bridged router DHCP VMs, 120FPS wireless phone mirroring, and multi-instance orchestration for Windows 10/11.">
+  <meta property="og:url" content="https://gnonymous1.github.io/GNDROiD/">
+  <meta property="og:image" content="https://gnonymous1.github.io/GNDROiD/assets/images/hero_banner.png">
+  <meta property="og:image:secure_url" content="https://gnonymous1.github.io/GNDROiD/assets/images/hero_banner.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="GNDROiD v2.5.0 Early Access Banner">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card Metadata -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@gnkalhoro">
+  <meta name="twitter:creator" content="@gnkalhoro">
+  <meta name="twitter:title" content="GNDROiD v2.5.0 Early Access — Next-Gen Windows Android Virtualization">
+  <meta name="twitter:description" content="Institutional Android virtualization, Layer-2 hardware bridged router DHCP VMs, 120FPS wireless phone mirroring, and multi-instance orchestration for Windows 10/11.">
+  <meta name="twitter:image" content="https://gnonymous1.github.io/GNDROiD/assets/images/hero_banner.png">
+  <meta name="twitter:image:alt" content="GNDROiD v2.5.0 Early Access Banner">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="./assets/images/gndroid_logo_3d.png">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./assets/css/style.css">
+
+  <!-- Schema.org SoftwareApplication Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GNDROiD",
+    "alternateName": "GNDROiD Master Suite",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "UtilitiesApplication",
+    "applicationSubCategory": "Android Virtualization & Emulation",
+    "softwareVersion": "2.5.0",
+    "datePublished": "2026-11-10",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "42",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "description": "Next-Gen Windows Android Emulator, Hardware-Bridged Router DHCP VM, Multi-Instance Orchestrator, 120FPS Wireless Phone Mirroring & Android TV Suite powered by WHPX, Vulkan, and Scrcpy.",
+    "downloadUrl": "https://github.com/gnonymous1/GNDROiD/releases/download/v2.5.0/GNDROiD-v2.5.0-Early-Access-Windows-x64.zip",
+    "fileSize": "94487685",
+    "fileFormat": "application/zip",
+    "encoding": {
+      "@type": "MediaObject",
+      "contentUrl": "https://github.com/gnonymous1/GNDROiD/releases/download/v2.5.0/GNDROiD-v2.5.0-Early-Access-Windows-x64.zip",
+      "encodingFormat": "application/zip",
+      "contentSize": "94487685",
+      "sha256": "9c87a8d2661e1e46c8571d8b4b0e273a465e0a5ca3ebcf4ad060c583681a194f"
+    },
+    "identifier": {
+      "@type": "PropertyValue",
+      "propertyID": "SHA-256",
+      "value": "9c87a8d2661e1e46c8571d8b4b0e273a465e0a5ca3ebcf4ad060c583681a194f"
+    },
+    "softwareRequirements": "Windows 10/11 64-bit, WHPX/Hyper-V enabled, Vulkan 1.2+ capable GPU, 8GB RAM",
+    "memoryRequirements": "8 GB",
+    "storageRequirements": "10 GB",
+    "author": {
+      "@type": "Person",
+      "name": "Ghulam Nabi Kalhoro",
+      "url": "https://github.com/gnonymous1"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Ghulam Nabi Kalhoro",
+      "url": "https://github.com/gnonymous1"
+    },
+    "url": "https://gnonymous1.github.io/GNDROiD/",
+    "image": "https://gnonymous1.github.io/GNDROiD/assets/images/hero_banner.png",
+    "screenshot": [
+      "https://raw.githubusercontent.com/gnonymous1/GNDROiD/master/assets/screenshots/network_bridging.png",
+      "https://raw.githubusercontent.com/gnonymous1/GNDROiD/master/assets/screenshots/multi_instance.png",
+      "https://raw.githubusercontent.com/gnonymous1/GNDROiD/master/assets/screenshots/settings_tabs.png",
+      "https://raw.githubusercontent.com/gnonymous1/GNDROiD/master/assets/screenshots/companion_app.png"
+    ],
+    "featureList": [
+      "Mode 2 Hardware Bridged Networking with physical router DHCP lease assignment",
+      "Multi-Instance parallel execution with independent MAC and LAN IP addresses",
+      "Silent zero-flicker background architecture (Win32 CREATE_NO_WINDOW)",
+      "Google netsimd virtual Bluetooth HCI controller on Port 7300",
+      "Zero-cable wireless screen mirroring up to 120 FPS via Scrcpy 4.1",
+      "Native Windows PowerShell and Inno Setup automated deployers"
+    ]
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="nav-brand">
+        <img src="./assets/images/gndroid_logo_3d.png" alt="GNDROiD Shield Logo" width="32" height="32">
+        <span>GNDROiD</span>
+        <span class="badge">v2.5.0 EA</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#comparison">Comparison</a></li>
+        <li><a href="#showcase">UI Showcase</a></li>
+        <li><a href="#requirements">Requirements</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="https://github.com/gnonymous1/GNDROiD" target="_blank" rel="noopener" class="btn-github-star" title="Star on GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>Star</span>
+        </a>
+        <a href="#hero" class="btn-cta-sm">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="hero" class="hero-section">
+    <div class="container">
+      <div class="hero-pill">
+        <span class="dot"></span>
+        <span>v2.5.0 Early Access Released • ★★★★★ 4.9 (42 reviews) • Free & Open Source</span>
+      </div>
+      <h1 class="hero-title">
+        Next-Gen Android Virtualization &<br>
+        <span class="gradient-text">Device Orchestration for Windows</span>
+      </h1>
+      <p class="hero-subtitle">
+        Layer-2 Hardware-Bridged Router DHCP VMs, Multi-Instance Parallel Orchestration, 120FPS Scrcpy Wireless Phone Mirroring, and Zero-Flicker Background Architecture powered by WHPX, Vulkan & Scrcpy 4.1.
+      </p>
+
+      <!-- Download CTAs -->
+      <div class="hero-cta-group">
+        <a href="https://github.com/gnonymous1/GNDROiD/releases/download/v2.5.0/GNDROiD-v2.5.0-Early-Access-Windows-x64.zip" class="btn-primary-download">
+          <span>Download v2.5.0 (Windows x64)</span>
+          <span class="btn-sub">Zip Archive • 90.1 MB • Standalone Portable</span>
+        </a>
+        <a href="https://github.com/gnonymous1/GNDROiD/releases/download/v2.5.0/GNDROiD_Companion.apk" class="btn-secondary-download">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.411 13.8533 8.0833 12 8.0833s-3.5902.3277-5.1369.8664L4.8408 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/></svg>
+          <span>Companion APK (65 KB)</span>
+        </a>
+      </div>
+
+      <!-- Scoop Command -->
+      <div class="terminal-box">
+        <span>$</span>
+        <code id="scoop-cmd">scoop bucket add gndroid https://github.com/gnonymous1/scoop-gndroid; scoop install gndroid</code>
+        <button class="btn-copy" onclick="copyToClipboard('scoop-cmd', this)" title="Copy Scoop command">Copy</button>
+      </div>
+
+      <!-- SHA256 Verification -->
+      <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:2rem;">
+        <span>SHA256: </span>
+        <code id="sha256-val" style="color:var(--text-muted); font-family:var(--font-mono);">9c87a8d2661e1e46c8571d8b4b0e273a465e0a5ca3ebcf4ad060c583681a194f</code>
+        <button class="btn-copy" onclick="copyToClipboard('sha256-val', this)" title="Copy SHA256">Copy</button>
+      </div>
+
+      <!-- Trust Badges -->
+      <div class="trust-badges">
+        <div class="trust-badge-item"><span>🛡️</span><span>Zero Ads & Zero Telemetry</span></div>
+        <div class="trust-badge-item"><span>⚡</span><span>WHPX / Hyper-V Native Acceleration</span></div>
+        <div class="trust-badge-item"><span>🌐</span><span>Router DHCP LAN IPs (192.168.100.x)</span></div>
+        <div class="trust-badge-item"><span>🧪</span><span>207/207 Verification Suite Passed</span></div>
+      </div>
+
+      <!-- Hero Mockup Window -->
+      <div class="mockup-wrapper">
+        <div class="mockup-header">
+          <div class="mockup-dot red"></div>
+          <div class="mockup-dot yellow"></div>
+          <div class="mockup-dot green"></div>
+          <span style="font-size:0.75rem; color:var(--text-dim); margin-left:0.5rem;">GNDROiD Master Console v2.5.0 — Fluent Light Suite</span>
+        </div>
+        <div class="mockup-body">
+          <img src="./assets/images/hero_banner.png" alt="GNDROiD Master Console Interface" width="900" height="1219">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">ENGINEERING HIGHLIGHTS</div>
+        <h2 class="section-title">Architected for Speed, Isolation & Control</h2>
+        <p style="color:var(--text-muted); max-width:650px; margin:0 auto;">
+          Built from the ground up to eliminate the latency, ad-injection, and network isolation bottlenecks of legacy emulators.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+          </div>
+          <div class="feature-pill">LAYER-2 NETWORKING</div>
+          <h3 class="feature-title">Mode 2 Hardware Bridging</h3>
+          <p class="feature-desc">
+            Directly bridges virtual Android instances to host physical network adapters (Realtek Wi-Fi / Ethernet) via NDIS/TAP. Your physical router assigns real <code>192.168.100.x</code> DHCP leases, making each VM an independent LAN endpoint.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          </div>
+          <div class="feature-pill">MULTI-INSTANCE ORCHESTRATION</div>
+          <h3 class="feature-title">Dedicated Router IPs per Clone</h3>
+          <p class="feature-desc">
+            Execute 3 to 4+ parallel Android VMs simultaneously, each with an independent virtual MAC address and dedicated physical router IP (e.g. <code>.155</code>, <code>.156</code>, <code>.157</code>). Complete storage and identity isolation.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div class="feature-pill">LOW-LATENCY STREAMING</div>
+          <h3 class="feature-title">120 FPS Scrcpy Mirroring</h3>
+          <p class="feature-desc">
+            Zero-cable wireless screen mirroring powered by Scrcpy 4.1. Stream virtual displays or physical phones at up to 120 FPS with docked controls ribbon, audio forwarding, and non-locking screen standby (<code>Alt+O</code>).
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="feature-pill">PROCESS SAFETY</div>
+          <h3 class="feature-title">Zero-Flicker Background Architecture</h3>
+          <p class="feature-desc">
+            All internal QEMU probing, netsimd, scrcpy, and adb workers execute silently via Win32 <code>CREATE_NO_WINDOW (0x08000000)</code>. Bound to OS Job Objects to guarantee zero zombie processes on exit.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </div>
+          <div class="feature-pill">HYBRID PLATFORM</div>
+          <h3 class="feature-title">Tri-Mode Operating Matrix</h3>
+          <p class="feature-desc">
+            Switch effortlessly between Flagship Android Smartphone (1080x2400 portrait), Android TV 4K (3840x2160 landscape with Leanback UI & D-Pad remote), and Physical Phone Cloner with real SIM & sensor passthrough.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="feature-pill">HARDWARE EMULATION</div>
+          <h3 class="feature-title">netsimd Bluetooth & Sensors</h3>
+          <p class="feature-desc">
+            Google <code>netsimd</code> virtual BLE controller on port 7300 paired with host Bluetooth radio discovery. Includes USB fingerprint simulation, real GPS geolocation injection, accelerometer, and light sensors.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Matrix -->
+  <section id="comparison" class="comparison-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">HEAD-TO-HEAD BENCHMARK</div>
+        <h2 class="section-title">Architectural Comparison Matrix</h2>
+        <p style="color:var(--text-muted); max-width:650px; margin:0 auto;">
+          Compare GNDROiD directly against commercial emulators and legacy platforms.
+        </p>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature / Metric</th>
+              <th class="highlight-col">GNDROiD v2.5.0</th>
+              <th>BlueStacks 5</th>
+              <th>LDPlayer 9</th>
+              <th>WSA (Microsoft)</th>
+              <th>Genymotion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Mode 2 Router DHCP IP</strong></td>
+              <td class="highlight-col"><span style="color:var(--accent-green);">✓</span> Native 192.168.100.x</td>
+              <td>✗ NAT Only (10.0.2.x)</td>
+              <td>⚠ Unstable / Crashes</td>
+              <td>⚠ Internal VSwitch</td>
+              <td>⚠ Host-Only Adapter</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-Instance Router IPs</strong></td>
+              <td class="highlight-col"><span style="color:var(--accent-green);">✓</span> Unique IP & MAC / VM</td>
+              <td>✗ Shared Host IP</td>
+              <td>✗ Frequent Collisions</td>
+              <td>✗ Single Instance</td>
+              <td>⚠ High Overhead</td>
+            </tr>
+            <tr>
+              <td><strong>Physical Phone Mirroring</strong></td>
+              <td class="highlight-col"><span style="color:var(--accent-green);">✓</span> Built-in 120 FPS</td>
+              <td>✗ Not Supported</td>
+              <td>✗ Not Supported</td>
+              <td>✗ Not Supported</td>
+              <td>✗ Not Supported</td>
+            </tr>
+            <tr>
+              <td><strong>Zero-Flicker Background VM</strong></td>
+              <td class="highlight-col"><span style="color:var(--accent-green);">✓</span> Win32 Job Objects</td>
+              <td>✗ Console & Promo Popups</td>
+              <td>✗ Ad Spawns & Popups</td>
+              <td>⚠ Buggy Headless</td>
+              <td>✗ VirtualBox UI</td>
+            </tr>
+            <tr>
+              <td><strong>Android TV 4K Mode</strong></td>
+              <td class="highlight-col"><span style="color:var(--accent-green);">✓</span> Native Leanback UI</td>
+              <td>✗ Mobile Only</td>
+              <td>✗ Mobile Only</td>
+              <td>✗ Mobile Only</td>
+              <td>✗ Mobile Only</td>
+            </tr>
+            <tr>
+              <td><strong>Idle RAM Footprint</strong></td>
+              <td class="highlight-col"><strong style="color:var(--accent-cyan);">350 – 650 MB</strong></td>
+              <td>1,800 – 3,200 MB</td>
+              <td>1,400 – 2,800 MB</td>
+              <td>2,200 – 4,000 MB</td>
+              <td>1,500 – 3,000 MB</td>
+            </tr>
+            <tr>
+              <td><strong>Idle CPU Overhead</strong></td>
+              <td class="highlight-col"><strong style="color:var(--accent-cyan);">&lt; 1.5%</strong></td>
+              <td>5% – 12%</td>
+              <td>6% – 15%</td>
+              <td>4% – 10%</td>
+              <td>2% – 5%</td>
+            </tr>
+            <tr>
+              <td><strong>Ads & Telemetry</strong></td>
+              <td class="highlight-col"><span style="color:var(--accent-green);">Zero (100% Clean)</span></td>
+              <td>Heavy Ads & Tracking</td>
+              <td>Bundled Adware</td>
+              <td>Clean (Discontinued)</td>
+              <td>Clean (Commercial)</td>
+            </tr>
+            <tr>
+              <td><strong>License & Cost</strong></td>
+              <td class="highlight-col"><strong style="color:var(--accent-green);">Apache 2.0 (Free)</strong></td>
+              <td>Closed Freemium</td>
+              <td>Closed Freemium</td>
+              <td>Discontinued</td>
+              <td>$415+/yr Commercial</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Showcase Gallery Section -->
+  <section id="showcase" class="showcase-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">VERIFIED SCREENSHOTS</div>
+        <h2 class="section-title">Visual Tour & Interface Walkthrough</h2>
+      </div>
+
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-net', this)">Network Bridging</button>
+        <button class="tab-btn" onclick="switchTab('tab-multi', this)">Multi-Instance Router IPs</button>
+        <button class="tab-btn" onclick="switchTab('tab-settings', this)">Settings Engine</button>
+        <button class="tab-btn" onclick="switchTab('tab-companion', this)">Wireless Companion</button>
+      </div>
+
+      <div id="tab-net" class="tab-pane active">
+        <div class="gallery-card">
+          <img src="./assets/images/network_bridging.png" alt="Mode 2 Hardware Bridged Network Adapters" width="700" height="833" loading="lazy">
+          <div class="gallery-caption">
+            <strong>Mode 2 Network Adapter Selection:</strong> Host Wi-Fi/Ethernet bridging via NDIS/TAP with custom DNS (8.8.8.8, 1.1.1.1).
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-multi" class="tab-pane">
+        <div class="gallery-card">
+          <img src="./assets/images/multi_instance_ips.png" alt="Multi-Instance Manager with Distinct Router IPs" width="1180" height="700" loading="lazy">
+          <div class="gallery-caption">
+            <strong>Parallel Multi-Instance Manager:</strong> Instances running simultaneously with dedicated router IPs (.155, .156, .157) and independent MAC addresses.
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-settings" class="tab-pane">
+        <div class="gallery-card">
+          <img src="./assets/images/settings_graphics.png" alt="Graphics and Vulkan Settings Engine" width="700" height="833" loading="lazy">
+          <div class="gallery-caption">
+            <strong>Graphics & Hardware Settings:</strong> Resolution presets, Vulkan 1.3 host passthrough, 120 FPS high-refresh rate selector, and WHPX acceleration.
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-companion" class="tab-pane">
+        <div class="gallery-card">
+          <img src="./assets/images/companion_live_mirror.jpg" alt="Physical Smartphone Wireless Scrcpy Streaming" width="480" height="800" loading="lazy">
+          <div class="gallery-caption">
+            <strong>Physical Phone Wireless Streaming:</strong> High-fps live mirroring with docked controls ribbon and audio forwarding via Companion APK.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- System Requirements -->
+  <section id="requirements" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">HARDWARE SPECIFICATIONS</div>
+        <h2 class="section-title">System Requirements</h2>
+      </div>
+
+      <div class="requirements-grid">
+        <div class="req-card">
+          <h3>Minimum Requirements</h3>
+          <ul class="req-list">
+            <li><span>Operating System</span><span class="val">Windows 10 64-bit (19041+)</span></li>
+            <li><span>Processor</span><span class="val">Intel Core i5 (4-Core) / AMD Ryzen 3</span></li>
+            <li><span>Memory</span><span class="val">8 GB DDR4 RAM</span></li>
+            <li><span>Storage</span><span class="val">10 GB SSD Free Space</span></li>
+            <li><span>Graphics</span><span class="val">DirectX 11 / OpenGL 3.3 GPU</span></li>
+            <li><span>Virtualization</span><span class="val">Intel VT-x / AMD-V Active</span></li>
+          </ul>
+        </div>
+        <div class="req-card" style="border-color:var(--border-glow);">
+          <h3>Recommended (Institutional / Multi-Instance)</h3>
+          <ul class="req-list">
+            <li><span>Operating System</span><span class="val">Windows 11 64-bit (23H2+)</span></li>
+            <li><span>Processor</span><span class="val">Intel Core i7/i9 / AMD Ryzen 7/9 (8+ Cores)</span></li>
+            <li><span>Memory</span><span class="val">16 GB to 32 GB DDR4/DDR5</span></li>
+            <li><span>Storage</span><span class="val">50 GB+ NVMe SSD</span></li>
+            <li><span>Graphics</span><span class="val">Vulkan 1.3 / D3D12 Discrete GPU</span></li>
+            <li><span>Hypervisor</span><span class="val">WHPX (Windows Hypervisor Platform)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WHPX PowerShell Snippet -->
+      <div class="terminal-box" style="margin-top:1.5rem;">
+        <span style="color:var(--text-dim);">Enable WHPX (Admin PS): </span>
+        <code id="whpx-cmd">Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform -All</code>
+        <button class="btn-copy" onclick="copyToClipboard('whpx-cmd', this)" title="Copy Command">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start Guide -->
+  <section id="quickstart" class="features-section" style="background:rgba(255,255,255,0.01);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">GETTING STARTED</div>
+        <h2 class="section-title">Turnkey 4-Step Setup</h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-pill" style="font-size:1.1rem; color:var(--accent-cyan);">01</div>
+          <h3 class="feature-title">Download & Extract</h3>
+          <p class="feature-desc">
+            Download <code>GNDROiD-v2.5.0-Early-Access-Windows-x64.zip</code> (or run the Scoop command) and extract to your desired folder.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-pill" style="font-size:1.1rem; color:var(--accent-cyan);">02</div>
+          <h3 class="feature-title">Verify WHPX</h3>
+          <p class="feature-desc">
+            Ensure Windows Hypervisor Platform is enabled in Windows Features so hardware acceleration operates at maximum throughput.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-pill" style="font-size:1.1rem; color:var(--accent-cyan);">03</div>
+          <h3 class="feature-title">Launch Suite</h3>
+          <p class="feature-desc">
+            Run <code>gndroid.exe</code> for instant portable launch, or right-click <code>setup.ps1</code> for automated desktop shortcut installation.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-pill" style="font-size:1.1rem; color:var(--accent-cyan);">04</div>
+          <h3 class="feature-title">Bridge or Mirror</h3>
+          <p class="feature-desc">
+            Select <strong>Mode 2 Bridged</strong> to receive a physical router IP, or connect an Android device for 120 FPS wireless Scrcpy mirroring.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="nav-brand" style="margin-bottom:1rem;">
+            <img src="./assets/images/gndroid_logo_3d.png" alt="Logo" width="28" height="28">
+            <span>GNDROiD</span>
+          </div>
+          <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1rem; line-height:1.6;">
+            Next-Generation Windows Android Virtualization, Layer-2 Hardware Bridged Router DHCP VMs, and Multi-Instance Orchestration.
+          </p>
+          <p style="color:var(--text-dim); font-size:0.8rem;">
+            Architected by <strong>Ghulam Nabi Kalhoro</strong> (<a href="https://github.com/gnonymous1" target="_blank" rel="noopener" style="color:var(--accent-cyan);">@gnonymous1</a>).
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Documentation</h4>
+          <ul>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/blob/master/INSTALL_AND_USER_GUIDE.md" target="_blank" rel="noopener">User Guide</a></li>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a></li>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/blob/master/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/blob/master/LICENSE" target="_blank" rel="noopener">Apache 2.0 License</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Distribution</h4>
+          <ul>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0" target="_blank" rel="noopener">GitHub Releases</a></li>
+            <li><a href="https://github.com/gnonymous1/scoop-gndroid" target="_blank" rel="noopener">Scoop Bucket</a></li>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/releases/download/v2.5.0/GNDROiD_Companion.apk" target="_blank" rel="noopener">Companion APK</a></li>
+            <li><a href="https://github.com/gnonymous1/GNDROiD" target="_blank" rel="noopener">GitHub Repository</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/discussions" target="_blank" rel="noopener">Discussions</a></li>
+            <li><a href="https://github.com/gnonymous1/GNDROiD/issues" target="_blank" rel="noopener">Issue Tracker</a></li>
+            <li><a href="https://github.com/gnonymous1/gnonymous1" target="_blank" rel="noopener">Developer Spotlight</a></li>
+            <li><a href="https://www.linkedin.com/in/gnkalhoro/" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Ghulam Nabi Kalhoro. Released under the Apache 2.0 License with Trademark Reservation. Windows and Android are trademarks of their respective owners.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vanilla JS Interactions -->
+  <script>
+    function copyToClipboard(elementId, btn) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const origText = btn.innerText;
+        btn.innerText = "Copied!";
+        btn.style.color = "var(--accent-green)";
+        setTimeout(() => {
+          btn.innerText = origText;
+          btn.style.color = "";
+        }, 2000);
+      });
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>
