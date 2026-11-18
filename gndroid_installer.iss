@@ -5,9 +5,9 @@
 ; ======================================================================
 
 #define MyAppName "GNDROiD"
-#define MyAppVersion "2.2.2"
+#define MyAppVersion "2.5.0"
 #define MyAppPublisher "Ghulam Nabi Kalhoro"
-#define MyAppURL "https://github.com/gnkalhoro"
+#define MyAppURL "https://github.com/gnonymous1/GNDROiD"
 #define MyAppExeName "gndroid.exe"
 #define MyAppId "{E82F169A-B389-4E65-8A51-7892C83D48B7}"
 
@@ -23,9 +23,10 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=dist\gndroid\LICENSE.txt
+LicenseFile=LICENSE
+InfoBeforeFile=installer\GNDROiD_User_Guide.txt
 OutputDir=installer
-OutputBaseFilename=GNDROiD-Setup-v2.2.2-Full
+OutputBaseFilename=GNDROiD-Setup-v2.5.0-Full
 SetupIconFile=gndroid.ico
 Compression=lzma2/max
 SolidCompression=yes
@@ -119,7 +120,11 @@ Source: "dist\gndroid\swresample-6.dll"; DestDir: "{app}"; Flags: ignoreversion;
 Source: "dist\gndroid\libusb-1.0.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: mirror
 
 ; 3. Documentation & Guides
-Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme; Components: developer
+Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme; Components: core
+Source: "INSTALL_AND_USER_GUIDE.md"; DestDir: "{app}"; Flags: ignoreversion; Components: core
+Source: "installer\GNDROiD_User_Guide.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: core
+Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion; Components: core
+Source: "NOTICE"; DestDir: "{app}"; Flags: ignoreversion; Components: core
 
 ; ======================================================================
 ; Start Menu & Desktop Shortcuts
@@ -132,6 +137,7 @@ Name: "{group}\{#MyAppName} 1-Click OS Downloader"; Filename: "{app}\{#MyAppExeN
 Name: "{group}\{#MyAppName} Mirror"; Filename: "{app}\{#MyAppExeName}"; Parameters: "mirror"; IconFilename: "{app}\gndroid.ico"; Comment: "GNDROiD Mirror — USB & Wireless LAN Phone Streaming with Controls"
 Name: "{group}\GNDROiD Wireless LAN Mode"; Filename: "{app}\{#MyAppExeName}"; Parameters: "lan"; IconFilename: "{app}\gndroid.ico"; Comment: "Wireless Wi-Fi Streaming & Subnet Radar"
 Name: "{group}\GNDROiD ADB Doctor && Fixer"; Filename: "{app}\{#MyAppExeName}"; Parameters: "fix"; IconFilename: "{app}\gndroid.ico"; Comment: "Diagnose USB and Setup Wireless LAN Wi-Fi mode"
+Name: "{group}\{#MyAppName} User & Installation Guide"; Filename: "{app}\GNDROiD_User_Guide.txt"; Comment: "Read GNDROiD Installation & User Guide"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename: "{app}\gndroid.ico"; Comment: "Uninstall GNDROiD Suite"
 
 ; Desktop Shortcuts (Optional Tasks)

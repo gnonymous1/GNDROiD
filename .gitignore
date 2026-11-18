@@ -15,6 +15,22 @@ nextgen-android-emulator/
 !tools/*.exe
 !tools/*.dll
 
+# Cryptographic Keys, Keystores & Certificates (Do NOT commit secrets!)
+*.keystore
+*.jks
+*.p12
+*.key
+*.pem
+*.pfx
+secrets/
+*.secret
+
+# Environment variables & credentials
+.env
+.env.local
+.env.*.local
+!.env.example
+
 # Python cache
 __pycache__/
 *.pyc
@@ -22,11 +38,13 @@ __pycache__/
 *.pyd
 .pytest_cache/
 
-# Runtime and temp files
+# Runtime, temporary files & internal session handovers
 logs/
 virtual_storage/
 *.log
 *.tmp
 .agents/
+SESSION_*.md
+.gemini/
 
 build/

@@ -1,0 +1,90 @@
+==============================================================================
+               GNDROiD v2.5.0 — INSTALLATION & QUICK START GUIDE
+               Developed & Engineered by Ghulam Nabi Kalhoro
+==============================================================================
+
+Welcome to GNDROiD, the institutional-grade Android Virtual Machine and 
+Physical Device Orchestrator for Windows 10 & 11 (64-bit).
+
+------------------------------------------------------------------------------
+1. SYSTEM REQUIREMENTS & PREREQUISITES
+------------------------------------------------------------------------------
+* Operating System: Windows 10 (Build 19041+) or Windows 11 (64-bit)
+* CPU: Intel Core or AMD Ryzen with Virtualization enabled (VT-x / AMD-V)
+* RAM: 8 GB minimum (16 GB - 32 GB recommended for multi-instance workloads)
+* Storage: 10 GB+ SSD recommended
+* WHPX: Windows Hypervisor Platform enabled in Windows Features.
+  To enable in PowerShell (Admin):
+  Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform -All
+
+------------------------------------------------------------------------------
+2. FIRST LAUNCH & CONFIGURATION
+------------------------------------------------------------------------------
+* Start GNDROiD via the Desktop Shortcut or by launching gndroid.exe.
+* On first start, GNDROiD automatically detects your host CPU cores, RAM, 
+  and GPU, provisioning a flagship Android instance.
+* Click [Launch Android Machine] to boot the VM in a realistic device window.
+* Use the Hardware Controls Ribbon on the right for Back, Home, Recents, 
+  Volume, Rotation, and Screenshot capture.
+
+------------------------------------------------------------------------------
+3. VIRTUAL MACHINE HARDWARE ALLOCATION (SETTINGS)
+------------------------------------------------------------------------------
+Click the [Settings] button on the main window:
+* Hardware & CPU/RAM: Customize RAM (2 GB to 32 GB), Dedicated Cores (2 to 24), 
+  ART heap size, and optional Root Access (Writable System).
+* Graphics & Display: Auto Vulkan 1.4 / Direct3D 11 hardware passthrough, 
+  resolutions up to Galaxy S24 Ultra (1440x3120 @ 500 DPI) and 4K displays.
+* Camera & Audio: Route host PC webcams and microphones directly into Android 
+  apps for WhatsApp video calls, identity KYC, and streaming.
+
+------------------------------------------------------------------------------
+4. TRI-MODE NETWORK ADAPTER & HARDWARE BRIDGING
+------------------------------------------------------------------------------
+Under Settings -> Network & Adapters:
+* Mode 1 (High-Speed LAN Bridge): Maps emulator ports (51888, 5555, 8080) to 
+  your host PC IP (e.g. 192.168.100.5) with zero driver requirements.
+* Mode 2 (Hardware Bridged - Default): Bridges the VM directly to your 
+  physical Wi-Fi 6 or Ethernet adapter. Your home router assigns an independent 
+  192.168.100.x IP address directly to Android with unique virtual MAC.
+* Direct Static IP & Custom DNS: Assign static IPv4 addresses and select 
+  Google (8.8.8.8), Cloudflare (1.1.1.1), or Quad9 DNS servers. Click [Apply] 
+  to inject live without rebooting.
+
+------------------------------------------------------------------------------
+5. MULTI-INSTANCE MANAGER & CLONING
+------------------------------------------------------------------------------
+Click [Multi-Instance Manager & Clones]:
+* Create and run multiple Android instances simultaneously.
+* Each instance receives a unique deterministic MAC and sequential router IP.
+* 1-Click clone preserves all installed applications, user data, and logins.
+* [Tile Windows] automatically arranges all active VMs across your monitors.
+
+------------------------------------------------------------------------------
+6. PHYSICAL PHONE MIRRORING & APP CLONING
+------------------------------------------------------------------------------
+* USB Mirroring: Turn on USB Debugging on your phone, plug USB cable, and 
+  click [Mirror Phone] for zero-latency 60 FPS streaming with host audio.
+* Wireless Debugging: Click [Wireless Debugging & QR Pairing] to pair your 
+  Android 11+ phone wirelessly via QR code.
+* Single-App Windows: Open [App Drawer & Cloner] to launch WhatsApp, banking, 
+  or gaming apps into dedicated, borderless floating desktop windows.
+
+------------------------------------------------------------------------------
+7. ADB DOCTOR & 1-CLICK AUTO-REPAIR
+------------------------------------------------------------------------------
+If devices or ports encounter conflicts:
+* Click [ADB Doctor & Fixer] -> [1-Click Auto-Repair All].
+* Automatically terminates zombie processes, clears port 5037, restarts daemon, 
+  and clamps Netd MTU to 1380 to eliminate VPN connection dropouts.
+
+------------------------------------------------------------------------------
+8. SUPPORT, ISSUES & CONTRIBUTIONS
+------------------------------------------------------------------------------
+* GitHub Repository: https://github.com/gnonymous1/GNDROiD
+* Lead Developer: Ghulam Nabi Kalhoro
+* Report issues, request features, and join the community at GitHub!
+
+==============================================================================
+               Enjoy the Next Generation of Android Emulation!
+==============================================================================

@@ -1,12 +1,50 @@
-# GNDROiD v2.2.2 — Institutional Android Emulation & Device Orchestrator
+# GNDROiD v2.5.0 Early Access — Institutional Android Virtualization & Device Orchestrator
 
-[![Status](https://img.shields.io/badge/System%20Status-Production%20Certified-success?style=flat-square)](docs/GNDROID_COMPREHENSIVE_AUDIT_AND_REMEDIATION_REPORT.md)
-[![Verification](https://img.shields.io/badge/Verification%20Suite-207%2F207%20Passed%20(100%25)-brightgreen?style=flat-square)](TEST_READY.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2011%20%7C%20WHPX%20%7C%20x86__64-blue?style=flat-square)]()
-[![Scrcpy](https://img.shields.io/badge/Streaming-Scrcpy%204.1%20Virtual%20Displays-orange?style=flat-square)]()
-[![Rust CLI](https://img.shields.io/badge/Native%20CLI-Rust%20gndroid.exe-crimson?style=flat-square)]()
+[![Early Access](https://img.shields.io/badge/Release-v2.5.0%20Early%20Access-brightgreen.svg?style=flat-square)](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)
+[![License](https://img.shields.io/badge/License-Apache%202.0%20w%2F%20Trademark-blue.svg?style=flat-square)](LICENSE)
+[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-orange.svg?style=flat-square)](CONTRIBUTING.md)
+[![Verification](https://img.shields.io/badge/Verification%20Suite-207%2F207%20Passed%20(100%25)-brightgreen.svg?style=flat-square)](TEST_READY.md)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2011%20%7C%20WHPX%20%7C%20x86__64-blue.svg?style=flat-square)]()
+[![Streaming](https://img.shields.io/badge/Streaming-Scrcpy%204.1%20Virtual%20Displays-orange.svg?style=flat-square)]()
+[![Networking](https://img.shields.io/badge/Network-Hardware%20Bridged%20%2F%20Router%20DHCP-success.svg?style=flat-square)]()
 
-**GNDROiD** is an institutional-grade, hyper-performant Android virtualization, sandboxing, and physical device orchestration suite engineered for Windows workstations and enterprise servers. It combines native Windows desktop ergonomics (Windows 11 Fluent Light UI) with high-throughput hardware passthrough, allowing operators to run multi-account sandboxes, stream physical and virtual devices at 60–120 FPS, and automate end-to-end user journeys with zero process orphaning.
+---
+
+> ### 🌟 **Public Early Access Release & Call for Open-Source Contributions**
+> Welcome to **GNDROiD v2.5.0 Early Access**! GNDROiD is an institutional-grade, hyper-performant Android virtualization, sandboxing, and physical device orchestration engine architected for Windows 10 & 11 by **Ghulam Nabi Kalhoro**.
+>
+> We are officially inviting the open-source community—developers, kernel hackers, UI designers, testers, and emulation enthusiasts—to contribute, test, and shape the next generation of Windows-native Android virtualization.
+>
+> 🚀 **Quick Navigation:**
+> - 📖 **[Complete Installation & User Guide (12 Sections)](INSTALL_AND_USER_GUIDE.md)**
+> - 🤝 **[Community Contribution Guidelines & Dev Roadmap](CONTRIBUTING.md)**
+> - 🔒 **[Security Policy & Secret Protection Guide](SECURITY.md)**
+> - 📜 **[Apache 2.0 License & Trademark Reservation](LICENSE)**
+> - 🐛 **[Report a Bug](https://github.com/gnonymous1/GNDROiD/issues/new?template=bug_report.md)** | 💡 **[Request a Feature](https://github.com/gnonymous1/GNDROiD/issues/new?template=feature_request.md)**
+
+---
+
+**GNDROiD** combines native Windows ergonomics with direct hardware virtualization, allowing operators to run multi-account sandboxes, assign independent physical router IP addresses to parallel Android instances, stream physical and virtual devices at 60–120 FPS, and automate end-to-end user journeys with zero process orphaning.
+
+---
+
+## What's New in v2.5.0 Early Access
+
+1. 🌐 **Mode 2 Hardware Bridged Networking (Router DHCP):**
+   - Connects the Android VM directly to your physical network adapter (Realtek Wi-Fi / Ethernet) via TAP/NDIS.
+   - Your home or office router assigns Android a real `192.168.100.x` address directly, making it an independent physical node on your LAN.
+   - Direct Static IP and custom DNS (Google `8.8.8.8`, Cloudflare `1.1.1.1`) configuration straight from the UI.
+2. 👥 **Multi-Instance Parallel Execution with Independent Router IPs:**
+   - Run 3 to 4+ Android instances simultaneously, each acquiring its own unique MAC address and distinct router DHCP lease (`.100.155`, `.100.156`, `.100.157`).
+3. ⚡ **Silent Zero-Flicker Background Architecture:**
+   - All internal shell processes (QEMU hardware probing, netsimd, scrcpy, adb, Bluetooth detection) execute silently with Win32 `CREATE_NO_WINDOW (0x08000000)`, eliminating terminal popups and UI lag.
+4. 📡 **Google `netsimd` Bluetooth HCI Controller & Sensor Passthrough:**
+   - Google `netsimd` virtual BLE engine on Port 7300 paired with host Bluetooth radio discovery.
+   - Hardware biometrics (USB Fingerprint Scanner simulation), GPS real geolocation, accelerometer, gyroscope, and ambient light sensors.
+5. 📱 **`GNDROiD Link` Wireless Companion & Android TV Mode:**
+   - Zero-cable wireless LAN screen mirroring (Port 51880) and Android TV big-screen receiver mode.
+6. 📦 **Turnkey Windows Packaging & User Manual:**
+   - Inno Setup Wizard installer and native PowerShell automated system deployer with Start Menu manual integration.
 
 ---
 
@@ -81,7 +119,7 @@ Execute the turnkey setup script from an elevated PowerShell terminal:
 powershell.exe -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-`setup.ps1` automatically detects standalone Inno Setup packages (`installer/GNDROiD-Setup-v2.2.2-Full.exe`) or executes the automated PowerShell system deployer (`installer/install_system.ps1`), registering native desktop shortcuts and configuring system paths.
+`setup.ps1` automatically detects standalone Inno Setup packages (`installer/GNDROiD-Setup-v2.5.0-Full.exe`) or executes the automated PowerShell system deployer (`installer/install_system.ps1`), registering native desktop shortcuts and configuring system paths.
 
 ---
 
@@ -111,7 +149,7 @@ Options:
   -t, --title <TITLE>  Custom window title for the floating application window
   -s, --serial <SERIAL> Target device serial number
   -h, --help           Print help
-  -V, --version        Print version (gndroid 2.2.2)
+  -V, --version        Print version (gndroid 2.5.0)
 ```
 
 ### CLI Command Examples

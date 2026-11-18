@@ -43,9 +43,10 @@ RES_DIR = os.path.join(BASE_DIR, "app", "src", "main", "res")
 ASSETS_DIR = os.path.join(BASE_DIR, "app", "src", "main", "assets")
 MANIFEST = os.path.join(BASE_DIR, "app", "src", "main", "AndroidManifest.xml")
 JAVA_SRC_DIR = os.path.join(BASE_DIR, "app", "src", "main", "java")
-KEYSTORE = os.path.join(BASE_DIR, "gndroid.keystore")
-KS_PASS = "gndroid2026"
-KEY_ALIAS = "gndroid"
+KEYSTORE = os.environ.get("GNDROID_KEYSTORE_PATH", os.path.join(BASE_DIR, "gndroid.keystore"))
+KS_PASS = os.environ.get("GNDROID_KEYSTORE_PASS", "gndroid2026")
+KEY_ALIAS = os.environ.get("GNDROID_KEY_ALIAS", "gndroid")
+KEY_PASS = os.environ.get("GNDROID_KEY_PASS", KS_PASS)
 
 
 def run_cmd(cmd, desc=""):
@@ -168,7 +169,7 @@ def build():
         JARSIGNER,
         "-keystore", KEYSTORE,
         "-storepass", KS_PASS,
-        "-keypass", KS_PASS,
+        "-keypass", KEY_PASS,
         unaligned_apk,
         KEY_ALIAS
     ]
@@ -180,7 +181,7 @@ def build():
 
     # 10. Apksigner V2 + V3 Full-APK Signing
     final_apk = os.path.join(BUILD_DIR, "GNDROiD_Companion.apk")
-    sign_cmd = f'"{APKSIGNER_BAT}" sign --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --ks "{KEYSTORE}" --ks-pass pass:{KS_PASS} --ks-key-alias {KEY_ALIAS} --key-pass pass:{KS_PASS} --out "{final_apk}" "{aligned_apk}"'
+    sign_cmd = f'"{APKSIGNER_BAT}" sign --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --ks "{KEYSTORE}" --ks-pass pass:{KS_PASS} --ks-key-alias {KEY_ALIAS} --key-pass pass:{KEY_PASS} --out "{final_apk}" "{aligned_apk}"'
     run_cmd(sign_cmd, "Apksigner V2+V3 Signing")
 
     # 11. Verify signature

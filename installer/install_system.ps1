@@ -15,7 +15,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $AppName = "GNDROiD"
-$AppVersion = "2.2.2"
+$AppVersion = "2.5.0"
 $AppPublisher = "Ghulam Nabi Kalhoro"
 $AppDescription = "GNDROiD - High-Performance Android Virtual Machine and Physical Phone Suite"
 
@@ -67,7 +67,11 @@ $FilesToCopy = @(
     "gndroid.exe",
     "gndroid.ico",
     "gndroid.png",
-    "README.md"
+    "README.md",
+    "INSTALL_AND_USER_GUIDE.md",
+    "LICENSE",
+    "NOTICE",
+    "SECURITY.md"
 )
 
 foreach ($f in $FilesToCopy) {
@@ -75,6 +79,12 @@ foreach ($f in $FilesToCopy) {
     if (Test-Path $src) {
         Copy-Item -Path $src -Destination $TargetDir -Force
     }
+}
+
+# Copy installer user guide text
+$guideTxt = Join-Path $ProjectRoot "installer\GNDROiD_User_Guide.txt"
+if (Test-Path $guideTxt) {
+    Copy-Item -Path $guideTxt -Destination $TargetDir -Force
 }
 
 # Copy nexus directory
@@ -144,6 +154,19 @@ if (-not $NoShortcuts) {
         $shortcut.Description = $s.Desc
         if (Test-Path $IconPath) { $shortcut.IconLocation = "$IconPath,0" }
         $shortcut.Save()
+    }
+
+    # Add Documentation Shortcut
+    $guideTxtPath = Join-Path $TargetDir "GNDROiD_User_Guide.txt"
+    if (Test-Path $guideTxtPath) {
+        $docLnkPath = Join-Path $StartMenuDir "$AppName User & Installation Guide.lnk"
+        $docShortcut = $WshShell.CreateShortcut($docLnkPath)
+        $docShortcut.TargetPath = "notepad.exe"
+        $docShortcut.Arguments = "`"$guideTxtPath`""
+        $docShortcut.WorkingDirectory = $TargetDir
+        $docShortcut.Description = "GNDROiD Complete User Manual & Setup Instructions"
+        if (Test-Path $IconPath) { $docShortcut.IconLocation = "$IconPath,0" }
+        $docShortcut.Save()
     }
 
     # Desktop shortcuts for key suites
