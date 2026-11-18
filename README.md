@@ -1,12 +1,26 @@
-# GNDROiD v2.5.0 Early Access — Institutional Android Virtualization & Device Orchestrator
+<div align="center">
 
-[![Early Access](https://img.shields.io/badge/Release-v2.5.0%20Early%20Access-brightgreen.svg?style=flat-square)](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)
-[![License](https://img.shields.io/badge/License-Apache%202.0%20w%2F%20Trademark-blue.svg?style=flat-square)](LICENSE)
-[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-orange.svg?style=flat-square)](CONTRIBUTING.md)
+<img src="assets/screenshots/gndroid_logo_3d.png" alt="GNDROiD 3D Institutional Shield Logo" width="160" />
+
+# GNDROiD v2.5.0 Early Access
+### Institutional Android Virtualization, Sandboxing & Physical Device Orchestrator for Windows
+
+[![Release](https://img.shields.io/badge/Release-v2.5.0%20Early%20Access-brightgreen.svg?style=flat-square)](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)
+[![Website](https://img.shields.io/badge/Website-gnonymous1.github.io%2FGNDROiD-blue.svg?style=flat-square)](https://gnonymous1.github.io/GNDROiD/)
+[![WinGet](https://img.shields.io/badge/WinGet-gnonymous1.GNDROiD-blueviolet.svg?style=flat-square)](https://github.com/microsoft/winget-pkgs)
+[![Scoop](https://img.shields.io/badge/Scoop-scoop--gndroid-orange.svg?style=flat-square)](https://github.com/gnonymous1/scoop-gndroid)
 [![Verification](https://img.shields.io/badge/Verification%20Suite-207%2F207%20Passed%20(100%25)-brightgreen.svg?style=flat-square)](TEST_READY.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2011%20%7C%20WHPX%20%7C%20x86__64-blue.svg?style=flat-square)]()
-[![Streaming](https://img.shields.io/badge/Streaming-Scrcpy%204.1%20Virtual%20Displays-orange.svg?style=flat-square)]()
-[![Networking](https://img.shields.io/badge/Network-Hardware%20Bridged%20%2F%20Router%20DHCP-success.svg?style=flat-square)]()
+[![License](https://img.shields.io/badge/License-Apache%202.0%20w%2F%20Trademark-blue.svg?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20%7C%20WHPX%20%7C%20x86__64-informational.svg?style=flat-square)]()
+[![Discussions](https://img.shields.io/badge/Discussions-Community%20Forum-success.svg?style=flat-square)](https://github.com/gnonymous1/GNDROiD/discussions)
+[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-orange.svg?style=flat-square)](CONTRIBUTING.md)
+
+<br/>
+
+[![GNDROiD Master Console](assets/screenshots/main_window_ready.png)](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)  
+*GNDROiD Master Control Suite (Fluent Light UI) — Device Status Cards, Hardware Virtualization Monitors & 1-Click Launchers*
+
+</div>
 
 ---
 
@@ -16,11 +30,37 @@
 > We are officially inviting the open-source community—developers, kernel hackers, UI designers, testers, and emulation enthusiasts—to contribute, test, and shape the next generation of Windows-native Android virtualization.
 >
 > 🚀 **Quick Navigation:**
+> - 🌐 **[Official Product Website](https://gnonymous1.github.io/GNDROiD/)**
 > - 📖 **[Complete Installation & User Guide (12 Sections)](INSTALL_AND_USER_GUIDE.md)**
 > - 🤝 **[Community Contribution Guidelines & Dev Roadmap](CONTRIBUTING.md)**
+> - 💬 **[GitHub Discussions Forum](https://github.com/gnonymous1/GNDROiD/discussions)**
 > - 🔒 **[Security Policy & Secret Protection Guide](SECURITY.md)**
 > - 📜 **[Apache 2.0 License & Trademark Reservation](LICENSE)**
 > - 🐛 **[Report a Bug](https://github.com/gnonymous1/GNDROiD/issues/new?template=bug_report.md)** | 💡 **[Request a Feature](https://github.com/gnonymous1/GNDROiD/issues/new?template=feature_request.md)**
+
+---
+
+### ⚡ Quick Start (Instant Installation)
+
+Install GNDROiD on Windows in under 60 seconds using your preferred method:
+
+```powershell
+# Method 1: Official Windows Package Manager (WinGet)
+winget install gnonymous1.GNDROiD
+
+# Method 2: Scoop Package Manager
+scoop bucket add gndroid https://github.com/gnonymous1/scoop-gndroid
+scoop install gndroid
+
+# Method 3: Standalone Portable Suite (Zero Install Required)
+# Download & extract GNDROiD-v2.5.0-Early-Access-Windows-x64.zip from GitHub Releases:
+Invoke-WebRequest -Uri "https://github.com/gnonymous1/GNDROiD/releases/download/v2.5.0/GNDROiD-v2.5.0-Early-Access-Windows-x64.zip" -OutFile "GNDROiD.zip"
+Expand-Archive -Path "GNDROiD.zip" -DestinationPath "$env:ProgramFiles\GNDROiD"
+& "$env:ProgramFiles\GNDROiD\gndroid.exe"
+
+# Method 4: Automated PowerShell Deployer
+powershell.exe -ExecutionPolicy Bypass -File .\setup.ps1
+```
 
 ---
 
@@ -45,6 +85,51 @@
    - Zero-cable wireless LAN screen mirroring (Port 51880) and Android TV big-screen receiver mode.
 6. 📦 **Turnkey Windows Packaging & User Manual:**
    - Inno Setup Wizard installer and native PowerShell automated system deployer with Start Menu manual integration.
+
+---
+
+## 📸 Visual Showcase & Architectural Gallery
+
+### 1. Mode 2 Hardware Bridged Networking (Physical Router DHCP)
+GNDROiD bypasses standard restrictive NAT virtualization by bridging the Android virtual NIC directly to the host's physical network adapter (Realtek Wi-Fi / PCIe Ethernet) via NDIS TAP drivers. Your local home or corporate router issues an independent physical DHCP lease, assigning the Android OS its own dedicated LAN IP (`192.168.100.x`).
+
+| Host Adapter Selection (Bridged Mode 2) | Physical Router IP & DNS Assignment |
+|:---:|:---:|
+| <img src="assets/screenshots/network_adapters_settings_tab_verified.png" alt="Host Adapter Selection" width="460" /> | <img src="assets/screenshots/network_ip_dns_assigned_verified.png" alt="Assigned Router IP and DNS" width="460" /> |
+| *Host Physical Adapter Dropdown & Bridged TAP Configuration* | *Live Router DHCP Lease (`192.168.100.x`) with Custom DNS (`8.8.8.8`, `1.1.1.1`)* |
+
+---
+
+### 2. Multi-Instance Parallel Execution with Independent Router IPs
+Run multiple concurrent Android instances simultaneously with zero network collision. Each instance is assigned a unique randomized MAC address and receives its own isolated IP address directly from your router DHCP pool, enabling enterprise-scale bot-free multi-accounting, isolated app staging, and distributed testing.
+
+<div align="center">
+  <img src="assets/screenshots/multi_instance_ips_verified.png" alt="Multi-Instance Manager showing parallel router IPs" width="850" />
+  <p><em>Multi-Instance Manager: Concurrent instances (<code>gndroid</code>, <code>gndroid_clone_1</code>, <code>gndroid_clone_2</code>) actively leasing distinct router IPs (<code>192.168.100.155</code>, <code>.156</code>, <code>.157</code>) with batch orchestration controls.</em></p>
+</div>
+
+---
+
+### 3. Modular Hypervisor & Hardware Configuration Tabs
+GNDROiD provides granular, real-time control over hypervisor allocation, graphics rendering pipelines, virtual cameras, and multi-display setups through a unified Fluent interface.
+
+| Graphics & FPS Engine | Hardware & Virtual CPU / RAM Allocation |
+|:---:|:---:|
+| <img src="assets/screenshots/settings_tab_graphics.png" alt="Settings Graphics Tab" width="440" /> | <img src="assets/screenshots/settings_tab_hardware.png" alt="Settings Hardware Tab" width="440" /> |
+| *Resolution presets, custom DPI, Vulkan/D3D/OpenGL backends, and 60/90/120 FPS selector* | *vCPU core allocation, RAM slider (MB/GB), WHPX acceleration, and storage limits* |
+| **Virtual Camera & Webcam Passthrough** | **Multi-Display & Secondary Monitor Hot-Plug** |
+| <img src="assets/screenshots/settings_tab_camera.png" alt="Settings Camera Tab" width="440" /> | <img src="assets/screenshots/settings_multidisplay_matched.png" alt="Settings Multi-Display Tab" width="440" /> |
+| *Virtual camera passthrough, USB webcam source binding, and frame rate clamping* | *Secondary monitor display hot-plugging and custom resolution matching* |
+
+---
+
+### 4. Wireless Companion App, SPAKE2 QR Pairing & App Cloner
+Seamlessly integrate physical mobile hardware with your Windows workstation. Connect via zero-cable TLS 1.3 QR pairing, stream phone displays at ultra-low latency with docked controls, and launch sandboxed cloned apps into dedicated borderless floating desktop windows.
+
+| 1-Click TLS 1.3 QR Pairing Modal | Live Physical Smartphone Streaming | Floating App Sandbox |
+|:---:|:---:|:---:|
+| <img src="assets/screenshots/qr_dialog_verified.png" alt="Undistorted 1:1 QR Pairing Modal" width="280" /> | <img src="assets/screenshots/infinix_live_screen.jpg" alt="Physical Phone Live Mirroring" width="280" /> | <img src="assets/screenshots/app_drawer_cloner_and_dedicated_window.png" alt="App Drawer & Floating Sandbox Window" width="320" /> |
+| *Undistorted 1:1 square QR code for instant Android 11+ pairing* | *Physical Infinix smartphone streaming over wireless Scrcpy with docked controls ribbon* | *Sandboxed cloned applications running in dedicated floating desktop windows* |
 
 ---
 
@@ -109,17 +194,30 @@ Beyond standard QEMU Ranchu emulation, GNDROiD incorporates a next-generation **
 
 ## Installation & Setup
 
-GNDROiD provides a modern, automated installation workflow. **All legacy `.bat` scripts have been completely excised from the repository.**
+GNDROiD provides a modern, automated installation workflow across multiple Windows distribution channels. **All legacy `.bat` scripts have been completely excised from the repository.**
 
-### Quick Deployment via PowerShell
-Execute the turnkey setup script from an elevated PowerShell terminal:
-
+### Method 1: WinGet (Official Windows Package Manager)
+Install directly from the command line:
 ```powershell
-# Run the automated deployment script
-powershell.exe -ExecutionPolicy Bypass -File .\setup.ps1
+winget install gnonymous1.GNDROiD
 ```
 
+### Method 2: Scoop Package Manager
+Install via the dedicated Scoop bucket:
+```powershell
+scoop bucket add gndroid https://github.com/gnonymous1/scoop-gndroid
+scoop install gndroid
+```
+
+### Method 3: Automated Turnkey PowerShell Setup
+Execute the turnkey setup script from an elevated PowerShell terminal:
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\setup.ps1
+```
 `setup.ps1` automatically detects standalone Inno Setup packages (`installer/GNDROiD-Setup-v2.5.0-Full.exe`) or executes the automated PowerShell system deployer (`installer/install_system.ps1`), registering native desktop shortcuts and configuring system paths.
+
+### Method 4: Standalone Portable ZIP
+Download `GNDROiD-v2.5.0-Early-Access-Windows-x64.zip` from **[GitHub Releases](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)**, extract to any directory, and launch `gndroid.exe` directly.
 
 ---
 
@@ -229,6 +327,28 @@ python scripts/test_milestone_2_process_safety.py
 
 ```
 GNDROiD/
+├── assets/
+│   └── screenshots/            # Verified High-Resolution UI & Architecture Screenshots
+│       ├── gndroid_logo_3d.png # 3D Institutional Brand Shield Logo
+│       ├── main_window_ready.png # Fluent Light Main Console
+│       ├── network_adapters_settings_tab_verified.png # Bridged Mode 2 Adapter Selection
+│       ├── network_ip_dns_assigned_verified.png # Router DHCP IP & DNS Assignment
+│       ├── multi_instance_ips_verified.png # Parallel Instances with Independent Router IPs
+│       ├── settings_tab_graphics.png # Graphics Engine, Custom DPI & 120 FPS
+│       ├── settings_tab_hardware.png # Hypervisor vCPU & RAM Allocation
+│       ├── settings_tab_camera.png # Virtual Camera Passthrough
+│       ├── settings_multidisplay_matched.png # Multi-Display Monitor Resolution
+│       ├── qr_dialog_verified.png # TLS 1.3 SPAKE2 Undistorted QR Pairing Modal
+│       ├── infinix_live_screen.jpg # Real Smartphone Live Scrcpy Stream
+│       └── app_drawer_cloner_and_dedicated_window.png # App Drawer & Floating Sandbox Window
+├── companion-app/              # Android Companion & Universal Receiver
+│   ├── GNDROiD_Companion.apk   # Direct Android Companion APK (Wireless Mirror & TV Receiver)
+│   └── README.md               # Companion App Setup & Wireless Mirroring Manual
+├── installer/                  # Windows Setup & Installer Automation
+│   ├── install_system.ps1      # Native PowerShell System Installer & PATH Configurator
+│   ├── uninstall_system.ps1    # Clean Registry & Shortcut Uninstaller
+│   ├── gndroid_installer.iss   # Professional Inno Setup 6 Wizard Script
+│   └── GNDROiD_User_Guide.txt  # Plain-Text User Manual (Packaged with Installer)
 ├── INSTALL_AND_USER_GUIDE.md   # Master 12-Section Installation & Operational Guide
 ├── README.md                   # System Architecture & Public Release Overview
 ├── setup.ps1                   # Modern Turnkey PowerShell Deployer
@@ -238,15 +358,7 @@ GNDROiD/
 ├── CONTRIBUTING.md              # Contributor Guidelines & Development Tracks
 ├── CODE_OF_CONDUCT.md          # Contributor Covenant v2.1
 ├── .env.example                # Configuration & Secret Template
-├── .github/                    # Community Issue & Pull Request Templates
-├── companion-app/              # Android Companion & Universal Receiver
-│   ├── GNDROiD_Companion.apk   # Direct Android Companion APK (Wireless Mirror & TV Receiver)
-│   └── README.md               # Companion App Setup & Wireless Mirroring Manual
-└── installer/                  # Windows Setup & Installer Automation
-    ├── install_system.ps1      # Native PowerShell System Installer & PATH Configurator
-    ├── uninstall_system.ps1    # Clean Registry & Shortcut Uninstaller
-    ├── gndroid_installer.iss   # Professional Inno Setup 6 Wizard Script
-    └── GNDROiD_User_Guide.txt  # Plain-Text User Manual (Packaged with Installer)
+└── .github/                    # Community Issue & Pull Request Templates
 ```
 
 > **📦 Download Full Portable Suite:** The compiled 64-bit Windows binary package (including ADB, Scrcpy, FFmpeg/SDL3 DLLs, and GUI launcher) is available via **[GitHub Releases](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)** (`GNDROiD-v2.5.0-Early-Access-Windows-x64.zip`).
@@ -259,9 +371,9 @@ GNDROiD has completed an exhaustive, forensic engineering audit resolving all 21
 
 ---
 
-## ⭐ Support & Share GNDROiD
+## ⭐ Support, Community & Share GNDROiD
 
-If you find **GNDROiD** useful, please **Star ⭐ this repository**, share it with your developer and gaming communities, and join us in building the future of Windows-native Android virtualization!
+If you find **GNDROiD** useful, please **Star ⭐ this repository**, join the **[GitHub Discussions](https://github.com/gnonymous1/GNDROiD/discussions)** forum, share it with your developer and gaming communities, and help build the future of Windows-native Android virtualization!
 
 ### 🔍 Topics & Viral Discovery Hashtags
 
