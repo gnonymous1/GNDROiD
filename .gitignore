@@ -46,5 +46,15 @@ virtual_storage/
 .agents/
 SESSION_*.md
 .gemini/
-
 build/
+
+# OS & editor artifacts
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.bak
+*~
