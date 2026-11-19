@@ -3,15 +3,15 @@
 <img src="assets/screenshots/gndroid_logo_3d.png" alt="GNDROiD 3D Institutional Shield Logo" width="160" />
 
 # GNDROiD v2.5.0 Early Access
-### Institutional Android Virtualization, Sandboxing & Physical Device Orchestrator for Windows
+## Institutional Android Virtualization, Sandboxing & Physical Device Orchestrator for Windows
 
 [![Release](https://img.shields.io/badge/Release-v2.5.0%20Early%20Access-brightgreen.svg?style=flat-square)](https://github.com/gnonymous1/GNDROiD/releases/tag/v2.5.0)
 [![Website](https://img.shields.io/badge/Website-gnonymous1.github.io%2FGNDROiD-blue.svg?style=flat-square)](https://gnonymous1.github.io/GNDROiD/)
 [![WinGet](https://img.shields.io/badge/WinGet-gnonymous1.GNDROiD-blueviolet.svg?style=flat-square)](https://github.com/microsoft/winget-pkgs)
 [![Scoop](https://img.shields.io/badge/Scoop-scoop--gndroid-orange.svg?style=flat-square)](https://github.com/gnonymous1/scoop-gndroid)
-[![Verification](https://img.shields.io/badge/Verification%20Suite-207%2F207%20Passed%20(100%25)-brightgreen.svg?style=flat-square)](TEST_READY.md)
+[![Verification](https://img.shields.io/badge/Verification%20Suite-215%2F215%20Passed%20(100%25)-brightgreen.svg?style=flat-square)](#automated-testing--verification-suite)
 [![License](https://img.shields.io/badge/License-Apache%202.0%20w%2F%20Trademark-blue.svg?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20%7C%20WHPX%20%7C%20x86__64-informational.svg?style=flat-square)]()
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20%7C%20WHPX%20%7C%20x86__64-informational.svg?style=flat-square)](#system-requirements--prerequisites)
 [![Discussions](https://img.shields.io/badge/Discussions-Community%20Forum-success.svg?style=flat-square)](https://github.com/gnonymous1/GNDROiD/discussions)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-orange.svg?style=flat-square)](CONTRIBUTING.md)
 
